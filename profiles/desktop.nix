@@ -17,6 +17,7 @@
     ../modules/waybar.nix
     ../modules/mako.nix
     ../modules/thunar.nix
+    ../modules/proton-pass.nix
 
     # Fonts -- safe to enable early, unlikely to break
     ../modules/fonts.nix

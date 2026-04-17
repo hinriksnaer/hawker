@@ -31,22 +31,8 @@ end
 # Default terminal for GUI applications
 set -gx TERMINAL kitty
 
-# SSH Agent
-# Only set up if not already configured (e.g., from systemd, forwarded agent, etc.)
-if test -z "$SSH_AUTH_SOCK"
-    # Try to find existing agent socket
-    set -l agent_sockets (find /tmp -type s -name "agent.*" -user $USER 2>/dev/null)
-
-    if test (count $agent_sockets) -gt 0
-        # Use first available agent socket
-        set -gx SSH_AUTH_SOCK $agent_sockets[1]
-        set -gx SSH_AGENT_PID (pgrep -u $USER ssh-agent | head -1)
-    else
-        # No existing agent, start a new one
-        eval (ssh-agent -c) > /dev/null
-        set -gx SSH_AGENT_PID (pgrep -u $USER ssh-agent)
-    end
-end
+# SSH Agent (Proton Pass)
+set -gx SSH_AUTH_SOCK $HOME/.ssh/proton-pass-agent.sock
 
 # Source virtual environment if it exists
 if test -f ~/.venv/bin/activate.fish
