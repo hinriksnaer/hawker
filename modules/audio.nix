@@ -22,6 +22,7 @@
     playerctl
     alsa-utils
 
+
     # Audio codecs
     ffmpeg
     gst_all_1.gstreamer
