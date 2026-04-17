@@ -14,7 +14,7 @@
     "bluetooth",
     "network",
     "pulseaudio",
-    "battery"
+    "custom/power"
   ],
   "hyprland/workspaces": {
     "on-click": "activate",
@@ -213,5 +213,10 @@
     "format": "󰓡 {}",
     "tooltip-format": "Swap Usage",
     "on-click": "kitty btop"
+  },
+  "custom/power": {
+    "format": "⏻",
+    "tooltip-format": "Power Menu",
+    "on-click": "power-menu"
   }
 }

@@ -54,6 +54,7 @@ window#waybar {
 #custom-swap,
 #network,
 #pulseaudio,
+#custom-power,
 #bluetooth,
 #tray,
 #custom-expand-icon,
@@ -196,4 +197,9 @@ tooltip label {
 #custom-swap {
   font-size: 10px;
   opacity: 0.9;
+}
+
+#custom-power {
+  padding: 0 8px;
+  margin-right: 4px;
 }
