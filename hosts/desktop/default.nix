@@ -21,7 +21,7 @@
     ../../modules/nvidia.nix
     ../../modules/networking.nix
     ../../modules/bluetooth.nix
-    # ../../modules/fancontrol.nix
+    ../../modules/fancontrol.nix
   ];
 
   networking.hostName = "hyprpunk";

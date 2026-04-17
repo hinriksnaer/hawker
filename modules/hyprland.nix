@@ -20,10 +20,10 @@
     # Wayland utilities
     hyprpaper
     swaybg
-    awww  # swww wallpaper daemon with transitions
     grim
     slurp
     wl-clipboard
+    cliphist
     wlr-randr
     wlogout
 

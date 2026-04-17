@@ -15,7 +15,8 @@ for dir in "$DOTFILES_DIR"/*/; do
 
     # themes are not stowed into $HOME -- they go to ~/.local/share/hyprpunk/themes/
     # rust is not needed on NixOS
-    if [ "$module" = "themes" ] || [ "$module" = "rust" ]; then
+    # btop rewrites its config on exit -- copy instead of stow to prevent repo leaks
+    if [ "$module" = "themes" ] || [ "$module" = "rust" ] || [ "$module" = "btop" ]; then
         continue
     fi
 
@@ -30,6 +31,11 @@ if [ -L "$HYPRPUNK_DATA/themes" ]; then
     rm "$HYPRPUNK_DATA/themes"
 fi
 ln -snf "$DOTFILES_DIR/themes" "$HYPRPUNK_DATA/themes"
+
+# Copy btop config (btop rewrites its config on exit, can't be a symlink)
+echo "==> Copying btop config..."
+mkdir -p "$HOME/.config/btop/themes"
+cp "$DOTFILES_DIR/btop/.config/btop/btop.conf" "$HOME/.config/btop/btop.conf"
 
 # Create runtime files (not managed by stow -- written by theme switcher)
 echo "==> Creating runtime config files..."
