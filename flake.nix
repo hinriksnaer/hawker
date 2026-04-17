@@ -52,6 +52,12 @@
         discord     = import ./modules/discord.nix;
         obsidian    = import ./modules/obsidian.nix;
 
+        # Session
+        sddm            = import ./modules/sddm.nix;
+        desktop-session = import ./modules/desktop-session.nix;
+        screenshot      = import ./modules/screenshot.nix;
+        cliphist        = import ./modules/cliphist.nix;
+
         # Hardware
         nvidia      = import ./modules/nvidia.nix;
         bluetooth   = import ./modules/bluetooth.nix;
