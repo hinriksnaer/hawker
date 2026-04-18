@@ -1,4 +1,4 @@
-{ pkgs, packages }:
+{ pkgs, packages, name ? "hyprpunk-dev" }:
 
 let
   repoSrc = builtins.path {
@@ -49,7 +49,7 @@ HOSTS
 
 in
 pkgs.dockerTools.buildLayeredImage {
-  name = "hyprpunk-dev";
+  inherit name;
   tag = "latest";
 
   contents = packages ++ [ homeDir etcDir ];

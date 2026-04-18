@@ -79,20 +79,32 @@
             ./hosts/container/default.nix
           ];
         };
+
+        helion = nixpkgs.lib.nixosSystem {
+          inherit system;
+          modules = [
+            ./hosts/helion/default.nix
+          ];
+        };
       };
 
       # ── Container images ──
-      packages.${system} = {
-        container =
-          let
-            # Evaluate the container host config to extract its packages
-            containerConfig = self.nixosConfigurations.container.config;
-            containerPackages = containerConfig.environment.systemPackages;
-          in
-          import ./containers/default.nix {
-            inherit pkgs;
-            packages = containerPackages;
-          };
+      packages.${system} = let
+        containerConfig = self.nixosConfigurations.container.config;
+        containerPackages = containerConfig.environment.systemPackages;
+        helionConfig = self.nixosConfigurations.helion.config;
+        helionPackages = helionConfig.environment.systemPackages;
+      in {
+        container = import ./containers/default.nix {
+          inherit pkgs;
+          packages = containerPackages;
+        };
+
+        helion = import ./containers/default.nix {
+          inherit pkgs;
+          packages = helionPackages;
+          name = "hyprpunk-helion";
+        };
       };
     };
 }

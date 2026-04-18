@@ -2,75 +2,112 @@
 # hyprpunk-container - manage dev containers locally and on remote hosts
 #
 # Usage:
-#   hyprpunk-container build                    Build the container image
-#   hyprpunk-container run                      Run locally
-#   hyprpunk-container push <host>              Build + push to remote host
-#   hyprpunk-container enter <host>             Enter container on remote host
-#   hyprpunk-container deploy <host>            Build + push + enter
-#   hyprpunk-container status [host]            Check if container is running
-#   hyprpunk-container stop [host]              Stop running container
-#   hyprpunk-container update <host>            Rebuild + push (no enter)
+#   hyprpunk-container [--image NAME] <command> [args]
+#
+# Images:
+#   dev     (default)  NixOS terminal tools
+#   helion             Helion GPU compiler (CUDA + PyTorch + terminal tools)
+#
+# Commands:
+#   build                    Build the container image
+#   run                      Run locally
+#   push <host>              Build + push to remote host
+#   enter [host]             Enter container (local or remote)
+#   deploy <host>            Build + push + enter
+#   status [host]            Check if container is running
+#   stop [host]              Stop running container
 
 set -euo pipefail
 
-IMAGE_NAME="hyprpunk-dev"
 # Resolve symlink to find the actual repo
 REAL_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}")"
 REPO_DIR="$(cd "$(dirname "$REAL_SCRIPT")/../../.." && pwd)"
 
+# Default image
+IMAGE="dev"
+
+# Parse --image flag
+if [ "${1:-}" = "--image" ]; then
+    IMAGE="$2"
+    shift 2
+fi
+
+# Set image-specific vars
+case "$IMAGE" in
+    dev)
+        IMAGE_NAME="hyprpunk-dev"
+        FLAKE_OUTPUT="container"
+        ;;
+    helion)
+        IMAGE_NAME="hyprpunk-helion"
+        FLAKE_OUTPUT="helion"
+        ;;
+    *)
+        echo "Unknown image: $IMAGE"
+        echo "Available: dev, helion"
+        exit 1
+        ;;
+esac
+
 # ── Helpers ──
 
-build() {
-    echo "==> Building container image..."
-    IMAGE_PATH=$(nix build "$REPO_DIR#container" --no-link --print-out-paths)
-    echo "    $IMAGE_PATH"
+detect_runtime() {
+    if command -v podman &>/dev/null; then
+        echo podman
+    elif command -v docker &>/dev/null; then
+        echo docker
+    else
+        echo "Error: podman or docker required" >&2
+        exit 1
+    fi
 }
 
-load_local() {
-    IMAGE_PATH=$(nix build "$REPO_DIR#container" --no-link --print-out-paths)
-    podman load -i "$IMAGE_PATH" 2>&1 | tail -1
+build() {
+    echo "==> Building $IMAGE_NAME..."
+    IMAGE_PATH=$(nix build "$REPO_DIR#$FLAKE_OUTPUT" --no-link --print-out-paths)
+    echo "    $IMAGE_PATH"
 }
 
 push_to() {
     local host="$1"
-    IMAGE_PATH=$(nix build "$REPO_DIR#container" --no-link --print-out-paths)
-    echo "==> Pushing to $host..."
-    scp "$IMAGE_PATH" "${host}:hyprpunk-dev.tar.gz"
+    IMAGE_PATH=$(nix build "$REPO_DIR#$FLAKE_OUTPUT" --no-link --print-out-paths)
+    echo "==> Pushing $IMAGE_NAME to $host..."
+    scp "$IMAGE_PATH" "${host}:${IMAGE_NAME}.tar.gz"
     scp "$(readlink -f "${BASH_SOURCE[0]}")" "${host}:hyprpunk-container"
     echo "==> Loading image on $host..."
-    ssh "$host" "chmod +x ~/hyprpunk-container && podman load -i ~/hyprpunk-dev.tar.gz 2>/dev/null || docker load -i ~/hyprpunk-dev.tar.gz" 2>&1 | tail -1
+    ssh "$host" "chmod +x ~/hyprpunk-container && (podman load -i ~/${IMAGE_NAME}.tar.gz 2>/dev/null || docker load -i ~/${IMAGE_NAME}.tar.gz)" 2>&1 | tail -1
 }
 
 run_container() {
-    local runtime
-    if command -v podman &>/dev/null; then
-        runtime=podman
-    elif command -v docker &>/dev/null; then
-        runtime=docker
-    else
-        echo "Error: podman or docker required"
-        exit 1
-    fi
+    local runtime=$(detect_runtime)
 
     $runtime rm -f "$IMAGE_NAME" 2>/dev/null || true
 
     local mounts=()
     local env_args=(-e "TERM=xterm-256color")
+    local extra_args=()
 
-    # Forward SSH agent socket (works with both local proton-pass and remote SSH forwarding)
+    # Forward SSH agent socket
     if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
         mounts+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock")
         env_args+=(-e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
     fi
 
+    mounts+=(-v "${IMAGE_NAME}-work:/home/softmax/work")
+
+    # Run setup script on first entry for project containers
+    local setup_cmd=""
+    if [ "$IMAGE" = "helion" ]; then
+        setup_cmd="bash /home/softmax/hyprpunk-nix/containers/helion-setup.sh && "
+    fi
+
     exec $runtime run -it --rm \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
-        -v hyprpunk-work:/home/softmax/work \
         "${mounts[@]}" \
         "${env_args[@]}" \
-        --entrypoint /bin/fish \
-        "$IMAGE_NAME"
+        "$IMAGE_NAME" \
+        bash -c "${setup_cmd}exec fish"
 }
 
 # ── Commands ──
@@ -81,37 +118,37 @@ case "${1:-help}" in
         ;;
 
     run)
-        echo "==> Loading image..."
-        load_local
-        echo "==> Starting container..."
+        echo "==> Loading $IMAGE_NAME..."
+        IMAGE_PATH=$(nix build "$REPO_DIR#$FLAKE_OUTPUT" --no-link --print-out-paths)
+        $(detect_runtime) load -i "$IMAGE_PATH" 2>&1 | tail -1
+        echo "==> Starting $IMAGE_NAME..."
         run_container
         ;;
 
     push|update)
-        [ $# -lt 2 ] && echo "Usage: $0 push <host>" && exit 1
+        [ $# -lt 2 ] && echo "Usage: $0 [--image NAME] push <host>" && exit 1
         build
         push_to "$2"
-        echo "==> Done. Enter with: $0 enter $2"
+        echo "==> Done. Enter with: $0 --image $IMAGE enter $2"
         ;;
 
     enter)
         if [ $# -ge 2 ]; then
-            ssh -tt "$2" '~/hyprpunk-container run-local'
+            ssh -tt "$2" "~/hyprpunk-container --image $IMAGE run-local"
         else
             run_container
         fi
         ;;
 
     deploy)
-        [ $# -lt 2 ] && echo "Usage: $0 deploy <host>" && exit 1
+        [ $# -lt 2 ] && echo "Usage: $0 [--image NAME] deploy <host>" && exit 1
         build
         push_to "$2"
         echo "==> Entering container..."
-        ssh -tt "$2" '~/hyprpunk-container run-local'
+        ssh -tt "$2" "~/hyprpunk-container --image $IMAGE run-local"
         ;;
 
     run-local)
-        # Called on the remote host by 'enter' and 'deploy'
         run_container
         ;;
 
@@ -134,14 +171,20 @@ case "${1:-help}" in
     help|*)
         echo "hyprpunk-container - manage dev containers"
         echo ""
+        echo "Images: dev (default), helion"
+        echo ""
         echo "Usage:"
-        echo "  $0 build                Build the container image"
-        echo "  $0 run                  Run locally"
-        echo "  $0 push <host>          Build + push to remote host"
-        echo "  $0 enter [host]         Enter container (local or remote)"
-        echo "  $0 deploy <host>        Build + push + enter remote"
-        echo "  $0 status [host]        Check container status"
-        echo "  $0 stop [host]          Stop running container"
-        echo "  $0 update <host>        Rebuild + push (alias for push)"
+        echo "  $0 [--image NAME] build              Build container image"
+        echo "  $0 [--image NAME] run                Run locally"
+        echo "  $0 [--image NAME] push <host>         Build + push to remote"
+        echo "  $0 [--image NAME] enter [host]        Enter container"
+        echo "  $0 [--image NAME] deploy <host>       Build + push + enter"
+        echo "  $0 [--image NAME] status [host]       Check status"
+        echo "  $0 [--image NAME] stop [host]         Stop container"
+        echo ""
+        echo "Examples:"
+        echo "  $0 build                              Build dev container"
+        echo "  $0 --image helion deploy ibm-kaiba    Deploy Helion to ibm-kaiba"
+        echo "  $0 --image helion enter ibm-kaiba     Enter Helion on ibm-kaiba"
         ;;
 esac
