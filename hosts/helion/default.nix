@@ -8,9 +8,12 @@
     # Terminal tools (same as desktop)
     ../../components/terminal.nix
 
-    # Helion (Python + PyTorch + CUDA + Triton + dev deps)
+    # Helion
     ../../modules/helion.nix
   ];
+
+  # Backend selection (cuda, rocm, cpu when added)
+  helion.backend = "cuda";
 
   # Container-specific: no bootloader, no hardware
   boot.loader.systemd-boot.enable = lib.mkForce false;

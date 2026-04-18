@@ -33,9 +33,14 @@ uv pip install --pre torch triton \
     --index-url "https://download.pytorch.org/whl/$TORCH_INDEX" \
     --extra-index-url https://pypi.org/simple
 
-echo "==> Installing Helion (editable)..."
+EXTRAS="dev"
+if [ -n "${HELION_PIP_EXTRAS:-}" ]; then
+    EXTRAS="dev,${HELION_PIP_EXTRAS#[}"
+    EXTRAS="${EXTRAS%]}"
+fi
+echo "==> Installing Helion (editable, extras: $EXTRAS)..."
 SETUPTOOLS_SCM_PRETEND_VERSION_FOR_HELION=0.0+dev \
-    uv pip install -e '.[dev]'
+    uv pip install -e ".[$EXTRAS]"
 
 uv pip install pyrefly ruff
 
