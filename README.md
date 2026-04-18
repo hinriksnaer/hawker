@@ -1,10 +1,8 @@
 # hyprpunk-nix
 
-NixOS configuration for Hyprland desktop with NVIDIA, dotfiles via GNU Stow, and Proton Pass SSH agent.
+NixOS + Hyprland desktop. NVIDIA, modular themes, reproducible containers.
 
-Migrated from [hyprpunk](https://github.com/hinriksnaer/hyprpunk) (Fedora).
-
-## Quick Start
+## Setup
 
 ```bash
 git clone git@github.com:hinriksnaer/hyprpunk-nix.git ~/hyprpunk-nix
@@ -15,30 +13,43 @@ sudo nixos-rebuild switch --flake ~/hyprpunk-nix#desktop
 ## Structure
 
 ```
-hosts/          Machine configs (hardware + components)
-components/     Composable collections of modules
-  terminal.nix  fish, kitty, tmux, btop, lazygit, yazi, neovim, cli-tools, gh
-  ui.nix        hyprland, waybar, rofi, hyprlock, mako, fonts, proton-pass
-  apps.nix      thunar, steam
-  dev.nix       dev-tools
-  media.nix     audio, multimedia
+hosts/          Machines (hardware + components)
+components/     Composable groups
+  terminal.nix    fish, kitty, tmux, neovim, btop, lazygit, yazi, opencode, cli-tools, gh
+  ui.nix          hyprland, sddm, waybar, rofi, mako, hyprlock, fonts, screenshot, cliphist
+  apps.nix        firefox, thunar, steam, discord, obsidian, proton-pass, podman
+  media.nix       pipewire audio
 modules/        Individual NixOS modules
-dotfiles/       Plain config files deployed via stow
+dotfiles/       Stow packages (each with optional modules.d/ and theme-hooks.d/)
+containers/     OCI container image (same packages as terminal component)
 ```
 
 ## Themes
 
-12 themes with live-reload across hyprland, kitty, neovim, btop, waybar, mako, rofi:
+12 themes across hyprland, kitty, neovim, btop, waybar, mako, rofi, hyprlock, opencode.
+
+```
+Super+T          Theme picker
+Super+Shift+T    Next theme
+Super+W          Wallpaper picker
+Super+Shift+W    Next wallpaper
+```
+
+Modular: each stow package registers its own theme hook in `~/.config/hyprpunk/theme-hooks.d/`.
+
+## Containers
+
+Build a NixOS container image with your terminal tools -- no Dockerfile needed:
 
 ```bash
-hyprpunk-theme-set torrentz-hydra
-hyprpunk-theme-next
-hyprpunk-theme-list
+nix build .#container                              # build image
+podman load -i ./result                            # load locally
+./containers/push.sh ibm-kaiba                     # or push to remote host
 ```
 
 ## Adding a Machine
 
-1. Create `hosts/<name>/default.nix`, import base + components
+1. Create `hosts/<name>/default.nix`, pick components
 2. Generate `hardware-configuration.nix` on target
 3. Add to `flake.nix` under `nixosConfigurations`
 4. `sudo nixos-rebuild switch --flake .#<name>`
