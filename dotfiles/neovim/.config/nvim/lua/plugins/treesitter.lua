@@ -27,6 +27,7 @@ return {
         'javascript',
         'json',
         'lua',
+        'nix',
         'luadoc',
         'markdown',
         'markdown_inline',

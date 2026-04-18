@@ -38,8 +38,8 @@ return {
 
           -- Main colors
           red           = "#FF6A1F",  -- orange-red
-          orange        = "#FF9A3D",  -- yellow/orange
-          yellow        = "#FFC268",  -- bright yellow
+          orange        = "#FFC268",  -- bright orange/gold
+          yellow        = "#FF9A3D",  -- warm yellow
           green         = "#9AE64F",  -- green
           cyan          = "#1BC5C9",  -- primary cyan
           blue          = "#39D8DF",  -- bright blue/cyan
