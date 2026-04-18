@@ -66,6 +66,7 @@ run_container() {
     exec $runtime run -it --rm \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
+        -v hyprpunk-work:/home/softmax/work \
         "${mounts[@]}" \
         "${env_args[@]}" \
         --entrypoint /bin/fish \
