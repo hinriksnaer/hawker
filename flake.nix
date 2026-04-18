@@ -16,9 +16,6 @@
         # Base
         base        = import ./modules/base.nix;
 
-        # Core tools
-        opencode    = import ./modules/opencode.nix;
-
         # Shell & CLI
         fish        = import ./modules/fish.nix;
         cli-tools   = import ./modules/cli-tools.nix;
@@ -33,9 +30,6 @@
         yazi        = import ./modules/yazi.nix;
         gh          = import ./modules/gh.nix;
 
-        # Dev toolchains
-        dev-tools   = import ./modules/dev-tools.nix;
-
         # Desktop
         hyprland    = import ./modules/hyprland.nix;
         kitty       = import ./modules/kitty.nix;
@@ -47,8 +41,7 @@
         fonts       = import ./modules/fonts.nix;
         audio       = import ./modules/audio.nix;
         multimedia  = import ./modules/multimedia.nix;
-        flatpak     = import ./modules/flatpak.nix;
-        zen-browser = import ./modules/zen-browser.nix;
+        firefox     = import ./modules/firefox.nix;
         discord     = import ./modules/discord.nix;
         obsidian    = import ./modules/obsidian.nix;
 
@@ -68,7 +61,6 @@
         terminal    = import ./components/terminal.nix;
         ui          = import ./components/ui.nix;
         apps        = import ./components/apps.nix;
-        dev         = import ./components/dev.nix;
         media       = import ./components/media.nix;
       };
 

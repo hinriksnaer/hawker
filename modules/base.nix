@@ -22,7 +22,7 @@
   users.users.softmax = {
     isNormalUser = true;
     extraGroups = [ "wheel" "video" "audio" "networkmanager" "docker" ];
-    shell = pkgs.fish;
+    shell = pkgs.fish;  # requires fish.nix in the same host config
   };
 
   security.sudo.wheelNeedsPassword = false;
@@ -41,11 +41,7 @@
     util-linux
     procps
     git
-    firefox
   ];
-
-  # Fish must be enabled at system level for login shell
-  programs.fish.enable = true;
 
   # ── System services ──
   services.dbus.enable = true;

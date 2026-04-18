@@ -1,7 +1,5 @@
-# Environment variables
+# PATH
 fish_add_path -g $HOME/.local/bin
-fish_add_path -g $HOME/go/bin
-# Note: Rust/Cargo PATH is managed in conf.d/installer-managed.fish
 
 # History
 set -g fish_history_size 10000
@@ -28,11 +26,10 @@ if command -v starship >/dev/null 2>&1
     starship init fish | source
 end
 
-# Default terminal for GUI applications
-set -gx TERMINAL kitty
-
 # SSH Agent (Proton Pass)
-set -gx SSH_AUTH_SOCK $HOME/.ssh/proton-pass-agent.sock
+if test -S $HOME/.ssh/proton-pass-agent.sock
+    set -gx SSH_AUTH_SOCK $HOME/.ssh/proton-pass-agent.sock
+end
 
 # Source virtual environment if it exists
 if test -f ~/.venv/bin/activate.fish

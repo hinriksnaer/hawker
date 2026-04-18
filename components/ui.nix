@@ -21,8 +21,5 @@
 
     # Appearance
     ../modules/fonts.nix
-
-    # Credentials
-    ../modules/proton-pass.nix
   ];
 }

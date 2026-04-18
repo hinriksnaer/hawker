@@ -11,5 +11,6 @@
     ../modules/cli-tools.nix
     ../modules/neovim.nix
     ../modules/gh.nix
+    ../modules/opencode.nix
   ];
 }

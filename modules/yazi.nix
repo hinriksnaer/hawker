@@ -6,10 +6,6 @@
     file
     ffmpegthumbnailer
     poppler-utils
-    fd
-    ripgrep
-    fzf
-    zoxide
     imagemagick
   ];
 }

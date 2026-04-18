@@ -67,11 +67,12 @@ set reload_commands
 # Process hook files
 if test -d "$hooks_dir"
     for hook_file in $hooks_dir/*
-        set hook_name (basename $hook_file)
+        set hook_name (basename $hook_file | sed 's/^[0-9]*-//')
         set source_file ""
         set target_path ""
         set reload_cmd ""
         set hook_type "symlink"
+        set config_key ""
 
         # Parse hook file
         for line in (cat $hook_file)
@@ -79,9 +80,9 @@ if test -d "$hooks_dir"
             if test -z "$line"; or string match -q '#*' $line
                 continue
             end
-            set key (echo $line | string split '=' | head -1 | string trim)
-            set val (echo $line | string replace "$key=" '' | string trim)
-            switch $key
+            set k (echo $line | string split '=' | head -1 | string trim)
+            set val (echo $line | string replace "$k=" '' | string trim)
+            switch $k
                 case source
                     set source_file $val
                 case target
@@ -90,7 +91,24 @@ if test -d "$hooks_dir"
                     set reload_cmd $val
                 case type
                     set hook_type $val
+                case key
+                    set config_key $val
             end
+        end
+
+        # Handle config-rewrite type (rewrites a JSON key in a config file)
+        if test "$hook_type" = "config-rewrite"
+            if test -n "$target_path"; and test -n "$config_key"
+                if test -f "$target_path"
+                    sed -i "s/\"$config_key\": *\"[^\"]*\"/\"$config_key\": \"$theme_name\"/" "$target_path"
+                    set applied_count (math $applied_count + 1)
+                    success "Applied $hook_name"
+                else
+                    set skipped_count (math $skipped_count + 1)
+                    warning "Skipped $hook_name ($target_path not found)"
+                end
+            end
+            continue
         end
 
         # Handle special types

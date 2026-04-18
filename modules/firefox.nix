@@ -2,8 +2,6 @@
 
 {
   environment.systemPackages = with pkgs; [
-    starship
+    firefox
   ];
-
-  programs.fish.enable = true;
 }

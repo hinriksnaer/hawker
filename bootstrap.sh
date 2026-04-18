@@ -13,9 +13,9 @@ echo "==> Deploying dotfiles via stow (--no-folding)..."
 for dir in "$DOTFILES_DIR"/*/; do
     module=$(basename "$dir")
 
-    # themes are not stowed into $HOME -- they go to ~/.local/share/hyprpunk/themes/
-    # rust is not needed on NixOS
-    # btop rewrites its config on exit -- copy instead of stow to prevent repo leaks
+    # themes: deployed separately to ~/.local/share/hyprpunk/themes/
+    # btop: rewrites its config on exit -- copied below
+    # opencode: tui.json gets rewritten by theme switcher -- copied below
     if [ "$module" = "themes" ] || [ "$module" = "rust" ] || [ "$module" = "btop" ]; then
         continue
     fi
@@ -36,6 +36,20 @@ ln -snf "$DOTFILES_DIR/themes" "$HYPRPUNK_DATA/themes"
 echo "==> Copying btop config..."
 mkdir -p "$HOME/.config/btop/themes"
 cp "$DOTFILES_DIR/btop/.config/btop/btop.conf" "$HOME/.config/btop/btop.conf"
+
+# Set up opencode themes (symlink each theme's opencode.json into opencode themes dir)
+echo "==> Deploying opencode themes..."
+mkdir -p "$HOME/.config/opencode/themes"
+for theme_dir in "$DOTFILES_DIR"/themes/*/; do
+    theme=$(basename "$theme_dir")
+    if [ -f "$theme_dir/opencode.json" ]; then
+        ln -sf "$theme_dir/opencode.json" "$HOME/.config/opencode/themes/$theme.json"
+    fi
+done
+
+# Copy opencode tui.json (theme switcher rewrites it, can't be a symlink)
+echo "==> Copying opencode tui.json..."
+echo '{"$schema":"https://opencode.ai/tui.json","theme":"torrentz-hydra"}' > "$HOME/.config/opencode/tui.json"
 
 # Create runtime files (not managed by stow -- written by theme switcher)
 echo "==> Creating runtime config files..."

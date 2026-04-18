@@ -11,11 +11,7 @@
     ../../components/terminal.nix
     ../../components/ui.nix
     ../../components/apps.nix
-    ../../components/dev.nix
     ../../components/media.nix
-
-    # Core tools
-    ../../modules/opencode.nix
 
     # Hardware
     ../../modules/nvidia.nix

@@ -7,24 +7,12 @@
     package = pkgs.kdePackages.sddm;
     theme = "sddm-astronaut-theme";
     extraPackages = [ pkgs.sddm-astronaut ];
-    settings.Theme.ThemeDir = "${pkgs.sddm-astronaut}/share/sddm/themes";
-  };
-
-  # UWSM manages Hyprland as a systemd session (proper env vars, service ordering)
-  programs.uwsm = {
-    enable = true;
-    waylandCompositors.hyprland = {
-      prettyName = "Hyprland";
-      comment = "Hyprland compositor managed by UWSM";
-      binPath = "/run/current-system/sw/bin/Hyprland";
+    settings.Theme = {
+      ThemeDir = "${pkgs.sddm-astronaut}/share/sddm/themes";
+      CursorTheme = "Adwaita";
+      CursorSize = "24";
     };
   };
-
-  environment.etc."sddm.conf.d/theme.conf".text = ''
-    [Theme]
-    ThemeDir=${pkgs.sddm-astronaut}/share/sddm/themes
-    Current=sddm-astronaut-theme
-  '';
 
   # Override theme config with hyprpunk colors
   environment.etc."sddm/themes/sddm-astronaut-theme/theme.conf.user".text = ''

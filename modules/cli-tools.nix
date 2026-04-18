@@ -2,9 +2,27 @@
 
 {
   environment.systemPackages = with pkgs; [
-    lsd
+    # Search and navigation
     ripgrep
-    bat
     fd
+    fzf
+    zoxide
+
+    # Better defaults
+    lsd
+    bat
+
+    # Build essentials
+    gcc
+    gnumake
+    cmake
+    pkg-config
+    openssl
+    openssl.dev
+    unzip
+    gnutar
+
+    # Clipboard
+    wl-clipboard
   ];
 }

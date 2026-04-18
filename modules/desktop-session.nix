@@ -4,8 +4,7 @@
   # Polkit agent for privilege escalation dialogs
   security.polkit.enable = true;
 
-  # Realtime scheduling (prevents "Failed to change process scheduling strategy")
-  security.rtkit.enable = true;
+  # PAM realtime limits (for Hyprland compositor scheduling)
   security.pam.loginLimits = [
     { domain = "@users"; item = "rtprio"; type = "-"; value = "99"; }
     { domain = "@users"; item = "memlock"; type = "-"; value = "unlimited"; }
@@ -31,7 +30,7 @@
     xdg-utils
 
     # Desktop utilities
-    networkmanagerapplet
+    networkmanagerapplet  # nm-applet tray icon
   ];
 
   environment.sessionVariables = {
@@ -39,5 +38,7 @@
     XCURSOR_SIZE = "24";
     HYPRCURSOR_THEME = "Adwaita";
     HYPRCURSOR_SIZE = "24";
+    GTK_THEME = "Adwaita:dark";
+    TERMINAL = "kitty";
   };
 }
