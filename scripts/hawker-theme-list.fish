@@ -9,8 +9,7 @@ else if test -d "$HOME/.local/share/hawker/themes"
     set themes_dir "$HOME/.local/share/hawker/themes"
 else
     # Try to find relative to script location (for running from repo)
-    set script_dir (dirname (status -f))
-    set themes_dir (realpath "$script_dir/../../themes")
+    set themes_dir "$HAWKER_PATH/themes"
 end
 
 # Check if themes directory exists

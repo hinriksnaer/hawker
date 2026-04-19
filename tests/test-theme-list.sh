@@ -8,7 +8,7 @@ echo "== hawker-theme-list =="
 
 setup_test_env
 
-output=$(fish "$REPO_DIR/dotfiles/scripts/.local/bin/hawker-theme-list" 2>/dev/null)
+output=$(fish "$REPO_DIR/scripts/hawker-theme-list.fish" 2>/dev/null)
 
 assert_contains "lists alpha" "alpha" "$output"
 assert_contains "lists beta" "beta" "$output"

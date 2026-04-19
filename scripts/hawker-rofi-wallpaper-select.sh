@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Wallpaper selector with image previews using rofi grid layout
 
 THEMES_DIR="$HOME/.local/share/hawker/themes"

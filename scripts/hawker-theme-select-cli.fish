@@ -4,10 +4,9 @@
 # Usage: hawker-theme-select-cli
 
 # Find script directory for calling other scripts
-set script_dir (dirname (status -f))
 
 # Get list of available themes
-set theme_list ($script_dir/hawker-theme-list)
+set theme_list (hawker-theme-list)
 
 if test (count $theme_list) -eq 0
     echo "No themes found"
@@ -15,7 +14,7 @@ if test (count $theme_list) -eq 0
 end
 
 # Get current theme (may fail, that's ok)
-set current_theme ($script_dir/hawker-theme-current 2>/dev/null)
+set current_theme (hawker-theme-current 2>/dev/null)
 
 # Prepare theme list with current indicator
 set display_list
@@ -42,7 +41,7 @@ if test -n "$selected"
 
     echo ""
     echo "Applying theme: $theme_name"
-    $script_dir/hawker-theme-set $theme_name
+    hawker-theme-set $theme_name
 else
     echo "Theme selection cancelled"
 end

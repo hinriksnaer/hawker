@@ -8,7 +8,7 @@ echo "== hawker-theme-set-terminal =="
 
 setup_test_env
 
-fish "$REPO_DIR/dotfiles/scripts/.local/bin/hawker-theme-set-terminal" beta 2>/dev/null || true
+fish "$REPO_DIR/scripts/hawker-theme-set-terminal.fish" beta 2>/dev/null || true
 
 assert_symlink "creates current theme symlink" "$HOME/.config/hawker/current/theme"
 

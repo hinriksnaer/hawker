@@ -3,7 +3,6 @@
 # Each stow package registers its theme integration via ~/.config/hawker/theme-hooks.d/
 # Usage: hawker-theme-set-desktop <theme-name>
 
-set script_dir (dirname (status -f))
 set hooks_dir "$HOME/.config/hawker/theme-hooks.d"
 
 # Output helpers
@@ -32,7 +31,7 @@ if test (count $argv) -lt 1
     echo "Usage: hawker-theme-set-desktop <theme-name>"
     echo ""
     echo "Available themes:"
-    $script_dir/hawker-theme-list
+    hawker-theme-list
     exit 1
 end
 
@@ -50,7 +49,7 @@ if not test -d "$themes_dir/$theme_name"
     error "Theme '$theme_name' does not exist"
     echo ""
     echo "Available themes:"
-    $script_dir/hawker-theme-list
+    hawker-theme-list
     exit 1
 end
 
@@ -163,7 +162,7 @@ end
 # Apply terminal themes (neovim, btop theme copy)
 echo ""
 info "Applying terminal themes"
-set terminal_result ($script_dir/hawker-theme-set-terminal $theme_name)
+set terminal_result (hawker-theme-set-terminal $theme_name)
 set terminal_counts (string split ":" $terminal_result)
 set terminal_applied $terminal_counts[1]
 set terminal_skipped $terminal_counts[2]
@@ -174,7 +173,7 @@ success "Terminal themes applied"
 # Set wallpaper
 echo ""
 info "Setting wallpaper"
-$script_dir/hawker-wallpaper-set $theme_name >/dev/null 2>&1
+hawker-wallpaper-set $theme_name >/dev/null 2>&1
 success "Setting wallpaper"
 
 # Execute reload commands

@@ -2,11 +2,10 @@
 # Cycle to the previous theme in the list
 # Usage: hawker-theme-prev
 
-set script_dir (dirname (status -f))
 
 # Get all available themes (sorted) from hawker-theme-list (includes custom themes)
 set available_themes
-for theme_name in ($script_dir/hawker-theme-list)
+for theme_name in (hawker-theme-list)
     # Convert pretty name back to theme name (lowercase, spaces to dashes)
     set theme_slug (echo $theme_name | string lower | string replace -a ' ' '-')
     set -a available_themes $theme_slug

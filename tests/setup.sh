@@ -36,8 +36,23 @@ setup_test_env() {
     chmod +x "$stubs_dir/$cmd"
   done
 
-  # Stubs go FIRST in PATH so they shadow real binaries
-  export PATH="$stubs_dir:$REPO_DIR/dotfiles/scripts/.local/bin:$PATH"
+  # Create symlinks without extensions so scripts are callable by name
+  local scripts_dir="$TEST_HOME/.scripts"
+  mkdir -p "$scripts_dir"
+  for f in "$REPO_DIR"/scripts/*.fish; do
+    local name
+    name=$(basename "$f" .fish)
+    ln -s "$f" "$scripts_dir/$name"
+  done
+  for f in "$REPO_DIR"/scripts/*.sh; do
+    local name
+    name=$(basename "$f" .sh)
+    ln -s "$f" "$scripts_dir/$name"
+  done
+  chmod -R +x "$REPO_DIR/scripts/"
+
+  # Stubs go FIRST in PATH so they shadow real binaries, then scripts
+  export PATH="$stubs_dir:$scripts_dir:$PATH"
 }
 
 teardown_test_env() {

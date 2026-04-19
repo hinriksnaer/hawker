@@ -1,27 +1,26 @@
 { config, pkgs, lib, settings, ... }:
 
 let
-  # Map project names to their NixOS modules
-  projectModules = {
-    helion  = ../../projects/helion;
-    pytorch = ../../projects/pytorch;
-  };
+  # Auto-discover projects: any directory in projects/ with a default.nix
+  projectsDir = ../../projects;
+  allProjects = builtins.attrNames (
+    lib.filterAttrs (name: type:
+      type == "directory" && builtins.pathExists (projectsDir + "/${name}/default.nix")
+    ) (builtins.readDir projectsDir)
+  );
 
-  # Import modules for each enabled project
-  enabledModules = builtins.filter (m: m != null)
-    (map (p: projectModules.${p} or null) (settings.projects or []));
+  # Only import projects listed in settings.projects
+  enabledProjects = builtins.filter (p: builtins.elem p allProjects) (settings.projects or []);
+  enabledModules = map (p: projectsDir + "/${p}") enabledProjects;
 in
 {
   imports = [
-    # Base system (core packages, nix settings, locale)
     ../../modules/core/base.nix
-
-    # Terminal tools (headless -- no kitty/Wayland deps)
     ../../components/terminal-headless.nix
   ] ++ enabledModules;
 
-  # Helion backends from settings (only applies if helion module is imported)
-  helion.backends = lib.mkIf (builtins.elem "helion" (settings.projects or []))
+  # Helion backends from settings (only applies if helion is enabled)
+  helion.backends = lib.mkIf (builtins.elem "helion" enabledProjects)
     (settings.helion.backends or [ "cuda" ]);
 
   # Container-specific: no bootloader, no hardware

@@ -1,29 +1,7 @@
-#!/usr/bin/env bash
 # hawker-container - manage dev environments locally and on remote hosts
-#
-# Uses nix copy for incremental transfers + podman/docker for isolation.
-# Best of both: subsequent deploys transfer only changed Nix store paths,
-# and the container provides full process/filesystem isolation.
-#
-# Usage:
-#   hawker-container <command> [args]
-#
-# Commands:
-#   deploy <host>            Build + push + enter container on remote
-#   enter [host]             Enter container (local or remote)
-#   push <host>              Build + push without entering
-#   shell [host]             Enter nix develop shell (no container isolation)
-#   status [host]            Check Nix/GPU availability on host
-#   stop [host]              Stop running container
-
-set -euo pipefail
-
-# Resolve symlink to find the actual repo
-REAL_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
-REPO_DIR="$(cd "$(dirname "$REAL_SCRIPT")/../../../.." 2>/dev/null && pwd 2>/dev/null || echo "")"
 
 IMAGE_NAME="hawker-dev"
-FLAKE_REF="${REPO_DIR}"
+FLAKE_REF="${HAWKER_FLAKE:-$HOME/hawker}"
 
 # ── Helpers ──
 

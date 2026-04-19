@@ -2,7 +2,6 @@
 # Interactive theme selector using rofi dmenu
 # Usage: hawker-rofi-theme-select
 
-set script_dir (dirname (status -f))
 set themes_dir "$HOME/.local/share/hawker/themes"
 
 if not test -d "$themes_dir"
@@ -46,4 +45,4 @@ set theme_name (echo $selected | sed 's/^[● ] *//; s/ /-/g' | string lower)
 set pretty_name (echo $theme_name | sed 's/-/ /g; s/\b\(.\)/\u\1/g')
 
 # Apply in background
-nohup $script_dir/hawker-theme-set "$theme_name" >/dev/null 2>&1 &
+nohup hawker-theme-set "$theme_name" >/dev/null 2>&1 &
