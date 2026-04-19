@@ -58,7 +58,18 @@ pkgs.dockerTools.buildLayeredImage {
 
   contents = packages ++ [ homeDir etcDir ];
 
+  # Set file ownership at build time (Nix sandbox builds everything as root).
+  # fakeRootCommands runs in a fakeroot environment so chown works without
+  # actual root privileges. This is the Nix-native solution -- no runtime
+  # chown or entrypoint hacks needed.
+  fakeRootCommands = ''
+    chown -R 1000:1000 /home/${username}
+    chmod 1777 /tmp
+  '';
+  enableFakechroot = true;
+
   config = {
+    User = "${username}";
     Env = [
       "LANG=en_US.UTF-8"
       "TERM=xterm-256color"
@@ -73,7 +84,6 @@ pkgs.dockerTools.buildLayeredImage {
       "HAWKER_USER=${username}"
       "HAWKER_PROJECTS=${projects}"
     ];
-    User = "${username}";
     Cmd = [ "${pkgs.fish}/bin/fish" ];
     WorkingDir = "/home/${username}";
   };

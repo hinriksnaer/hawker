@@ -102,10 +102,7 @@ run_container() {
     local projects="${HAWKER_PROJECTS:-}"
     if [ -n "$projects" ]; then
         for project in ${projects//,/ }; do
-            local script="$HOME/hawker/containers/${project}-setup.sh"
-            if [ -f "$script" ] 2>/dev/null; then
-                setup_cmd+="bash ~/hawker/containers/${project}-setup.sh && "
-            fi
+            setup_cmd+="if [ -f ~/hawker/containers/${project}-setup.sh ]; then bash ~/hawker/containers/${project}-setup.sh; fi && "
         done
     fi
 
