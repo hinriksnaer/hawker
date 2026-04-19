@@ -2,6 +2,7 @@
 
 IMAGE_NAME="hawker-dev"
 FLAKE_REF="${HAWKER_FLAKE:-$HOME/hawker}"
+REPO_DIR="$FLAKE_REF"
 
 # ── Helpers ──
 
