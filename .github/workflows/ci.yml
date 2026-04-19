@@ -6,10 +6,16 @@ on:
   pull_request:
     branches: [main]
 
+# Cancel in-progress runs on the same branch (only latest commit matters)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   script-tests:
     name: Script tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -30,6 +36,8 @@ jobs:
   container-build:
     name: Container build
     runs-on: ubuntu-latest
+    timeout-minutes: 90
+    needs: script-tests
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
@@ -40,6 +48,7 @@ jobs:
   vm-integration:
     name: VM integration test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: script-tests
     steps:
       - uses: actions/checkout@v4
@@ -59,6 +68,7 @@ jobs:
   build:
     name: Build desktop config
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     needs: script-tests
     steps:
       - uses: actions/checkout@v4
