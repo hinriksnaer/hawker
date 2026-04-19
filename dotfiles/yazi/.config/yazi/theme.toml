@@ -1,6 +1,6 @@
-# Yazi Theme for Fedpunk
+# Yazi Theme for Hawker
 # Managed by hawker-theme-set - Do not edit manually
-# This file automatically switches flavors based on the active Fedpunk theme
+# This file automatically switches flavors based on the active Hawker theme
 
 [flavor]
 use = "catppuccin-mocha"

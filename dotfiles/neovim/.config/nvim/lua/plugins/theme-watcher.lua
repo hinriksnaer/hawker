@@ -1,7 +1,7 @@
 -- Automatically reload colorscheme when theme.lua changes
 -- This enables dynamic theme switching without restarting Neovim
 
--- Path to the theme configuration file (symlinked by hyprpunk-theme-set)
+-- Path to the theme configuration file (symlinked by hawker-theme-set)
 local theme_file = vim.fn.stdpath 'config' .. '/lua/plugins/theme.lua'
 
 -- Watch the theme file for changes

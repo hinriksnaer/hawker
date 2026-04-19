@@ -1,4 +1,4 @@
--- Fedpunk theme: catppuccin
+-- Hawker theme: catppuccin
 return {
   {
     "catppuccin/nvim",

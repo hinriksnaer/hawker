@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# Set Yazi flavor based on Fedpunk theme
+# Set Yazi flavor based on Hawker theme
 # Usage: set-yazi-theme <theme-name>
 
 if test (count $argv) -lt 1
@@ -40,9 +40,9 @@ set theme_file "$HOME/.config/yazi/theme.toml"
 # Create or update the flavor section in theme.toml
 # We'll create a minimal theme.toml that just sets the flavor
 printf '%s\n' \
-    '# Yazi Theme for Fedpunk' \
+    '# Yazi Theme for Hawker' \
     '# Managed by hawker-theme-set - Do not edit manually' \
-    '# This file automatically switches flavors based on the active Fedpunk theme' \
+    '# This file automatically switches flavors based on the active Hawker theme' \
     '' \
     '[flavor]' \
     "use = \"$yazi_flavor\"" \

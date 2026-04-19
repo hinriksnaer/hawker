@@ -4,7 +4,7 @@
   "position": "top",
   "spacing": 0,
   "height": 26,
-  "modules-left": ["custom/hyprpunk", "hyprland/workspaces"],
+  "modules-left": ["custom/hawker", "hyprland/workspaces"],
   "modules-center": ["clock"],
   "modules-right": [
     "group/hardware-cpu",
@@ -40,11 +40,11 @@
       "5": []
     }
   },
-  "custom/hyprpunk": {
+  "custom/hawker": {
     "format": "",
     "on-click": "rofi -show drun",
     "on-click-right": "kitty",
-    "tooltip-format": "Hyprpunk Menu\n\nSuper + Space"
+    "tooltip-format": "Hawker Menu\n\nSuper + Space"
   },
   "clock": {
     "format": "{:L%d %A %H:%M}",

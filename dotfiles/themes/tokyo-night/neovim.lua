@@ -1,4 +1,4 @@
--- Fedpunk theme: tokyo-night
+-- Hawker theme: tokyo-night
 return {
   {
     "folke/tokyonight.nvim",

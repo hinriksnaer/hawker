@@ -1,4 +1,4 @@
--- Fedpunk theme: ristretto
+-- Hawker theme: ristretto
 return {
   {
     "loctvl842/monokai-pro.nvim",

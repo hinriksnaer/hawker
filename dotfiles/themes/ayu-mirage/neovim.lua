@@ -1,4 +1,4 @@
--- Fedpunk theme: ayu-mirage
+-- Hawker theme: ayu-mirage
 return {
   {
     "Shatur/neovim-ayu",

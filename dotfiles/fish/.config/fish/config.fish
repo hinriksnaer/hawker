@@ -26,14 +26,12 @@ if command -v starship >/dev/null 2>&1
     starship init fish | source
 end
 
+# zoxide (smart cd, only load if installed)
+if command -v zoxide >/dev/null 2>&1
+    zoxide init fish | source
+end
+
 # SSH Agent (Proton Pass)
 if test -S $HOME/.ssh/proton-pass-agent.sock
     set -gx SSH_AUTH_SOCK $HOME/.ssh/proton-pass-agent.sock
-end
-
-
-
-# Source virtual environment if it exists
-if test -f ~/.venv/bin/activate.fish
-    source ~/.venv/bin/activate.fish
 end

@@ -1,4 +1,4 @@
--- Fedpunk theme: osaka-jade
+-- Hawker theme: osaka-jade
 -- Jade-inspired color palette
 return {
   {

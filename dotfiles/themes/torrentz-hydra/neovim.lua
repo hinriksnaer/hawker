@@ -1,4 +1,4 @@
--- Fedpunk theme: torrentz-hydra
+-- Hawker theme: torrentz-hydra
 -- Matches the color palette from kitty/ghostty/hyprland configs
 return {
   {

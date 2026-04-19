@@ -1,4 +1,4 @@
--- Yazi initialization script for Fedpunk
+-- Yazi initialization script for Hawker
 -- https://yazi-rs.github.io/docs/configuration/overview
 
 -- Minimal custom linemode showing only size

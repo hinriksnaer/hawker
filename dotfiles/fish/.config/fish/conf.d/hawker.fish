@@ -1,4 +1,4 @@
-# Hyprpunk environment setup
+# Hawker environment setup
 # Sets HAWKER_PATH for theme-manager and scripts to find themes and resources
 
 if test -z "$HAWKER_PATH"

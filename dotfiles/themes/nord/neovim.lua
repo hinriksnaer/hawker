@@ -1,4 +1,4 @@
--- Fedpunk theme: nord
+-- Hawker theme: nord
 return {
   {
     "EdenEast/nightfox.nvim",

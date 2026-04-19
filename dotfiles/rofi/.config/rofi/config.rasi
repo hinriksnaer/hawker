@@ -22,5 +22,5 @@ configuration {
     show-match: false;
 }
 
-// Theme is symlinked by hyprpunk-theme-set
+// Theme is symlinked by hawker-theme-set
 @theme "~/.config/rofi/theme.rasi"

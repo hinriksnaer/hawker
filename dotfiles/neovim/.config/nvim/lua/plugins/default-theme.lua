@@ -1,6 +1,6 @@
 -- Default theme configuration
--- This file sets a fallback colorscheme when no hyprpunk-theme is active
--- theme.lua (symlinked by hyprpunk-theme-set) will override this when present
+-- This file sets a fallback colorscheme when no hawker-theme is active
+-- theme.lua (symlinked by hawker-theme-set) will override this when present
 
 return {
   {

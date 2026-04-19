@@ -1,4 +1,4 @@
--- Fedpunk theme: rose-pine
+-- Hawker theme: rose-pine
 return {
   {
     "rose-pine/neovim",

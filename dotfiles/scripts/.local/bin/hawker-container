@@ -69,19 +69,19 @@ push_to() {
         echo "==> Building container on $host (remote build)..."
         ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-build-logs"
 
-        local stream_script
-        stream_script=$(ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-out-paths")
+        local image_path
+        image_path=$(ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-out-paths")
 
         echo "==> Loading image on $host..."
-        ssh "$host" "$stream_script | podman load 2>/dev/null || $stream_script | docker load"
+        ssh "$host" "podman load -i $image_path 2>/dev/null || docker load -i $image_path"
     else
-        # Fallback: build locally, stream via SSH
+        # Fallback: build locally, transfer via SSH
         echo "==> Building container locally..."
-        local stream_script
-        stream_script=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
+        local image_path
+        image_path=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
 
         echo "==> Streaming image to $host..."
-        "$stream_script" | ssh "$host" "podman load 2>&1 || docker load 2>&1"
+        cat "$image_path" | ssh "$host" "podman load 2>&1 || docker load 2>&1"
     fi
 }
 
@@ -152,10 +152,9 @@ case "${1:-help}" in
 
     run)
         # Local: build, load, run
-        local stream_script
-        stream_script=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
+        image_path=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
         echo "==> Loading $IMAGE_NAME..."
-        "$stream_script" | $(detect_runtime) load
+        $(detect_runtime) load -i "$image_path"
         echo "==> Starting $IMAGE_NAME..."
         run_container
         ;;
@@ -211,8 +210,8 @@ case "${1:-help}" in
         echo "store paths) + container runtime for isolation."
         echo ""
         echo "Examples:"
-        echo "  $0 deploy ibm-kaiba    Deploy to ibm-kaiba"
-        echo "  $0 enter ibm-kaiba     Enter existing container"
+        echo "  $0 deploy my-gpu-host   Deploy to remote host"
+        echo "  $0 enter my-gpu-host   Enter existing container"
         echo "  $0 shell               Local dev shell (no container)"
         ;;
 esac

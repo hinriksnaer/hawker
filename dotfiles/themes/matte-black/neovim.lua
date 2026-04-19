@@ -1,4 +1,4 @@
--- Fedpunk theme: matte-black
+-- Hawker theme: matte-black
 return {
   {
     "kxzk/matteblack.nvim",

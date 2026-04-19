@@ -25,5 +25,5 @@ max-icon-size=48
 # Grouping
 group-by=app-name
 
-# Theme colors (symlinked by hyprpunk-theme-set)
+# Theme colors (symlinked by hawker-theme-set)
 include=~/.config/mako/theme.conf

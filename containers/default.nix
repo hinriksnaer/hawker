@@ -52,7 +52,7 @@ HOSTS
   '';
 
 in
-pkgs.dockerTools.streamLayeredImage {
+pkgs.dockerTools.buildLayeredImage {
   inherit name;
   tag = "latest";
 
