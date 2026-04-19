@@ -44,10 +44,15 @@ with lib;
     };
 
     container = {
-      gpuPassthrough = mkOption {
-        type = types.bool;
-        default = true;
-        description = "Enable GPU passthrough in containers (--device nvidia).";
+      gpus = mkOption {
+        type = types.str;
+        default = "all";
+        description = ''
+          GPUs to pass through to containers.
+          "all" for all GPUs, "none" to disable, or a
+          comma-separated list of indices (e.g. "0,1,4").
+        '';
+        example = "4";
       };
 
       projects = mkOption {

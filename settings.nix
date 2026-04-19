@@ -21,7 +21,7 @@
 
     # ── Container settings ──
     container = {
-      gpuPassthrough = true;
+      gpus = "4";
       projects = [ "helion" "pytorch" ];
     };
 

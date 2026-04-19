@@ -49,17 +49,26 @@ run_container() {
     local env_args=(-e "TERM=xterm-256color")
     local extra_args=()
 
-    # GPU passthrough (controlled by HAWKER_GPU env var from settings)
-    if [ "${HAWKER_GPU:-true}" = "true" ]; then
-        if [ "$runtime" = "docker" ]; then
-            extra_args+=(--gpus all)
-        else
+    # GPU passthrough (controlled by HAWKER_GPUS: "all", "none", or "0,1,4")
+    local gpus="${HAWKER_GPUS:-all}"
+    if [ "$gpus" != "none" ]; then
+        # Always need the control devices
+        extra_args+=(--device /dev/nvidiactl --device /dev/nvidia-uvm --device /dev/nvidia-uvm-tools)
+        if [ "$gpus" = "all" ]; then
             if [ -d "/etc/cdi" ] || [ -d "/var/run/cdi" ]; then
                 extra_args+=(--device nvidia.com/gpu=all)
             else
-                extra_args+=(--device /dev/nvidia0 --device /dev/nvidiactl --device /dev/nvidia-uvm --device /dev/nvidia-uvm-tools)
+                for dev in /dev/nvidia[0-9]*; do
+                    [ -e "$dev" ] && extra_args+=(--device "$dev")
+                done
             fi
+        else
+            # Specific GPU indices: "4" or "0,1,4"
+            for idx in ${gpus//,/ }; do
+                extra_args+=(--device "/dev/nvidia${idx}")
+            done
         fi
+        env_args+=(-e "CUDA_VISIBLE_DEVICES=${gpus}")
     fi
 
     # Forward SSH agent socket
