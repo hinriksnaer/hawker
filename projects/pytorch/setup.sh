@@ -21,6 +21,9 @@ if [ ! -d "$VENV" ]; then
 fi
 source "$VENV/bin/activate"
 
+# Ensure pip is available (uv venv doesn't include it by default)
+uv pip install pip 2>/dev/null || true
+
 if [ ! -d "$WORKSPACE" ]; then
     echo "==> Cloning ${PYTORCH_REPO} (${PYTORCH_BRANCH})..."
     git clone --recursive --branch "${PYTORCH_BRANCH}" "${PYTORCH_REPO}" "$WORKSPACE"

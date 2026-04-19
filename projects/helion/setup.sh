@@ -20,6 +20,9 @@ if [ ! -d "$VENV" ]; then
 fi
 source "$VENV/bin/activate"
 
+# Ensure pip is available (uv venv doesn't include it by default)
+uv pip install pip 2>/dev/null || true
+
 if [ ! -d "$WORKSPACE" ]; then
     echo "==> Cloning ${HELION_REPO} (${HELION_BRANCH})..."
     git clone --branch "${HELION_BRANCH}" "${HELION_REPO}" "$WORKSPACE"
