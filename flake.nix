@@ -87,7 +87,7 @@
         containerConfig = self.nixosConfigurations.container.config;
         containerPackages = containerConfig.environment.systemPackages;
         sessionVars = containerConfig.environment.sessionVariables;
-        projects = builtins.concatStringsSep "," hawkerConfig.projects;
+        projects = builtins.concatStringsSep "," hawkerConfig.container.projects;
       in pkgs.mkShell {
         packages = containerPackages;
 

@@ -4,7 +4,7 @@ let
   # Read projects list directly from settings.nix for import decisions.
   # Can't use config.hawker.projects here -- imports can't depend on config.
   rawSettings = import ../../settings.nix { };
-  projectsList = rawSettings.hawker.projects or [];
+  projectsList = rawSettings.hawker.container.projects or [];
 
   # Auto-discover projects: any directory in projects/ with a default.nix
   projectsDir = ../../projects;

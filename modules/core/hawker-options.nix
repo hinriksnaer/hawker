@@ -43,21 +43,23 @@ with lib;
       };
     };
 
-    gpuPassthrough = mkOption {
-      type = types.bool;
-      default = true;
-      description = "Enable GPU passthrough in containers (--device nvidia).";
-    };
+    container = {
+      gpuPassthrough = mkOption {
+        type = types.bool;
+        default = true;
+        description = "Enable GPU passthrough in containers (--device nvidia).";
+      };
 
-    projects = mkOption {
-      type = types.listOf types.str;
-      default = [];
-      description = ''
-        Projects to include in the dev container. Each entry
-        must have a matching directory in projects/ with a
-        default.nix and setup.sh.
-      '';
-      example = [ "helion" "pytorch" ];
+      projects = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        description = ''
+          Projects to include in the dev container. Each entry
+          must have a matching directory in projects/ with a
+          default.nix and setup.sh.
+        '';
+        example = [ "helion" "pytorch" ];
+      };
     };
 
     helion = {

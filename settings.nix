@@ -19,9 +19,13 @@
       vertexRegion = "us-east5";
     };
 
-    # Each project handles its own dependencies.
-    projects = [ "helion" "pytorch" ];
+    # ── Container settings ──
+    container = {
+      gpuPassthrough = true;
+      projects = [ "helion" "pytorch" ];
+    };
 
+    # ── Project settings ──
     helion = {
       repo = "https://github.com/pytorch/helion.git";
       branch = "main";
