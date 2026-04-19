@@ -9,14 +9,14 @@ let
     ) (builtins.readDir projectsDir)
   );
 
-  # Only import projects listed in settings.projects
   enabledProjects = builtins.filter (p: builtins.elem p allProjects) (settings.projects or []);
   enabledModules = map (p: projectsDir + "/${p}") enabledProjects;
 in
 {
   imports = [
-    ../../modules/core/base.nix
-    ../../components/terminal-headless.nix
+    # Headless modules only (no desktop/hardware/apps)
+    ../../modules/core
+    ../../modules/terminal
   ] ++ enabledModules;
 
   # Helion backends from settings (only applies if helion is enabled)

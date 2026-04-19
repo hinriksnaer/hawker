@@ -4,20 +4,12 @@
   imports = [
     ./hardware-configuration.nix
 
-    # Base system
-    ../../modules/core/base.nix
-
-    # Components
-    ../../components/terminal.nix
-    ../../components/ui.nix
-    ../../components/apps.nix
-    ../../components/media.nix
-
-    # Hardware
-    ../../modules/hardware/nvidia.nix
-    ../../modules/hardware/networking.nix
-    ../../modules/hardware/bluetooth.nix
-    ../../modules/hardware/fancontrol.nix
+    # Module groups (each default.nix auto-imports all modules in the dir)
+    ../../modules/core
+    ../../modules/terminal
+    ../../modules/desktop
+    ../../modules/hardware
+    ../../modules/apps
   ];
 
   networking.hostName = "hawker";

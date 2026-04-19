@@ -38,17 +38,17 @@
 
       # ── Individually importable modules (auto-discovered) ──
       nixosModules =
-        # modules/<category>/*.nix
+        # Individual modules (auto-discovered from each category)
         (discoverModules ./modules/core) //
         (discoverModules ./modules/terminal) //
         (discoverModules ./modules/desktop) //
         (discoverModules ./modules/hardware) //
         (discoverModules ./modules/ai) //
         (discoverModules ./modules/apps) //
-        # projects/<name>/default.nix
-        (discoverDirs ./projects) //
-        # components/*.nix
-        (discoverModules ./components);
+        # Module groups (import a whole category via its default.nix)
+        (discoverDirs ./modules) //
+        # Projects
+        (discoverDirs ./projects);
 
       # ── Machine configurations ──
       nixosConfigurations = {
