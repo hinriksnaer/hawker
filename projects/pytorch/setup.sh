@@ -32,6 +32,10 @@ echo "==> Installing PyTorch dev dependencies..."
 uv pip install -r requirements.txt
 uv pip install pytest expecttest hypothesis pyrefly
 
+# Remove pip-installed cmake/ninja -- they shadow the Nix-provided ones
+# which are properly configured for this environment
+uv pip uninstall cmake ninja 2>/dev/null || true
+
 echo "==> Installing PyTorch in editable mode (compiles from source)..."
 echo "    This takes 30-60 minutes on first build."
 echo "    MAX_JOBS=${MAX_JOBS:-auto}"
