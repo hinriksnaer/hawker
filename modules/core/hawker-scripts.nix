@@ -34,10 +34,10 @@ in
       runtimeInputs = with pkgs; [ rsync openssh git nix coreutils ];
     })
     (mkBash "hawker-rofi-wallpaper-select" {
-      runtimeInputs = with pkgs; [ rofi-wayland swaybg findutils coreutils ];
+      runtimeInputs = with pkgs; [ rofi swaybg findutils coreutils ];
     })
     (mkBash "power-menu" {
-      runtimeInputs = with pkgs; [ rofi-wayland systemd ];
+      runtimeInputs = with pkgs; [ rofi systemd ];
     })
 
     # Fish scripts (HAWKER_PATH injected at build time)
