@@ -13,18 +13,25 @@
 
 let
   inherit (settings) username;
+  scriptsDir = ../scripts;
 
   # Mock pass-cli wrapper to verify the keyctl session pattern without
   # pulling in the unfree proton-pass-cli package.
   mock-pass-cli = pkgs.writeShellScriptBin "pass-cli" ''
     exec ${pkgs.keyutils}/bin/keyctl session - echo "pass-cli-mock: $@"
   '';
+
+  # Wrap fish scripts for the VM (same as hawker-scripts.nix does)
+  mkFish = name: pkgs.writeScriptBin name ''
+    #!${pkgs.fish}/bin/fish
+    set -gx HAWKER_PATH "/home/${username}/.local/share/hawker"
+    ${builtins.readFile "${scriptsDir}/${name}.fish"}
+  '';
 in
 pkgs.testers.nixosTest {
   name = "hawker-integration";
 
   nodes.machine = { config, pkgs, lib, ... }: {
-    # Minimal user setup (mirrors base.nix without nixpkgs.config)
     users.users.${username} = {
       isNormalUser = true;
       extraGroups = [ "wheel" ];
@@ -36,16 +43,17 @@ pkgs.testers.nixosTest {
     # gnome-keyring (mirrors proton-pass.nix without unfree dep)
     services.gnome.gnome-keyring.enable = true;
     security.pam.services.login.enableGnomeKeyring = true;
-    environment.systemPackages = [ mock-pass-cli pkgs.keyutils ];
+    environment.systemPackages = [
+      mock-pass-cli
+      pkgs.keyutils
+      (mkFish "hawker-theme-list")
+      (mkFish "hawker-theme-set-terminal")
+    ];
 
     virtualisation.memorySize = 2048;
 
-    # Deploy theme scripts and mock theme
+    # Deploy mock theme
     system.activationScripts.testSetup = ''
-      mkdir -p /home/${username}/.local/bin
-      cp -r ${../dotfiles/scripts/.local/bin}/* /home/${username}/.local/bin/
-      chmod -R +x /home/${username}/.local/bin/
-
       mkdir -p /home/${username}/.local/share/hawker/themes/test-theme/backgrounds
       echo '# test' > /home/${username}/.local/share/hawker/themes/test-theme/hyprland.conf
       echo '# test' > /home/${username}/.local/share/hawker/themes/test-theme/btop.theme
@@ -83,22 +91,12 @@ pkgs.testers.nixosTest {
     # 6. keyctl session wrapper actually works
     machine.succeed("su - ${username} -c 'pass-cli test'")
 
-    # 7. Theme list works
-    result = machine.succeed(
-        "su - ${username} -c '"
-        "export HAWKER_PATH=/home/${username}/.local/share/hawker; "
-        "export PATH=/home/${username}/.local/bin:$PATH; "
-        "fish /home/${username}/.local/bin/hawker-theme-list'"
-    )
+    # 7. Theme list works (scripts are Nix-managed, in PATH)
+    result = machine.succeed("su - ${username} -c 'hawker-theme-list'")
     assert "test-theme" in result, f"Expected test-theme in output, got: {result}"
 
     # 8. Theme set terminal works end-to-end
-    machine.succeed(
-        "su - ${username} -c '"
-        "export HAWKER_PATH=/home/${username}/.local/share/hawker; "
-        "export PATH=/home/${username}/.local/bin:$PATH; "
-        "fish /home/${username}/.local/bin/hawker-theme-set-terminal test-theme'"
-    )
+    machine.succeed("su - ${username} -c 'hawker-theme-set-terminal test-theme'")
     machine.succeed("test -L /home/${username}/.config/hawker/current/theme")
   '';
 }
