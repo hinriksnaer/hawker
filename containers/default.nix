@@ -1,14 +1,14 @@
-{ pkgs, packages, settings, name ? "hyprpunk-dev" }:
+{ pkgs, packages, settings, name ? "hawker-dev" }:
 
 let
   inherit (settings) username;
 
   repoSrc = builtins.path {
     path = ../.;
-    name = "hyprpunk-src";
+    name = "hawker-src";
   };
 
-  homeDir = pkgs.runCommand "hyprpunk-home" {
+  homeDir = pkgs.runCommand "hawker-home" {
     nativeBuildInputs = [ pkgs.stow ];
   } ''
     mkdir -p $out/tmp
@@ -33,7 +33,7 @@ HOSTS
     chmod 644 $out/home/${username}/.ssh/known_hosts
   '';
 
-  etcDir = pkgs.runCommand "hyprpunk-etc" {} ''
+  etcDir = pkgs.runCommand "hawker-etc" {} ''
     mkdir -p $out/etc/ssh
     echo "root:x:0:0:root:/root:/bin/bash" > $out/etc/passwd
     echo "${username}:x:1000:1000::/home/${username}:${pkgs.fish}/bin/fish" >> $out/etc/passwd
@@ -67,8 +67,8 @@ pkgs.dockerTools.buildLayeredImage {
       "USER=${username}"
       "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
       "NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-      "HYPRPUNK_PATH=/home/${username}/.local/share/hyprpunk"
-      "HYPRPUNK_USER=${username}"
+      "HAWKER_PATH=/home/${username}/.local/share/hawker"
+      "HAWKER_USER=${username}"
     ];
     Cmd = [ "${pkgs.fish}/bin/fish" ];
     WorkingDir = "/home/${username}";

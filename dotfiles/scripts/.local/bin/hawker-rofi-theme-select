@@ -1,9 +1,9 @@
 #!/usr/bin/env fish
 # Interactive theme selector using rofi dmenu
-# Usage: hyprpunk-rofi-theme-select
+# Usage: hawker-rofi-theme-select
 
 set script_dir (dirname (status -f))
-set themes_dir "$HOME/.local/share/hyprpunk/themes"
+set themes_dir "$HOME/.local/share/hawker/themes"
 
 if not test -d "$themes_dir"
     notify-send "Theme Selector" "Themes directory not found" -t 3000
@@ -11,10 +11,10 @@ if not test -d "$themes_dir"
 end
 
 # Get list of available themes
-set theme_list (hyprpunk-theme-list)
+set theme_list (hawker-theme-list)
 
 # Get current theme for highlighting
-set current_theme (hyprpunk-theme-current 2>/dev/null | string lower | string replace -a ' ' '-')
+set current_theme (hawker-theme-current 2>/dev/null | string lower | string replace -a ' ' '-')
 
 # Build display list with current marker and track index
 set display_list
@@ -46,4 +46,4 @@ set theme_name (echo $selected | sed 's/^[● ] *//; s/ /-/g' | string lower)
 set pretty_name (echo $theme_name | sed 's/-/ /g; s/\b\(.\)/\u\1/g')
 
 # Apply in background
-nohup $script_dir/hyprpunk-theme-set "$theme_name" >/dev/null 2>&1 &
+nohup $script_dir/hawker-theme-set "$theme_name" >/dev/null 2>&1 &

@@ -12,8 +12,8 @@ set theme_name $argv[1]
 # Find the theme map file
 if test -f "$HOME/.config/yazi/theme-map.conf"
     set theme_map "$HOME/.config/yazi/theme-map.conf"
-else if test -f "$HOME/.local/share/hyprpunk/modules/yazi/config/.config/yazi/theme-map.conf"
-    set theme_map "$HOME/.local/share/hyprpunk/modules/yazi/config/.config/yazi/theme-map.conf"
+else if test -f "$HOME/.local/share/hawker/modules/yazi/config/.config/yazi/theme-map.conf"
+    set theme_map "$HOME/.local/share/hawker/modules/yazi/config/.config/yazi/theme-map.conf"
 else
     echo "Error: theme-map.conf not found"
     exit 1
@@ -41,7 +41,7 @@ set theme_file "$HOME/.config/yazi/theme.toml"
 # We'll create a minimal theme.toml that just sets the flavor
 printf '%s\n' \
     '# Yazi Theme for Fedpunk' \
-    '# Managed by hyprpunk-theme-set - Do not edit manually' \
+    '# Managed by hawker-theme-set - Do not edit manually' \
     '# This file automatically switches flavors based on the active Fedpunk theme' \
     '' \
     '[flavor]' \

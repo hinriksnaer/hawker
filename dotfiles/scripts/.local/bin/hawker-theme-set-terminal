@@ -1,19 +1,19 @@
 #!/usr/bin/env fish
 # Set terminal-only theme components (btop, neovim)
-# Usage: hyprpunk-theme-set-terminal <theme-name>
+# Usage: hawker-theme-set-terminal <theme-name>
 # This script handles only terminal application themes
 
 if test (count $argv) -lt 1
-    echo "Usage: hyprpunk-theme-set-terminal <theme-name>"
+    echo "Usage: hawker-theme-set-terminal <theme-name>"
     exit 1
 end
 
 # Find themes directory - use active profile
-if test -n "$HYPRPUNK_PATH"; and test -d "$HYPRPUNK_PATH/themes"
-    # Using HYPRPUNK_PATH directly
-    set themes_dir "$HYPRPUNK_PATH/themes"
-else if test -n "$HYPRPUNK_USER"
-    set themes_dir "$HOME/.local/share/hyprpunk/themes"
+if test -n "$HAWKER_PATH"; and test -d "$HAWKER_PATH/themes"
+    # Using HAWKER_PATH directly
+    set themes_dir "$HAWKER_PATH/themes"
+else if test -n "$HAWKER_USER"
+    set themes_dir "$HOME/.local/share/hawker/themes"
 else
     # Try to find relative to script location (for running from repo)
     set script_dir (dirname (status -f))
@@ -36,8 +36,8 @@ set applied_count 0
 set skipped_count 0
 
 # Create theme symlink for tracking current theme
-mkdir -p ~/.config/hyprpunk/current
-ln -snf $theme_path ~/.config/hyprpunk/current/theme
+mkdir -p ~/.config/hawker/current
+ln -snf $theme_path ~/.config/hawker/current/theme
 
 # Apply btop theme (symlink works fine for btop)
 set btop_source "$theme_path/btop.theme"
@@ -63,7 +63,7 @@ end
 
 # Apply yazi theme (use flavor system)
 if command -v yazi >/dev/null 2>&1
-    set yazi_theme_script "$HOME/.local/bin/hyprpunk-set-yazi-theme"
+    set yazi_theme_script "$HOME/.local/bin/hawker-set-yazi-theme"
     if test -x "$yazi_theme_script"
         set yazi_result ($yazi_theme_script $theme_name 2>/dev/null)
         if test $status -eq 0

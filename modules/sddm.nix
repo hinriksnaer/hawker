@@ -23,7 +23,7 @@
     Inherits=Adwaita
   '';
 
-  # Override theme config with hyprpunk colors
+  # Override theme config with hawker colors
   environment.etc."sddm/themes/sddm-astronaut-theme/theme.conf.user".text = ''
     [General]
     Background="Backgrounds/cyberpunk.png"
@@ -40,7 +40,7 @@
     ForceLastUser="true"
     PasswordFocus="true"
 
-    HeaderText="HYPRPUNK"
+    HeaderText="HAWKER"
     DateFormat="dddd, MMMM d"
 
     HeaderTextColor="#FF6A1F"

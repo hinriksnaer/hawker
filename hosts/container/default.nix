@@ -15,7 +15,7 @@
   fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
 
   # Container doesn't need a display manager or desktop
-  networking.hostName = "hyprpunk-dev";
+  networking.hostName = "hawker-dev";
 
   # SSH for remote access
   environment.systemPackages = with pkgs; [

@@ -1,13 +1,13 @@
 #!/usr/bin/env fish
 # Set wallpaper from current theme (uses first wallpaper found)
-# Usage: hyprpunk-wallpaper-set [theme-name]
+# Usage: hawker-wallpaper-set [theme-name]
 # If no theme-name provided, uses current theme
 # Uses swaybg (like omarchy)
 
 # Find themes directory using active profile
-if test -n "$HYPRPUNK_PATH"; and test -d "$HYPRPUNK_PATH/themes"
-    # Using HYPRPUNK_PATH directly
-    set themes_dir "$HYPRPUNK_PATH/themes"
+if test -n "$HAWKER_PATH"; and test -d "$HAWKER_PATH/themes"
+    # Using HAWKER_PATH directly
+    set themes_dir "$HAWKER_PATH/themes"
 else
     echo "Error: Active profile not found"
     exit 1

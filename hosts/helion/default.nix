@@ -20,7 +20,7 @@
   boot.loader.grub.enable = lib.mkForce false;
   fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
 
-  networking.hostName = "hyprpunk-helion";
+  networking.hostName = "hawker-helion";
 
   environment.systemPackages = with pkgs; [
     openssh

@@ -1,13 +1,13 @@
 #!/usr/bin/env fish
 # Get the currently active theme
-# Usage: hyprpunk-theme-current
+# Usage: hawker-theme-current
 
 # Find themes directory - use active profile
-if test -n "$HYPRPUNK_PATH"; and test -d "$HYPRPUNK_PATH/themes"
-    # Using HYPRPUNK_PATH directly
-    set themes_dir "$HYPRPUNK_PATH/themes"
-else if test -n "$HYPRPUNK_USER"
-    set themes_dir "$HOME/.local/share/hyprpunk/themes"
+if test -n "$HAWKER_PATH"; and test -d "$HAWKER_PATH/themes"
+    # Using HAWKER_PATH directly
+    set themes_dir "$HAWKER_PATH/themes"
+else if test -n "$HAWKER_USER"
+    set themes_dir "$HOME/.local/share/hawker/themes"
 else
     # Try to find relative to script location (for running from repo)
     set script_dir (dirname (status -f))
@@ -32,8 +32,8 @@ if test -f "$active_theme_conf"
 end
 
 # Fallback: try the common theme symlink (works for terminal-only)
-if test -L "$HOME/.config/hyprpunk/current/theme"
-    set theme_name (basename (readlink "$HOME/.config/hyprpunk/current/theme"))
+if test -L "$HOME/.config/hawker/current/theme"
+    set theme_name (basename (readlink "$HOME/.config/hawker/current/theme"))
 
     # Verify the theme directory actually exists
     if test -d "$themes_dir/$theme_name"

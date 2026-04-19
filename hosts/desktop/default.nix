@@ -20,5 +20,5 @@
     ../../modules/fancontrol.nix
   ];
 
-  networking.hostName = "hyprpunk";
+  networking.hostName = "hawker";
 }

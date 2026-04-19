@@ -3,7 +3,7 @@
 #   1. System boots successfully
 #   2. User account is created with correct name from settings.nix
 #   3. gnome-keyring-daemon is available and PAM hooks are set
-#   4. Session variables (HYPRPUNK_USER) are set
+#   4. Session variables (HAWKER_USER) are set
 #   5. Theme engine scripts are functional
 #   6. pass-cli wrapper pattern works (keyctl session fix)
 #
@@ -31,7 +31,7 @@ pkgs.testers.nixosTest {
       shell = pkgs.fish;
     };
     programs.fish.enable = true;
-    environment.sessionVariables.HYPRPUNK_USER = username;
+    environment.sessionVariables.HAWKER_USER = username;
 
     # gnome-keyring (mirrors proton-pass.nix without unfree dep)
     services.gnome.gnome-keyring.enable = true;
@@ -46,13 +46,13 @@ pkgs.testers.nixosTest {
       cp -r ${../dotfiles/scripts/.local/bin}/* /home/${username}/.local/bin/
       chmod -R +x /home/${username}/.local/bin/
 
-      mkdir -p /home/${username}/.local/share/hyprpunk/themes/test-theme/backgrounds
-      echo '# test' > /home/${username}/.local/share/hyprpunk/themes/test-theme/hyprland.conf
-      echo '# test' > /home/${username}/.local/share/hyprpunk/themes/test-theme/btop.theme
-      touch /home/${username}/.local/share/hyprpunk/themes/test-theme/backgrounds/wall.png
+      mkdir -p /home/${username}/.local/share/hawker/themes/test-theme/backgrounds
+      echo '# test' > /home/${username}/.local/share/hawker/themes/test-theme/hyprland.conf
+      echo '# test' > /home/${username}/.local/share/hawker/themes/test-theme/btop.theme
+      touch /home/${username}/.local/share/hawker/themes/test-theme/backgrounds/wall.png
 
       mkdir -p /home/${username}/.config/hypr
-      mkdir -p /home/${username}/.config/hyprpunk/current
+      mkdir -p /home/${username}/.config/hawker/current
       mkdir -p /home/${username}/.config/btop/themes
       touch /home/${username}/.config/hypr/active-theme.conf
 
@@ -67,8 +67,8 @@ pkgs.testers.nixosTest {
     machine.succeed("id ${username}")
     machine.succeed("getent passwd ${username} | grep -q fish")
 
-    # 2. HYPRPUNK_USER session variable is configured
-    machine.succeed("grep 'HYPRPUNK_USER' /etc/set-environment")
+    # 2. HAWKER_USER session variable is configured
+    machine.succeed("grep 'HAWKER_USER' /etc/set-environment")
 
     # 3. gnome-keyring is available
     machine.succeed("which gnome-keyring-daemon")
@@ -86,19 +86,19 @@ pkgs.testers.nixosTest {
     # 7. Theme list works
     result = machine.succeed(
         "su - ${username} -c '"
-        "export HYPRPUNK_PATH=/home/${username}/.local/share/hyprpunk; "
+        "export HAWKER_PATH=/home/${username}/.local/share/hawker; "
         "export PATH=/home/${username}/.local/bin:$PATH; "
-        "fish /home/${username}/.local/bin/hyprpunk-theme-list'"
+        "fish /home/${username}/.local/bin/hawker-theme-list'"
     )
     assert "test-theme" in result, f"Expected test-theme in output, got: {result}"
 
     # 8. Theme set terminal works end-to-end
     machine.succeed(
         "su - ${username} -c '"
-        "export HYPRPUNK_PATH=/home/${username}/.local/share/hyprpunk; "
+        "export HAWKER_PATH=/home/${username}/.local/share/hawker; "
         "export PATH=/home/${username}/.local/bin:$PATH; "
-        "fish /home/${username}/.local/bin/hyprpunk-theme-set-terminal test-theme'"
+        "fish /home/${username}/.local/bin/hawker-theme-set-terminal test-theme'"
     )
-    machine.succeed("test -L /home/${username}/.config/hyprpunk/current/theme")
+    machine.succeed("test -L /home/${username}/.config/hawker/current/theme")
   '';
 }

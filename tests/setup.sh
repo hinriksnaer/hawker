@@ -8,21 +8,21 @@ REPO_DIR="${REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 setup_test_env() {
   export TEST_HOME=$(mktemp -d)
   export HOME="$TEST_HOME"
-  export HYPRPUNK_PATH="$TEST_HOME/.local/share/hyprpunk"
+  export HAWKER_PATH="$TEST_HOME/.local/share/hawker"
 
   # Mock themes
   for theme in alpha beta gamma; do
-    mkdir -p "$HYPRPUNK_PATH/themes/$theme/backgrounds"
-    echo "# $theme hyprland" > "$HYPRPUNK_PATH/themes/$theme/hyprland.conf"
-    echo "# $theme btop" > "$HYPRPUNK_PATH/themes/$theme/btop.theme"
-    touch "$HYPRPUNK_PATH/themes/$theme/backgrounds/wall1.png"
+    mkdir -p "$HAWKER_PATH/themes/$theme/backgrounds"
+    echo "# $theme hyprland" > "$HAWKER_PATH/themes/$theme/hyprland.conf"
+    echo "# $theme btop" > "$HAWKER_PATH/themes/$theme/btop.theme"
+    touch "$HAWKER_PATH/themes/$theme/backgrounds/wall1.png"
   done
-  echo '# alpha waybar' > "$HYPRPUNK_PATH/themes/alpha/waybar.css"
-  echo '# beta waybar' > "$HYPRPUNK_PATH/themes/beta/waybar.css"
+  echo '# alpha waybar' > "$HAWKER_PATH/themes/alpha/waybar.css"
+  echo '# beta waybar' > "$HAWKER_PATH/themes/beta/waybar.css"
 
   # Config directories
   mkdir -p "$HOME/.config/hypr"
-  mkdir -p "$HOME/.config/hyprpunk/current"
+  mkdir -p "$HOME/.config/hawker/current"
   mkdir -p "$HOME/.config/btop/themes"
   mkdir -p "$HOME/.config/waybar"
   touch "$HOME/.config/hypr/active-theme.conf"

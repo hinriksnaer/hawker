@@ -4,11 +4,11 @@ REPO_DIR="${REPO_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 source "$(dirname "$0")/lib.sh"
 source "$(dirname "$0")/setup.sh"
 
-echo "== hyprpunk-theme-list =="
+echo "== hawker-theme-list =="
 
 setup_test_env
 
-output=$(fish "$REPO_DIR/dotfiles/scripts/.local/bin/hyprpunk-theme-list" 2>/dev/null)
+output=$(fish "$REPO_DIR/dotfiles/scripts/.local/bin/hawker-theme-list" 2>/dev/null)
 
 assert_contains "lists alpha" "alpha" "$output"
 assert_contains "lists beta" "beta" "$output"

@@ -48,9 +48,9 @@ containers/     OCI container images (built from host configs, no Dockerfile)
 Same flake, different targets:
 
 ```bash
-hyprpunk-container build                        # dev container
-hyprpunk-container --image helion build          # Helion GPU container
-hyprpunk-container --image helion deploy ibm-kaiba  # build + push + enter
+hawker-container build                        # dev container
+hawker-container --image helion build          # Helion GPU container
+hawker-container --image helion deploy ibm-kaiba  # build + push + enter
 ```
 
 ## Themes

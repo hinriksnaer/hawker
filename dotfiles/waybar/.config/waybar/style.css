@@ -39,7 +39,7 @@ window#waybar {
   background: rgba(255, 255, 255, 0.1);
 }
 
-#custom-hyprpunk,
+#custom-hawker,
 #window,
 #clock,
 #battery,
@@ -66,7 +66,7 @@ window#waybar {
   color: @foreground;
 }
 
-#custom-hyprpunk {
+#custom-hawker {
   font-size: 14px;
   padding: 0 10px;
   margin-left: 8px;

@@ -29,7 +29,7 @@ in
   };
 
   # Expose username to scripts/dotfiles at runtime
-  environment.sessionVariables.HYPRPUNK_USER = username;
+  environment.sessionVariables.HAWKER_USER = username;
 
   security.sudo.wheelNeedsPassword = false;
 

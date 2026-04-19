@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$SCRIPT_DIR/dotfiles"
-HYPRPUNK_DATA="$HOME/.local/share/hyprpunk"
+HAWKER_DATA="$HOME/.local/share/hawker"
 
 echo "==> Deploying dotfiles via stow (--no-folding)..."
 
@@ -13,7 +13,7 @@ echo "==> Deploying dotfiles via stow (--no-folding)..."
 for dir in "$DOTFILES_DIR"/*/; do
     module=$(basename "$dir")
 
-    # themes: deployed separately to ~/.local/share/hyprpunk/themes/
+    # themes: deployed separately to ~/.local/share/hawker/themes/
     # btop: rewrites its config on exit -- copied below
     # opencode: tui.json gets rewritten by theme switcher -- copied below
     if [ "$module" = "themes" ] || [ "$module" = "rust" ] || [ "$module" = "btop" ]; then
@@ -24,13 +24,13 @@ for dir in "$DOTFILES_DIR"/*/; do
     stow -d "$DOTFILES_DIR" -t "$HOME" --no-folding --restow "$module" 2>&1 | grep -v "BUG" || true
 done
 
-# Deploy themes to ~/.local/share/hyprpunk/themes/
-echo "==> Deploying themes to $HYPRPUNK_DATA/themes/..."
-mkdir -p "$HYPRPUNK_DATA"
-if [ -L "$HYPRPUNK_DATA/themes" ]; then
-    rm "$HYPRPUNK_DATA/themes"
+# Deploy themes to ~/.local/share/hawker/themes/
+echo "==> Deploying themes to $HAWKER_DATA/themes/..."
+mkdir -p "$HAWKER_DATA"
+if [ -L "$HAWKER_DATA/themes" ]; then
+    rm "$HAWKER_DATA/themes"
 fi
-ln -snf "$DOTFILES_DIR/themes" "$HYPRPUNK_DATA/themes"
+ln -snf "$DOTFILES_DIR/themes" "$HAWKER_DATA/themes"
 
 # Copy btop config (btop rewrites its config on exit, can't be a symlink)
 echo "==> Copying btop config..."
@@ -69,7 +69,7 @@ fi
 
 # Create runtime files (not managed by stow -- written by theme switcher)
 echo "==> Creating runtime config files..."
-mkdir -p "$HOME/.config/hyprpunk/current"
+mkdir -p "$HOME/.config/hawker/current"
 mkdir -p "$HOME/.config/hypr/wallpapers"
 touch "$HOME/.config/hypr/active-theme.conf"
 touch "$HOME/.config/hypr/active-mode.conf"
@@ -102,10 +102,10 @@ if command -v yazi &>/dev/null; then
 fi
 
 # Set default theme (torrentz-hydra)
-if command -v hyprpunk-theme-set &>/dev/null && [ ! -L "$HOME/.config/hyprpunk/current/theme" ]; then
+if command -v hawker-theme-set &>/dev/null && [ ! -L "$HOME/.config/hawker/current/theme" ]; then
     echo "==> Setting default theme (torrentz-hydra)..."
-    export HYPRPUNK_PATH="$HYPRPUNK_DATA"
-    fish -c "hyprpunk-theme-set torrentz-hydra" 2>/dev/null || true
+    export HAWKER_PATH="$HAWKER_DATA"
+    fish -c "hawker-theme-set torrentz-hydra" 2>/dev/null || true
 fi
 
 echo ""

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# hyprpunk-container - manage dev containers locally and on remote hosts
+# hawker-container - manage dev containers locally and on remote hosts
 #
 # Usage:
-#   hyprpunk-container [--image NAME] <command> [args]
+#   hawker-container [--image NAME] <command> [args]
 #
 # Images:
 #   dev     (default)  NixOS terminal tools
@@ -35,11 +35,11 @@ fi
 # Set image-specific vars
 case "$IMAGE" in
     dev)
-        IMAGE_NAME="hyprpunk-dev"
+        IMAGE_NAME="hawker-dev"
         FLAKE_OUTPUT="container"
         ;;
     helion)
-        IMAGE_NAME="hyprpunk-helion"
+        IMAGE_NAME="hawker-helion"
         FLAKE_OUTPUT="helion"
         ;;
     *)
@@ -73,9 +73,9 @@ push_to() {
     IMAGE_PATH=$(nix build "$REPO_DIR#$FLAKE_OUTPUT" --no-link --print-out-paths)
     echo "==> Pushing $IMAGE_NAME to $host..."
     scp "$IMAGE_PATH" "${host}:${IMAGE_NAME}.tar.gz"
-    scp "$(readlink -f "${BASH_SOURCE[0]}")" "${host}:hyprpunk-container"
+    scp "$(readlink -f "${BASH_SOURCE[0]}")" "${host}:hawker-container"
     echo "==> Loading image on $host..."
-    ssh "$host" "chmod +x ~/hyprpunk-container && (podman load -i ~/${IMAGE_NAME}.tar.gz 2>/dev/null || docker load -i ~/${IMAGE_NAME}.tar.gz)" 2>&1 | tail -1
+    ssh "$host" "chmod +x ~/hawker-container && (podman load -i ~/${IMAGE_NAME}.tar.gz 2>/dev/null || docker load -i ~/${IMAGE_NAME}.tar.gz)" 2>&1 | tail -1
 }
 
 run_container() {
@@ -93,7 +93,7 @@ run_container() {
         env_args+=(-e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
     fi
 
-    mounts+=(-v "${IMAGE_NAME}-work:/home/${HYPRPUNK_USER:-$USER}/work")
+    mounts+=(-v "${IMAGE_NAME}-work:/home/${HAWKER_USER:-$USER}/work")
 
     # Run setup script on first entry for project containers
     local setup_cmd=""
@@ -134,7 +134,7 @@ case "${1:-help}" in
 
     enter)
         if [ $# -ge 2 ]; then
-            ssh -tt "$2" "~/hyprpunk-container --image $IMAGE run-local"
+            ssh -tt "$2" "~/hawker-container --image $IMAGE run-local"
         else
             run_container
         fi
@@ -145,7 +145,7 @@ case "${1:-help}" in
         build
         push_to "$2"
         echo "==> Entering container..."
-        ssh -tt "$2" "~/hyprpunk-container --image $IMAGE run-local"
+        ssh -tt "$2" "~/hawker-container --image $IMAGE run-local"
         ;;
 
     run-local)
@@ -169,7 +169,7 @@ case "${1:-help}" in
         ;;
 
     help|*)
-        echo "hyprpunk-container - manage dev containers"
+        echo "hawker-container - manage dev containers"
         echo ""
         echo "Images: dev (default), helion"
         echo ""

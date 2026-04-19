@@ -120,7 +120,7 @@
         helion = import ./containers/default.nix {
           inherit pkgs settings;
           packages = helionPackages;
-          name = "hyprpunk-helion";
+          name = "hawker-helion";
         };
       };
     };
