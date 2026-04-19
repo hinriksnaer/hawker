@@ -43,6 +43,7 @@ in
       CMAKE_C_COMPILER_LAUNCHER = "ccache";
       CMAKE_CXX_COMPILER_LAUNCHER = "ccache";
       CMAKE_CUDA_COMPILER_LAUNCHER = "ccache";
+      USE_PRECOMPILED_HEADERS = "1";  # upstream recommended for faster rebuilds
     };
   };
 }

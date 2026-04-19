@@ -28,18 +28,19 @@ fi
 
 cd "$WORKSPACE"
 
+# Install dev dependencies (upstream recommended method)
 echo "==> Installing PyTorch dev dependencies..."
-uv pip install -r requirements.txt
-uv pip install pytest expecttest hypothesis pyrefly
+python -m pip install --group dev
 
 # Remove pip-installed cmake/ninja -- they shadow the Nix-provided ones
 # which are properly configured for this environment
-uv pip uninstall cmake ninja 2>/dev/null || true
+python -m pip uninstall -y cmake ninja 2>/dev/null || true
 
+# Build and install PyTorch in editable mode (upstream recommended method)
 echo "==> Installing PyTorch in editable mode (compiles from source)..."
-echo "    This takes 30-60 minutes on first build."
-echo "    MAX_JOBS=${MAX_JOBS:-auto}"
-pip install --no-build-isolation -v -e .
+echo "    MAX_JOBS=${MAX_JOBS:-auto}, TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST:-auto}"
+echo "    ccache: ${CMAKE_CXX_COMPILER_LAUNCHER:-none}"
+python -m pip install --no-build-isolation -v -e .
 
 touch "$MARKER"
 echo "==> PyTorch workspace ready"
