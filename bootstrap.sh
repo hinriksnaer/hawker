@@ -107,15 +107,6 @@ touch "$HOME/.config/hypr/active-mode.conf"
 
 # ── One-time plugin installs ──
 
-# Fisher (fish plugin manager)
-if command -v fish &>/dev/null; then
-    echo "==> Installing Fisher and fish plugins..."
-    fish -c "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher" 2>/dev/null || true
-    if [ -f "$DOTFILES_DIR/fish/.config/fish/fish_plugins" ]; then
-        fish -c "fisher update" 2>/dev/null || true
-    fi
-fi
-
 # TPM (tmux plugin manager)
 TPM_DIR="$HOME/.tmux/plugins/tpm"
 if [ ! -d "$TPM_DIR" ]; then
