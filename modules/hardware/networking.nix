@@ -1,6 +1,6 @@
-{ pkgs, settings, ... }:
+{ pkgs, config, ... }:
 
 {
   networking.networkmanager.enable = true;
-  users.users.${settings.username}.extraGroups = [ "networkmanager" ];
+  users.users.${config.hawker.username}.extraGroups = [ "networkmanager" ];
 }

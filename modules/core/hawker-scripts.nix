@@ -3,11 +3,11 @@
 #
 # Source files live in scripts/ at repo root. Nix wraps them at build time
 # with runtime deps in PATH and HAWKER_PATH baked in.
-{ pkgs, settings, ... }:
+{ pkgs, config, ... }:
 
 let
   src = ../../scripts;
-  username = settings.username;
+  username = config.hawker.username;
   hawkerPath = "/home/${username}/.local/share/hawker";
 
   # Wrap a bash script with writeShellApplication (gets shellcheck + set -euo pipefail)

@@ -1,9 +1,7 @@
-{ pkgs, packages, settings, sessionVariables ? {}, name ? "hawker-dev" }:
+{ pkgs, packages, username, projects ? [], sessionVariables ? {}, name ? "hawker-dev" }:
 
 let
-  inherit (settings) username;
-
-  projects = builtins.concatStringsSep "," (settings.projects or []);
+  projectsStr = builtins.concatStringsSep "," projects;
 
   # Convert NixOS sessionVariables attrset to Docker Env list format
   sessionEnv = pkgs.lib.mapAttrsToList (k: v: "${k}=${v}") sessionVariables;
@@ -75,7 +73,7 @@ pkgs.dockerTools.streamLayeredImage {
       "NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
       "HAWKER_PATH=/home/${username}/.local/share/hawker"
       "HAWKER_USER=${username}"
-      "HAWKER_PROJECTS=${projects}"
+      "HAWKER_PROJECTS=${projectsStr}"
     ] ++ sessionEnv;
     Cmd = [ "${pkgs.fish}/bin/fish" ];
     WorkingDir = "/home/${username}";

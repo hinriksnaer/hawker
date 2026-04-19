@@ -1,4 +1,4 @@
-{ pkgs, config, lib, settings, ... }:
+{ pkgs, config, lib, ... }:
 
 let
   hasNvidia = config.hardware.nvidia.modesetting.enable or false;
@@ -12,7 +12,7 @@ let
     })
   else
     pkgs.btop;
-  username = settings.username;
+  username = config.hawker.username;
 in
 {
   environment.systemPackages = [ btop-pkg ];

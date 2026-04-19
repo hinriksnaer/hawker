@@ -1,7 +1,7 @@
-{ pkgs, lib, config, settings, ... }:
+{ pkgs, lib, config, ... }:
 
 let
-  pytorchSettings = settings.pytorch or {};
+  pc = config.hawker.pytorch;
   nccl = pkgs.cudaPackages.nccl;
 in
 {
@@ -26,8 +26,8 @@ in
     ];
 
     environment.sessionVariables = {
-      PYTORCH_REPO = pytorchSettings.repo or "https://github.com/pytorch/pytorch.git";
-      PYTORCH_BRANCH = pytorchSettings.branch or "main";
+      PYTORCH_REPO = pc.repo;
+      PYTORCH_BRANCH = pc.branch;
       NCCL_ROOT = "${nccl}";
       NCCL_INCLUDE_DIR = "${nccl.dev}/include";
       NCCL_LIB_DIR = "${nccl}/lib";
@@ -43,7 +43,7 @@ in
       CMAKE_C_COMPILER_LAUNCHER = "ccache";
       CMAKE_CXX_COMPILER_LAUNCHER = "ccache";
       CMAKE_CUDA_COMPILER_LAUNCHER = "ccache";
-      CCACHE_DIR = "/home/${settings.username}/.cache/ccache";
+      CCACHE_DIR = "/home/${config.hawker.username}/.cache/ccache";
       CCACHE_MAXSIZE = "25G";
       USE_PRECOMPILED_HEADERS = "1";  # upstream recommended for faster rebuilds
     };

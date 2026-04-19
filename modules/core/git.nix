@@ -1,23 +1,19 @@
-# Git configuration -- generates .gitconfig from settings.nix
-# Replaces the bootstrap.sh git config generation.
-{ pkgs, settings, ... }:
+# Git configuration -- generates .gitconfig from hawker options.
+{ pkgs, config, ... }:
 
 let
-  gitSettings = settings.git or {};
-  name = gitSettings.name or "user";
-  email = gitSettings.email or "user@localhost";
+  cfg = config.hawker;
 in
 {
   environment.systemPackages = [ pkgs.git ];
 
-  # Generate .gitconfig for the user via activation script
   system.activationScripts.gitconfig = ''
-    GITCONFIG="/home/${settings.username}/.gitconfig"
+    GITCONFIG="/home/${cfg.username}/.gitconfig"
     if [ ! -f "$GITCONFIG" ]; then
       cat > "$GITCONFIG" <<'EOF'
 [user]
-    name = ${name}
-    email = ${email}
+    name = ${cfg.git.name}
+    email = ${cfg.git.email}
 
 [core]
     editor = nvim
@@ -28,7 +24,7 @@ in
 [pull]
     rebase = false
 EOF
-      chown ${settings.username}:users "$GITCONFIG"
+      chown ${cfg.username}:users "$GITCONFIG"
     fi
   '';
 }

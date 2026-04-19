@@ -11,9 +11,13 @@
       pkgs = nixpkgs.legacyPackages.${system};
       lib = nixpkgs.lib;
 
-      settings = import ./settings.nix;
+      # Common modules: options + user settings (imported by all machine configs)
+      commonModules = [
+        ./modules/core/hawker-options.nix
+        ./settings.nix
+      ];
 
-      # Auto-discover .nix files from a directory, returning { name = import path; }
+      # Auto-discover .nix files from a directory
       discoverModules = dir:
         lib.mapAttrs'
           (name: _: lib.nameValuePair
@@ -25,7 +29,7 @@
             (builtins.readDir dir)
           );
 
-      # Auto-discover directories with default.nix (for projects)
+      # Auto-discover directories with default.nix
       discoverDirs = dir:
         lib.mapAttrs'
           (name: _: lib.nameValuePair name (import (dir + "/${name}")))
@@ -34,36 +38,34 @@
             (builtins.readDir dir)
           );
 
+      # Access hawker config from a nixosConfiguration
+      hawkerConfig = self.nixosConfigurations.container.config.hawker;
+
     in {
 
       # ── Individually importable modules (auto-discovered) ──
       nixosModules =
-        # Individual modules (auto-discovered from each category)
         (discoverModules ./modules/core) //
         (discoverModules ./modules/terminal) //
         (discoverModules ./modules/desktop) //
         (discoverModules ./modules/hardware) //
         (discoverModules ./modules/ai) //
         (discoverModules ./modules/apps) //
-        # Module groups (import a whole category via its default.nix)
         (discoverDirs ./modules) //
-        # Projects
         (discoverDirs ./projects);
 
       # ── Machine configurations ──
       nixosConfigurations = {
         desktop = nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = { inherit settings; };
-          modules = [
+          modules = commonModules ++ [
             ./hosts/desktop/default.nix
           ];
         };
 
         container = nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = { inherit settings; };
-          modules = [
+          modules = commonModules ++ [
             ./hosts/container/default.nix
           ];
         };
@@ -73,7 +75,10 @@
       checks.${system} = let
         scriptTests = import ./tests { inherit pkgs; src = self; };
       in scriptTests // {
-        vm-integration = import ./tests/vm-test.nix { inherit pkgs settings; };
+        vm-integration = import ./tests/vm-test.nix {
+          inherit pkgs;
+          hawkerConfig = self.nixosConfigurations.desktop.config.hawker;
+        };
         container-build = self.packages.${system}.container;
       };
 
@@ -82,13 +87,13 @@
         containerConfig = self.nixosConfigurations.container.config;
         containerPackages = containerConfig.environment.systemPackages;
         sessionVars = containerConfig.environment.sessionVariables;
-        projects = builtins.concatStringsSep "," (settings.projects or []);
+        projects = builtins.concatStringsSep "," hawkerConfig.projects;
       in pkgs.mkShell {
         packages = containerPackages;
 
         shellHook = ''
           export HAWKER_PATH="$HOME/.local/share/hawker"
-          export HAWKER_USER="${settings.username}"
+          export HAWKER_USER="${hawkerConfig.username}"
           export HAWKER_PROJECTS="${projects}"
 
           ${builtins.concatStringsSep "\n" (
@@ -115,7 +120,8 @@
         containerSessionVars = containerConfig.environment.sessionVariables;
       in {
         container = import ./containers/default.nix {
-          inherit pkgs settings;
+          inherit pkgs;
+          inherit (hawkerConfig) username projects;
           packages = containerPackages;
           sessionVariables = containerSessionVars;
         };

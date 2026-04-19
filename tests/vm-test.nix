@@ -9,10 +9,10 @@
 #
 # Run: nix build .#checks.x86_64-linux.vm-integration --print-build-logs
 # Requires KVM (won't work in unprivileged containers).
-{ pkgs, settings }:
+{ pkgs, hawkerConfig }:
 
 let
-  inherit (settings) username;
+  username = hawkerConfig.username;
   scriptsDir = ../scripts;
 
   # Mock pass-cli wrapper to verify the keyctl session pattern without

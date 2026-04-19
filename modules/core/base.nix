@@ -1,7 +1,7 @@
-{ config, pkgs, lib, settings, ... }:
+{ config, pkgs, lib, ... }:
 
 let
-  inherit (settings) username;
+  inherit (config.hawker) username;
 in
 {
   # ── Nix settings ──

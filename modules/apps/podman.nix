@@ -1,4 +1,4 @@
-{ pkgs, settings, ... }:
+{ pkgs, config, ... }:
 
 {
   virtualisation.podman = {
@@ -10,7 +10,7 @@
   # Rootless podman
   security.unprivilegedUsernsClone = true;
 
-  users.users.${settings.username}.extraGroups = [ "podman" ];
+  users.users.${config.hawker.username}.extraGroups = [ "podman" ];
 
   environment.systemPackages = with pkgs; [
     podman-compose

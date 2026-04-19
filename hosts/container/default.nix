@@ -1,6 +1,11 @@
-{ config, pkgs, lib, settings, ... }:
+{ config, pkgs, lib, ... }:
 
 let
+  # Read projects list directly from settings.nix for import decisions.
+  # Can't use config.hawker.projects here -- imports can't depend on config.
+  rawSettings = import ../../settings.nix { };
+  projectsList = rawSettings.hawker.projects or [];
+
   # Auto-discover projects: any directory in projects/ with a default.nix
   projectsDir = ../../projects;
   allProjects = builtins.attrNames (
@@ -9,19 +14,14 @@ let
     ) (builtins.readDir projectsDir)
   );
 
-  enabledProjects = builtins.filter (p: builtins.elem p allProjects) (settings.projects or []);
+  enabledProjects = builtins.filter (p: builtins.elem p allProjects) projectsList;
   enabledModules = map (p: projectsDir + "/${p}") enabledProjects;
 in
 {
   imports = [
-    # Headless modules only (no desktop/hardware/apps)
     ../../modules/core
     ../../modules/terminal
   ] ++ enabledModules;
-
-  # Helion backends from settings (only applies if helion is enabled)
-  helion.backends = lib.mkIf (builtins.elem "helion" enabledProjects)
-    (settings.helion.backends or [ "cuda" ]);
 
   # Container-specific: no bootloader, no hardware
   boot.loader.systemd-boot.enable = lib.mkForce false;

@@ -1,9 +1,8 @@
-{ pkgs, lib, config, settings, ... }:
+{ pkgs, lib, config, ... }:
 
 let
-  cfg = config.helion;
-  helionSettings = settings.helion or {};
-  has = backend: builtins.elem backend cfg.backends;
+  hc = config.hawker.helion;
+  has = backend: builtins.elem backend hc.backends;
 
   backendPackages = {
     cuda = [];
@@ -14,18 +13,10 @@ let
     lib.optional (has "cute") "cute-cu12"
   );
 
-  selectedPackages = lib.concatMap (b: backendPackages.${b} or []) cfg.backends;
+  selectedPackages = lib.concatMap (b: backendPackages.${b} or []) hc.backends;
 in
 {
   imports = [ ../../modules/ai/cuda-dev.nix ];
-
-  options.helion = {
-    backends = lib.mkOption {
-      type = lib.types.listOf (lib.types.enum [ "cuda" "cute" ]);
-      default = [ "cuda" ];
-      description = "Hardware backends to enable (not mutually exclusive)";
-    };
-  };
 
   config = {
     environment.systemPackages = with pkgs; [
@@ -33,10 +24,10 @@ in
     ] ++ selectedPackages;
 
     environment.sessionVariables = {
-      HELION_REPO = helionSettings.repo or "https://github.com/pytorch/helion.git";
-      HELION_BRANCH = helionSettings.branch or "main";
-      HELION_TORCH_INDEX = helionSettings.torchIndex or "nightly/cu130";
-      HELION_BACKENDS = builtins.concatStringsSep "," cfg.backends;
+      HELION_REPO = hc.repo;
+      HELION_BRANCH = hc.branch;
+      HELION_TORCH_INDEX = hc.torchIndex;
+      HELION_BACKENDS = builtins.concatStringsSep "," hc.backends;
       HELION_PIP_EXTRAS = if pipExtras != "" then "[${pipExtras}]" else "";
     };
   };
