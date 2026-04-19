@@ -23,7 +23,8 @@
   # Projects to include in the dev container.
   # Each entry pulls in project-specific packages and setup scripts.
   # Available: "helion", "pytorch"
-  projects = [ "helion" "pytorch" ];
+  # Order matters: pytorch builds torch from source, helion depends on it.
+  projects = [ "pytorch" "helion" ];
 
   # Helion configuration
   helion = {

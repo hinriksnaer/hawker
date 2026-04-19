@@ -27,10 +27,15 @@ fi
 
 cd "$WORKSPACE"
 
-echo "==> Installing PyTorch (${HELION_TORCH_INDEX})..."
-uv pip install --pre torch triton \
-    --index-url "https://download.pytorch.org/whl/${HELION_TORCH_INDEX}" \
-    --extra-index-url https://pypi.org/simple
+# Install torch if not already present (pytorch project builds from source)
+if ! python -c "import torch" 2>/dev/null; then
+    echo "==> Installing PyTorch from nightly (${HELION_TORCH_INDEX})..."
+    uv pip install --pre torch triton \
+        --index-url "https://download.pytorch.org/whl/${HELION_TORCH_INDEX}" \
+        --extra-index-url https://pypi.org/simple
+else
+    echo "==> PyTorch already installed ($(python -c 'import torch; print(torch.__version__)'))"
+fi
 
 EXTRAS="dev"
 if [ -n "${HELION_PIP_EXTRAS:-}" ]; then
