@@ -1,6 +1,3 @@
-# PATH
-fish_add_path -g $HOME/.local/bin
-
 # History
 set -g fish_history_size 10000
 
