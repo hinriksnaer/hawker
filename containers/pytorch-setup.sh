@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # PyTorch workspace setup -- runs once on first container entry
 # Config: containers/pytorch/config.sh
+# Follows upstream CONTRIBUTING.md install instructions.
 
 set -euo pipefail
 
@@ -32,14 +33,13 @@ fi
 
 cd "$WORKSPACE"
 
-echo "==> Installing PyTorch build dependencies..."
-uv pip install -r requirements.txt
+echo "==> Installing PyTorch dev dependencies..."
+pip install --group dev
 
-echo "==> Installing PyTorch in editable mode (this will compile from source)..."
+echo "==> Installing PyTorch in editable mode (compiles from source)..."
 echo "    This takes 30-60 minutes on first build."
-python setup.py develop
-
-uv pip install pytest expecttest hypothesis
+echo "    Set MAX_JOBS to control parallelism."
+python -m pip install --no-build-isolation -v -e .
 
 touch "$MARKER"
 echo "==> PyTorch workspace ready"
