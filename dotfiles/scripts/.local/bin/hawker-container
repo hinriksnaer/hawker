@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 # hawker-container - manage dev environments locally and on remote hosts
 #
-# Uses Nix natively when available (incremental deploys via nix copy),
-# falls back to container streaming for hosts without Nix.
+# Uses nix copy for incremental transfers + podman/docker for isolation.
+# Best of both: subsequent deploys transfer only changed Nix store paths,
+# and the container provides full process/filesystem isolation.
 #
 # Usage:
 #   hawker-container <command> [args]
 #
 # Commands:
-#   deploy <host>            Sync repo + Nix closure to remote, enter dev shell
-#   enter [host]             Enter dev shell (local or remote)
-#   push <host>              Sync repo + Nix closure without entering
-#   status [host]            Check Nix availability on host
-#
-# Container fallback (for hosts without Nix):
-#   container-deploy <host>  Build + stream container image + enter
-#   container-run             Build + run container locally
+#   deploy <host>            Build + push + enter container on remote
+#   enter [host]             Enter container (local or remote)
+#   push <host>              Build + push without entering
+#   shell [host]             Enter nix develop shell (no container isolation)
+#   status [host]            Check Nix/GPU availability on host
+#   stop [host]              Stop running container
 
 set -euo pipefail
 
@@ -24,36 +23,9 @@ REAL_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURC
 REPO_DIR="$(cd "$(dirname "$REAL_SCRIPT")/../../.." 2>/dev/null && pwd 2>/dev/null || echo "")"
 
 IMAGE_NAME="hawker-dev"
-FLAKE_OUTPUT="container"
 FLAKE_REF="${REPO_DIR}"
 
-# ── Nix-native helpers ──
-
-push_nix() {
-    local host="$1"
-
-    echo "==> Syncing repo to $host..."
-    rsync -a --delete --exclude='.git' --chmod=Du+rwx,Fu+rw \
-        "$REPO_DIR/" "${host}:~/hawker/"
-
-    echo "==> Building dev shell..."
-    nix build "${FLAKE_REF}#devShells.x86_64-linux.default" --no-link
-
-    echo "==> Copying Nix closure to $host (only changed paths)..."
-    nix copy --to "ssh://$host" "${FLAKE_REF}#devShells.x86_64-linux.default"
-}
-
-enter_remote() {
-    local host="$1"
-    ssh -A -tt "$host" "cd ~/hawker && nix develop --command fish"
-}
-
-enter_local() {
-    cd "$REPO_DIR"
-    exec nix develop --command fish
-}
-
-# ── Container fallback helpers ──
+# ── Helpers ──
 
 detect_runtime() {
     if command -v podman &>/dev/null; then
@@ -81,15 +53,27 @@ detect_gpu_flags() {
     fi
 }
 
-container_push() {
+push_to() {
     local host="$1"
-    STREAM_SCRIPT=$(nix build "${REPO_DIR}#${FLAKE_OUTPUT}" --no-link --print-out-paths)
-    rsync --chmod=u+rwx "$(readlink -f "${BASH_SOURCE[0]}")" "${host}:hawker-container"
-    echo "==> Streaming $IMAGE_NAME to $host..."
-    "$STREAM_SCRIPT" | ssh "$host" "podman load 2>&1 || docker load 2>&1"
+
+    echo "==> Syncing repo to $host..."
+    rsync -a --delete --exclude='.git' --chmod=Du+rwx,Fu+rw \
+        "$REPO_DIR/" "${host}:~/hawker/"
+
+    echo "==> Building container image..."
+    local stream_script
+    stream_script=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
+
+    echo "==> Copying Nix closure to $host (incremental)..."
+    nix copy --to "ssh://$host" "${FLAKE_REF}#container"
+
+    # Load the image into podman/docker on the remote using the stream script
+    # that's now in the remote's Nix store
+    echo "==> Loading image on $host..."
+    ssh "$host" "$stream_script | podman load 2>&1 || $stream_script | docker load 2>&1"
 }
 
-container_run() {
+run_container() {
     local runtime
     runtime=$(detect_runtime)
 
@@ -99,6 +83,7 @@ container_run() {
     local env_args=(-e "TERM=xterm-256color")
     local extra_args=()
 
+    # GPU passthrough
     local gpu_flags
     gpu_flags=$(detect_gpu_flags "$runtime")
     if [ -n "$gpu_flags" ]; then
@@ -106,13 +91,16 @@ container_run() {
         extra_args+=($gpu_flags)
     fi
 
+    # Forward SSH agent socket
     if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
         mounts+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock")
         env_args+=(-e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
     fi
 
+    # Persistent work volume
     mounts+=(-v "${IMAGE_NAME}-work:/home/${HAWKER_USER:-$USER}/work")
 
+    # Run project setup scripts on entry (idempotent)
     local setup_cmd=""
     local projects="${HAWKER_PROJECTS:-}"
     if [ -n "$projects" ]; then
@@ -136,23 +124,47 @@ container_run() {
 case "${1:-help}" in
     deploy)
         [ $# -lt 2 ] && echo "Usage: $0 deploy <host>" && exit 1
-        push_nix "$2"
-        echo "==> Entering dev shell..."
-        enter_remote "$2"
+        push_to "$2"
+        echo "==> Entering container..."
+        ssh -A -tt "$2" "~/hawker/dotfiles/scripts/.local/bin/hawker-container run-local"
         ;;
 
     enter)
         if [ $# -ge 2 ]; then
-            enter_remote "$2"
+            ssh -A -tt "$2" "~/hawker/dotfiles/scripts/.local/bin/hawker-container run-local"
         else
-            enter_local
+            run_container
         fi
         ;;
 
     push)
         [ $# -lt 2 ] && echo "Usage: $0 push <host>" && exit 1
-        push_nix "$2"
+        push_to "$2"
         echo "==> Done. Enter with: $0 enter $2"
+        ;;
+
+    run)
+        # Local: build, load, run
+        local stream_script
+        stream_script=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
+        echo "==> Loading $IMAGE_NAME..."
+        "$stream_script" | $(detect_runtime) load
+        echo "==> Starting $IMAGE_NAME..."
+        run_container
+        ;;
+
+    shell)
+        # Native nix develop (no container isolation)
+        if [ $# -ge 2 ]; then
+            ssh -A -tt "$2" "cd ~/hawker && nix develop --command fish"
+        else
+            cd "$REPO_DIR"
+            exec nix develop --command fish
+        fi
+        ;;
+
+    run-local)
+        run_container
         ;;
 
     status)
@@ -168,40 +180,32 @@ case "${1:-help}" in
         fi
         ;;
 
-    # ── Container fallback ──
-
-    container-deploy)
-        [ $# -lt 2 ] && echo "Usage: $0 container-deploy <host>" && exit 1
-        container_push "$2"
-        echo "==> Entering container..."
-        ssh -A -tt "$2" "~/hawker-container container-run"
-        ;;
-
-    container-run)
-        container_run
-        ;;
-
-    run-local)
-        # Backwards compat: remote hosts may still have old hawker-container
-        container_run
+    stop)
+        if [ $# -ge 2 ]; then
+            ssh "$2" "podman stop $IMAGE_NAME 2>/dev/null || docker stop $IMAGE_NAME 2>/dev/null"
+        else
+            podman stop "$IMAGE_NAME" 2>/dev/null || docker stop "$IMAGE_NAME" 2>/dev/null
+        fi
         ;;
 
     help|*)
         echo "hawker-container - manage dev environments"
         echo ""
-        echo "Nix-native (preferred):"
-        echo "  $0 deploy <host>          Sync + enter dev shell on remote"
-        echo "  $0 enter [host]           Enter dev shell (local or remote)"
-        echo "  $0 push <host>            Sync without entering"
-        echo "  $0 status [host]          Check Nix/GPU availability"
+        echo "Commands:"
+        echo "  $0 deploy <host>       Build + push + enter container on remote"
+        echo "  $0 enter [host]        Enter container (local or remote)"
+        echo "  $0 push <host>         Build + push without entering"
+        echo "  $0 run                 Build + run container locally"
+        echo "  $0 shell [host]        Enter nix develop shell (no isolation)"
+        echo "  $0 status [host]       Check Nix/GPU availability"
+        echo "  $0 stop [host]         Stop running container"
         echo ""
-        echo "Container fallback (hosts without Nix):"
-        echo "  $0 container-deploy <host> Stream container image + enter"
-        echo "  $0 container-run           Run container locally"
+        echo "Deploy uses nix copy for incremental transfers (only changed"
+        echo "store paths) + container runtime for isolation."
         echo ""
         echo "Examples:"
-        echo "  $0 deploy ibm-kaiba       Deploy to ibm-kaiba via Nix"
-        echo "  $0 enter ibm-kaiba        Enter existing dev shell"
-        echo "  $0 enter                  Enter local dev shell"
+        echo "  $0 deploy ibm-kaiba    Deploy to ibm-kaiba"
+        echo "  $0 enter ibm-kaiba     Enter existing container"
+        echo "  $0 shell               Local dev shell (no container)"
         ;;
 esac
