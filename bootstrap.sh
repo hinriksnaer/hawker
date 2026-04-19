@@ -51,6 +51,22 @@ done
 echo "==> Copying opencode tui.json..."
 echo '{"$schema":"https://opencode.ai/tui.json","theme":"torrentz-hydra"}' > "$HOME/.config/opencode/tui.json"
 
+# SSH config -- points at external drive keys (not stored in repo)
+echo "==> Setting up SSH config..."
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+if [ ! -f "$HOME/.ssh/config" ]; then
+    cat > "$HOME/.ssh/config" <<'EOF'
+# SSH keys and host configs from external drive (GAMES)
+Include /mnt/games/.ssh/config
+
+# Override identity file path to point at the drive
+Host *
+    IdentityFile /mnt/games/.ssh/id_ed25519
+EOF
+    chmod 600 "$HOME/.ssh/config"
+fi
+
 # Create runtime files (not managed by stow -- written by theme switcher)
 echo "==> Creating runtime config files..."
 mkdir -p "$HOME/.config/hyprpunk/current"
