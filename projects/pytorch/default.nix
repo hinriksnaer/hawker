@@ -19,7 +19,6 @@ in
 
       # Build acceleration (upstream recommended)
       ccache
-      mold
 
       python3Packages.pyyaml
       python3Packages.typing-extensions
@@ -44,7 +43,6 @@ in
       CMAKE_C_COMPILER_LAUNCHER = "ccache";
       CMAKE_CXX_COMPILER_LAUNCHER = "ccache";
       CMAKE_CUDA_COMPILER_LAUNCHER = "ccache";
-      CMAKE_LINKER_TYPE = "MOLD";
     };
   };
 }
