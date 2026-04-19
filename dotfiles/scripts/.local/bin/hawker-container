@@ -64,11 +64,10 @@ push_to() {
     local host="$1"
     IMAGE_PATH=$(nix build "${REPO_DIR}#${FLAKE_OUTPUT}" --no-link --print-out-paths)
     echo "==> Pushing $IMAGE_NAME to $host..."
-    ssh "$host" "rm -f ~/${IMAGE_NAME}.tar.gz ~/hawker-container"
-    scp "$IMAGE_PATH" "${host}:${IMAGE_NAME}.tar.gz"
-    scp "$(readlink -f "${BASH_SOURCE[0]}")" "${host}:hawker-container"
+    rsync --progress --chmod=u+rw "$IMAGE_PATH" "${host}:${IMAGE_NAME}.tar.gz"
+    rsync --chmod=u+rwx "$(readlink -f "${BASH_SOURCE[0]}")" "${host}:hawker-container"
     echo "==> Loading image on $host..."
-    ssh "$host" "chmod +x ~/hawker-container && (podman load -i ~/${IMAGE_NAME}.tar.gz 2>/dev/null || docker load -i ~/${IMAGE_NAME}.tar.gz)" 2>&1 | tail -1
+    ssh "$host" "(podman load -i ~/${IMAGE_NAME}.tar.gz 2>/dev/null || docker load -i ~/${IMAGE_NAME}.tar.gz)" 2>&1 | tail -1
 }
 
 run_container() {
