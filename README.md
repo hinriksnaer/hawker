@@ -50,16 +50,16 @@ Deploy to any remote host with podman/docker. If the remote has Nix installed, b
 
 ```bash
 # Deploy to a remote GPU host
-hawker-container deploy ibm-kaiba
+hawker-container deploy my-gpu-host
 
 # Enter an existing deployment
-hawker-container enter ibm-kaiba
+hawker-container enter my-gpu-host
 
 # Native nix shell (no container isolation)
-hawker-container shell ibm-kaiba
+hawker-container shell my-gpu-host
 
 # Check what a remote host has
-hawker-container status ibm-kaiba
+hawker-container status my-gpu-host
 ```
 
 ### How it works
@@ -72,8 +72,8 @@ hawker-container status ibm-kaiba
 ### Installing Nix on a remote host (optional, speeds up deploys)
 
 ```bash
-ssh ibm-kaiba "curl -L https://nixos.org/nix/install | sh -s -- --no-daemon"
-ssh ibm-kaiba "mkdir -p ~/.config/nix && echo 'experimental-features = nix-command flakes' > ~/.config/nix/nix.conf"
+ssh my-gpu-host "curl -L https://nixos.org/nix/install | sh -s -- --no-daemon"
+ssh my-gpu-host "mkdir -p ~/.config/nix && echo 'experimental-features = nix-command flakes' > ~/.config/nix/nix.conf"
 ```
 
 ### Container layout
