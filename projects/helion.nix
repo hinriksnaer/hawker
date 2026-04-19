@@ -18,7 +18,7 @@ let
   selectedPackages = lib.concatMap (b: backendPackages.${b} or []) cfg.backends;
 in
 {
-  imports = [ ./cuda-dev.nix ];
+  imports = [ ../modules/cuda-dev.nix ];
 
   options.helion = {
     backends = lib.mkOption {

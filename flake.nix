@@ -59,6 +59,9 @@
         networking  = import ./modules/networking.nix;
         fancontrol  = import ./modules/fancontrol.nix;
 
+        # AI/ML infrastructure
+        cuda-dev    = import ./modules/cuda-dev.nix;
+
         # Projects
         helion      = import ./projects/helion.nix;
         pytorch     = import ./projects/pytorch.nix;
