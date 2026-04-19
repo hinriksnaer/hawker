@@ -4,6 +4,19 @@
 {
   username = "hawker";
 
+  # Git identity (used by .gitconfig)
+  git = {
+    name = "hinriksnaer";
+    email = "hgudmund@redhat.com";
+  };
+
+  # OpenCode / Vertex AI configuration
+  # Set to {} to disable Vertex AI integration.
+  opencode = {
+    vertexProject = "itpc-gcp-ai-eng-claude";
+    vertexRegion = "us-east5";
+  };
+
   # Projects to include in the dev container.
   # Each entry pulls in project-specific packages and setup scripts.
   # Available: "helion", "pytorch"

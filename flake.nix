@@ -31,6 +31,7 @@
         lazygit     = import ./modules/terminal/lazygit.nix;
         yazi        = import ./modules/terminal/yazi.nix;
         gh          = import ./modules/terminal/gh.nix;
+        opencode    = import ./modules/terminal/opencode.nix;
 
         # Desktop
         hyprland    = import ./modules/desktop/hyprland.nix;

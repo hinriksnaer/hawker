@@ -16,7 +16,8 @@ for dir in "$DOTFILES_DIR"/*/; do
     # themes: deployed separately to ~/.local/share/hawker/themes/
     # btop: rewrites its config on exit -- copied below
     # opencode: tui.json gets rewritten by theme switcher -- copied below
-    if [ "$module" = "themes" ] || [ "$module" = "rust" ] || [ "$module" = "btop" ]; then
+    # git: generated from settings.nix values below, not stowed
+    if [ "$module" = "themes" ] || [ "$module" = "rust" ] || [ "$module" = "btop" ] || [ "$module" = "git" ]; then
         continue
     fi
 
@@ -50,6 +51,33 @@ done
 # Copy opencode tui.json (theme switcher rewrites it, can't be a symlink)
 echo "==> Copying opencode tui.json..."
 echo '{"$schema":"https://opencode.ai/tui.json","theme":"torrentz-hydra"}' > "$HOME/.config/opencode/tui.json"
+
+# Git config -- generated from settings.nix if nix is available, else uses defaults
+echo "==> Setting up git config..."
+if [ ! -f "$HOME/.gitconfig" ]; then
+    GIT_NAME=""
+    GIT_EMAIL=""
+    if command -v nix >/dev/null 2>&1 && [ -f "$SCRIPT_DIR/settings.nix" ]; then
+        GIT_NAME=$(nix eval --raw --file "$SCRIPT_DIR/settings.nix" git.name 2>/dev/null || true)
+        GIT_EMAIL=$(nix eval --raw --file "$SCRIPT_DIR/settings.nix" git.email 2>/dev/null || true)
+    fi
+    GIT_NAME="${GIT_NAME:-$(whoami)}"
+    GIT_EMAIL="${GIT_EMAIL:-$(whoami)@$(hostname)}"
+    cat > "$HOME/.gitconfig" <<EOF
+[user]
+    name = $GIT_NAME
+    email = $GIT_EMAIL
+
+[core]
+    editor = nvim
+
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = false
+EOF
+fi
 
 # SSH config -- points at external drive keys (not stored in repo).
 # Only created on the desktop (where /mnt/games exists), not in containers.
