@@ -83,7 +83,16 @@ run_container() {
 
     # Project setup runs inside the container where HAWKER_PROJECTS is set.
     # Each setup script is idempotent (checks its own marker file).
-    local setup_cmd='for p in ${HAWKER_PROJECTS//,/ }; do s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
+    # pytorch runs before helion (helion depends on torch at install time).
+    local setup_cmd='
+      projects="${HAWKER_PROJECTS//,/ }"
+      ordered=""
+      for p in pytorch $projects; do
+        case " $ordered " in *" $p "*) continue ;; esac
+        case " $projects " in *" $p "*) ordered="$ordered $p" ;; esac
+      done
+      for p in $ordered; do s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done
+    && '
 
     exec $runtime run -it --rm \
         --name "$IMAGE_NAME" \
