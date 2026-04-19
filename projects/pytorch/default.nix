@@ -39,7 +39,7 @@ in
       USE_CUFILE = "OFF";     # cuFile (GPU Direct Storage) not in Nix CUDA packages
       USE_NVSHMEM = "OFF";  # pip nvshmem ABI incompatible with older SM targets
       TORCH_CUDA_ARCH_LIST = "9.0";  # H200 only -- dramatically faster builds
-      MAX_JOBS = "16";
+      MAX_JOBS = "64";
       CMAKE_C_COMPILER_LAUNCHER = "ccache";
       CMAKE_CXX_COMPILER_LAUNCHER = "ccache";
       CMAKE_CUDA_COMPILER_LAUNCHER = "ccache";
