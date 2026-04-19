@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Helion workspace setup -- runs once on first container entry
-# Config: containers/helion/config.sh
+# Config: projects/helion/config.sh
 
 set -euo pipefail
 

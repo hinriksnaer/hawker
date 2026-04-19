@@ -132,7 +132,7 @@
 
           # Run project setup scripts (idempotent)
           for project in ''${HAWKER_PROJECTS//,/ }; do
-            setup="$HOME/hawker/containers/''${project}-setup.sh"
+            setup="$HOME/hawker/projects/''${project}-setup.sh"
             if [ -f "$setup" ]; then
               bash "$setup"
             fi

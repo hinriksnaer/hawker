@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PyTorch workspace setup -- runs once on first container entry
-# Config: containers/pytorch/config.sh
+# Config: projects/pytorch/config.sh
 # Follows upstream CONTRIBUTING.md install instructions.
 
 set -euo pipefail

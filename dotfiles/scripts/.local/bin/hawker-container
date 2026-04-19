@@ -114,7 +114,7 @@ run_container() {
 
     # Project setup runs inside the container where HAWKER_PROJECTS is set.
     # Each setup script is idempotent (checks its own marker file).
-    local setup_cmd='for p in ${HAWKER_PROJECTS//,/ }; do s=~/hawker/containers/${p}-setup.sh; [ -f "$s" ] && bash "$s"; done && '
+    local setup_cmd='for p in ${HAWKER_PROJECTS//,/ }; do s=~/hawker/projects/${p}-setup.sh; [ -f "$s" ] && bash "$s"; done && '
 
     exec $runtime run -it --rm \
         --name "$IMAGE_NAME" \
