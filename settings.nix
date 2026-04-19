@@ -23,6 +23,9 @@
   # Projects to include in the dev container.
   # Each entry pulls in project-specific packages and setup scripts.
   # Available: "helion", "pytorch"
+  # Setup scripts run in list order. Each handles its own dependencies:
+  # - helion: installs torch from nightly if not already present
+  # - pytorch: builds torch from source (overrides nightly if helion ran first)
   projects = [ "helion" "pytorch" ];
 
   # Helion configuration
