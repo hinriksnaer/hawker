@@ -11,15 +11,23 @@ if not test -f "$active_theme_conf"
     exit 1
 end
 
-set current_line (grep "source.*themes.*hyprland.conf" "$active_theme_conf" 2>/dev/null)
+# Try 1: look for "# theme: <name>" marker (written by hyprpunk-theme-set-desktop)
+set theme_name ""
+set marker_line (grep '^# theme:' "$active_theme_conf" 2>/dev/null)
+if test -n "$marker_line"
+    set theme_name (echo $marker_line | sed 's/^# theme: *//')
+end
 
-if test -n "$current_line"
-    set theme_name (echo $current_line | sed 's|.*themes/\([^/]*\)/.*|\1|')
+# Try 2: fall back to symlink at ~/.config/hyprpunk/current/theme
+if test -z "$theme_name"; and test -L "$HOME/.config/hyprpunk/current/theme"
+    set theme_name (basename (readlink "$HOME/.config/hyprpunk/current/theme"))
+end
+
+if test -n "$theme_name"
     echo "Refreshing theme: $theme_name"
     hyprpunk-theme-set $theme_name
 else
-    echo "Error: Could not detect theme from active-theme.conf"
-    echo "File contents:"
-    cat "$active_theme_conf"
+    echo "Error: Could not detect current theme"
+    echo "Run 'hyprpunk-theme-set <theme-name>' first"
     exit 1
 end

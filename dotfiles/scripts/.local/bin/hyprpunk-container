@@ -93,7 +93,7 @@ run_container() {
         env_args+=(-e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
     fi
 
-    mounts+=(-v "${IMAGE_NAME}-work:/home/hawker/work")
+    mounts+=(-v "${IMAGE_NAME}-work:/home/${HYPRPUNK_USER:-$USER}/work")
 
     # Run setup script on first entry for project containers
     local setup_cmd=""

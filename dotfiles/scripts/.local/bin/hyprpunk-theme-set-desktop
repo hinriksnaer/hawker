@@ -119,6 +119,7 @@ if test -d "$hooks_dir"
                 printf '%s\n' \
                     '# Active Hyprland Theme (runtime-generated)' \
                     '# Managed by hyprpunk-theme-set-desktop' \
+                    "# theme: $theme_name" \
                     '' \
                     > $active_theme_conf
                 grep '^\$' "$theme_path/hyprland.conf" >> $active_theme_conf 2>/dev/null

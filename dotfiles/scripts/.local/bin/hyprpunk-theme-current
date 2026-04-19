@@ -14,14 +14,13 @@ else
     set themes_dir (realpath "$script_dir/../../themes")
 end
 
-# First try active-theme.conf (most accurate for desktop)
+# First try active-theme.conf marker (most accurate for desktop)
 set active_theme_conf "$HOME/.config/hypr/active-theme.conf"
 if test -f "$active_theme_conf"
-    set current_line (grep "source.*themes.*hyprland.conf" $active_theme_conf 2>/dev/null)
+    set marker_line (grep '^# theme:' "$active_theme_conf" 2>/dev/null)
 
-    if test -n "$current_line"
-        # Extract theme name from path
-        set theme_name (echo $current_line | sed 's|.*themes/\([^/]*\)/.*|\1|')
+    if test -n "$marker_line"
+        set theme_name (echo $marker_line | sed 's/^# theme: *//')
 
         # Verify the theme directory actually exists
         if test -d "$themes_dir/$theme_name"

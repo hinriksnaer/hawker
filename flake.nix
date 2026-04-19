@@ -9,6 +9,8 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+
+      settings = import ./settings.nix;
     in {
 
       # ── Individually importable modules ──
@@ -68,6 +70,7 @@
       nixosConfigurations = {
         desktop = nixpkgs.lib.nixosSystem {
           inherit system;
+          specialArgs = { inherit settings; };
           modules = [
             ./hosts/desktop/default.nix
           ];
@@ -75,6 +78,7 @@
 
         container = nixpkgs.lib.nixosSystem {
           inherit system;
+          specialArgs = { inherit settings; };
           modules = [
             ./hosts/container/default.nix
           ];
@@ -82,6 +86,7 @@
 
         helion = nixpkgs.lib.nixosSystem {
           inherit system;
+          specialArgs = { inherit settings; };
           modules = [
             ./hosts/helion/default.nix
           ];
@@ -96,12 +101,12 @@
         helionPackages = helionConfig.environment.systemPackages;
       in {
         container = import ./containers/default.nix {
-          inherit pkgs;
+          inherit pkgs settings;
           packages = containerPackages;
         };
 
         helion = import ./containers/default.nix {
-          inherit pkgs;
+          inherit pkgs settings;
           packages = helionPackages;
           name = "hyprpunk-helion";
         };

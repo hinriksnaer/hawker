@@ -3,7 +3,6 @@
 # Usage: hyprpunk-theme-prev
 
 set script_dir (dirname (status -f))
-set hyprland_conf "$HOME/.config/hypr/hyprland.conf"
 
 # Get all available themes (sorted) from hyprpunk-theme-list (includes custom themes)
 set available_themes
@@ -18,12 +17,21 @@ if test (count $available_themes) -eq 0
     exit 1
 end
 
-# Extract current theme from hyprland.conf
-set current_line (grep "source.*themes.*hyprland.conf" $hyprland_conf 2>/dev/null)
+# Detect current theme
 set current_theme ""
 
-if test -n "$current_line"
-    set current_theme (echo $current_line | sed 's|.*themes/\([^/]*\)/.*|\1|')
+# Try 1: "# theme:" marker in active-theme.conf
+set active_theme_conf "$HOME/.config/hypr/active-theme.conf"
+if test -f "$active_theme_conf"
+    set marker_line (grep '^# theme:' "$active_theme_conf" 2>/dev/null)
+    if test -n "$marker_line"
+        set current_theme (echo $marker_line | sed 's/^# theme: *//')
+    end
+end
+
+# Try 2: symlink fallback
+if test -z "$current_theme"; and test -L "$HOME/.config/hyprpunk/current/theme"
+    set current_theme (basename (readlink "$HOME/.config/hyprpunk/current/theme"))
 end
 
 # If can't determine current, use second theme (so prev will be first)

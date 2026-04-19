@@ -1,5 +1,8 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, settings, ... }:
 
+let
+  inherit (settings) username;
+in
 {
   # ── Nix settings ──
   nix.settings = {
@@ -19,11 +22,14 @@
   i18n.defaultLocale = "en_US.UTF-8";
 
   # ── Users ──
-  users.users.hawker = {
+  users.users.${username} = {
     isNormalUser = true;
     extraGroups = [ "wheel" "video" "audio" "networkmanager" "docker" ];
     shell = pkgs.fish;  # requires fish.nix in the same host config
   };
+
+  # Expose username to scripts/dotfiles at runtime
+  environment.sessionVariables.HYPRPUNK_USER = username;
 
   security.sudo.wheelNeedsPassword = false;
 
