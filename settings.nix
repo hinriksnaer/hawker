@@ -4,6 +4,9 @@
 {
   username = "hawker";
 
+  # Default desktop theme (from dotfiles/themes/)
+  defaultTheme = "torrentz-hydra";
+
   # Git identity (used by .gitconfig)
   git = {
     name = "hinriksnaer";
