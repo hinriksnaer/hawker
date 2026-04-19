@@ -15,6 +15,10 @@ in
       libpng
       libjpeg
 
+      # Build acceleration (upstream recommended)
+      ccache
+      mold  # fast linker
+
       python3Packages.pyyaml
       python3Packages.typing-extensions
       python3Packages.setuptools
@@ -29,6 +33,12 @@ in
       USE_NCCL = "1";
       USE_SYSTEM_NCCL = "1";
       MAX_JOBS = "16";
+      # ccache for fast incremental rebuilds (upstream best practice)
+      CMAKE_C_COMPILER_LAUNCHER = "ccache";
+      CMAKE_CXX_COMPILER_LAUNCHER = "ccache";
+      CMAKE_CUDA_COMPILER_LAUNCHER = "ccache";
+      # mold for fast linking
+      CMAKE_LINKER_TYPE = "MOLD";
     };
   };
 }
