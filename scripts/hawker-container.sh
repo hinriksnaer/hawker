@@ -77,8 +77,9 @@ run_container() {
         env_args+=(-e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
     fi
 
-    # Persistent volume for all repos (~/repos/helion, ~/repos/pytorch, etc.)
+    # Persistent volumes
     mounts+=(-v "${IMAGE_NAME}-repos:/home/${HAWKER_USER:-$USER}/repos")
+    mounts+=(-v "${IMAGE_NAME}-ccache:/home/${HAWKER_USER:-$USER}/.cache/ccache")
 
     # Project setup runs inside the container where HAWKER_PROJECTS is set.
     # Each setup script is idempotent (checks its own marker file).
@@ -163,16 +164,16 @@ case "${1:-help}" in
         ;;
 
     clean)
-        # Remove persistent volume (repos, venvs, setup markers)
+        # Remove persistent volumes (repos, ccache, setup markers)
         if [ $# -ge 2 ]; then
             echo "==> Cleaning ${IMAGE_NAME} on $2..."
             # shellcheck disable=SC2029
-            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-repos 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
         else
             echo "==> Cleaning local $IMAGE_NAME..."
             $(detect_runtime) stop "$IMAGE_NAME" 2>/dev/null || true
             $(detect_runtime) rm "$IMAGE_NAME" 2>/dev/null || true
-            $(detect_runtime) volume rm "${IMAGE_NAME}-repos" 2>/dev/null || true
+            $(detect_runtime) volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" 2>/dev/null || true
             $(detect_runtime) rmi "$IMAGE_NAME:latest" 2>/dev/null || true
             echo "done"
         fi
