@@ -1,14 +1,13 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, settings, ... }:
 
 let
   cfg = config.helion;
+  helionSettings = settings.helion or {};
   has = backend: builtins.elem backend cfg.backends;
 
   backendPackages = {
-    cuda = []; # cudatoolkit + cudnn already in cuda-dev.nix
+    cuda = [];
     cute = with pkgs; [ cudaPackages.cutlass ];
-    # rocm = with pkgs; [ rocmPackages.clr rocmPackages.rocm-smi ];
-    # cpu = [];
   };
 
   pipExtras = lib.concatStringsSep "," (
@@ -22,7 +21,7 @@ in
 
   options.helion = {
     backends = lib.mkOption {
-      type = lib.types.listOf (lib.types.enum [ "cuda" "cute" /* "rocm" "cpu" */ ]);
+      type = lib.types.listOf (lib.types.enum [ "cuda" "cute" ]);
       default = [ "cuda" ];
       description = "Hardware backends to enable (not mutually exclusive)";
     };
@@ -30,11 +29,13 @@ in
 
   config = {
     environment.systemPackages = with pkgs; [
-      # Helion-specific build tools
       clang_20
     ] ++ selectedPackages;
 
     environment.sessionVariables = {
+      HELION_REPO = helionSettings.repo or "https://github.com/pytorch/helion.git";
+      HELION_BRANCH = helionSettings.branch or "main";
+      HELION_TORCH_INDEX = helionSettings.torchIndex or "nightly/cu130";
       HELION_BACKENDS = builtins.concatStringsSep "," cfg.backends;
       HELION_PIP_EXTRAS = if pipExtras != "" then "[${pipExtras}]" else "";
     };

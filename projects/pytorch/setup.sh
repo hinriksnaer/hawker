@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 # PyTorch workspace setup -- runs once on first container entry
-# Config: projects/pytorch/config.sh
+# Config comes from settings.nix via environment variables.
 # Follows upstream CONTRIBUTING.md install instructions.
-
 set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/pytorch/config.sh"
 
 REPOS="$HOME/repos"
 WORKSPACE="$REPOS/pytorch"
@@ -19,7 +15,6 @@ fi
 
 echo "==> Setting up PyTorch workspace..."
 
-# Shared venv (created by whichever project runs first)
 if [ ! -d "$VENV" ]; then
     echo "==> Creating shared virtual environment..."
     uv venv "$VENV"
@@ -27,8 +22,8 @@ fi
 source "$VENV/bin/activate"
 
 if [ ! -d "$WORKSPACE" ]; then
-    echo "==> Cloning $PYTORCH_REPO ($PYTORCH_BRANCH)..."
-    git clone --recursive --branch "$PYTORCH_BRANCH" "$PYTORCH_REPO" "$WORKSPACE"
+    echo "==> Cloning ${PYTORCH_REPO} (${PYTORCH_BRANCH})..."
+    git clone --recursive --branch "${PYTORCH_BRANCH}" "${PYTORCH_REPO}" "$WORKSPACE"
 fi
 
 cd "$WORKSPACE"

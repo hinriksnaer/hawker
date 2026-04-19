@@ -24,9 +24,17 @@
 
   # Helion configuration
   helion = {
-    # Hardware backends to enable. Not mutually exclusive -- enable multiple.
+    repo = "https://github.com/pytorch/helion.git";
+    branch = "main";
+    torchIndex = "nightly/cu130";
+    # Hardware backends to enable. Not mutually exclusive.
     # Available: "cuda", "cute"
-    # Future: "rocm", "cpu"
     backends = [ "cuda" ];
+  };
+
+  # PyTorch configuration
+  pytorch = {
+    repo = "https://github.com/pytorch/pytorch.git";
+    branch = "main";
   };
 }
