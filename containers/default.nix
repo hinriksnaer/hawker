@@ -1,4 +1,4 @@
-{ pkgs, packages, username, projects ? [], sessionVariables ? {}, name ? "hawker-dev" }:
+{ pkgs, packages, username, projects ? [], gpuPassthrough ? true, sessionVariables ? {}, name ? "hawker-dev" }:
 
 let
   projectsStr = builtins.concatStringsSep "," projects;
@@ -74,6 +74,7 @@ pkgs.dockerTools.streamLayeredImage {
       "HAWKER_PATH=/home/${username}/.local/share/hawker"
       "HAWKER_USER=${username}"
       "HAWKER_PROJECTS=${projectsStr}"
+      "HAWKER_GPU=${if gpuPassthrough then "true" else "false"}"
     ] ++ sessionEnv;
     Cmd = [ "${pkgs.fish}/bin/fish" ];
     WorkingDir = "/home/${username}";

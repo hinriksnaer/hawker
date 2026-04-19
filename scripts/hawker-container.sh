@@ -17,20 +17,6 @@ detect_runtime() {
     fi
 }
 
-detect_gpu_flags() {
-    local runtime="$1"
-    if command -v nvidia-smi &>/dev/null && nvidia-smi &>/dev/null; then
-        if [ "$runtime" = "docker" ]; then
-            echo "--gpus all"
-        else
-            if [ -d "/etc/cdi" ] || [ -d "/var/run/cdi" ]; then
-                echo "--device nvidia.com/gpu=all"
-            else
-                echo "--device /dev/nvidia0 --device /dev/nvidiactl --device /dev/nvidia-uvm --device /dev/nvidia-uvm-tools"
-            fi
-        fi
-    fi
-}
 
 push_to() {
     local host="$1"
@@ -63,12 +49,17 @@ run_container() {
     local env_args=(-e "TERM=xterm-256color")
     local extra_args=()
 
-    # GPU passthrough
-    local gpu_flags
-    gpu_flags=$(detect_gpu_flags "$runtime")
-    if [ -n "$gpu_flags" ]; then
-        # shellcheck disable=SC2206
-        extra_args+=($gpu_flags)
+    # GPU passthrough (controlled by HAWKER_GPU env var from settings)
+    if [ "${HAWKER_GPU:-true}" = "true" ]; then
+        if [ "$runtime" = "docker" ]; then
+            extra_args+=(--gpus all)
+        else
+            if [ -d "/etc/cdi" ] || [ -d "/var/run/cdi" ]; then
+                extra_args+=(--device nvidia.com/gpu=all)
+            else
+                extra_args+=(--device /dev/nvidia0 --device /dev/nvidiactl --device /dev/nvidia-uvm --device /dev/nvidia-uvm-tools)
+            fi
+        fi
     fi
 
     # Forward SSH agent socket

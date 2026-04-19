@@ -43,6 +43,12 @@ with lib;
       };
     };
 
+    gpuPassthrough = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Enable GPU passthrough in containers (--device nvidia).";
+    };
+
     projects = mkOption {
       type = types.listOf types.str;
       default = [];

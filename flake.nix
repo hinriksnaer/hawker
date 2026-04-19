@@ -121,7 +121,7 @@
       in {
         container = import ./containers/default.nix {
           inherit pkgs;
-          inherit (hawkerConfig) username projects;
+          inherit (hawkerConfig) username projects gpuPassthrough;
           packages = containerPackages;
           sessionVariables = containerSessionVars;
         };
