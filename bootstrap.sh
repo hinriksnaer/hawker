@@ -52,33 +52,6 @@ done
 echo "==> Copying opencode tui.json..."
 echo '{"$schema":"https://opencode.ai/tui.json","theme":"torrentz-hydra"}' > "$HOME/.config/opencode/tui.json"
 
-# Git config -- generated from settings.nix if nix is available, else uses defaults
-echo "==> Setting up git config..."
-if [ ! -f "$HOME/.gitconfig" ]; then
-    GIT_NAME=""
-    GIT_EMAIL=""
-    if command -v nix >/dev/null 2>&1 && [ -f "$SCRIPT_DIR/settings.nix" ]; then
-        GIT_NAME=$(nix eval --raw --file "$SCRIPT_DIR/settings.nix" git.name 2>/dev/null || true)
-        GIT_EMAIL=$(nix eval --raw --file "$SCRIPT_DIR/settings.nix" git.email 2>/dev/null || true)
-    fi
-    GIT_NAME="${GIT_NAME:-$(whoami 2>/dev/null || echo user)}"
-    GIT_EMAIL="${GIT_EMAIL:-$(whoami 2>/dev/null || echo user)@$(hostname 2>/dev/null || echo localhost)}"
-    cat > "$HOME/.gitconfig" <<EOF
-[user]
-    name = $GIT_NAME
-    email = $GIT_EMAIL
-
-[core]
-    editor = nvim
-
-[init]
-    defaultBranch = main
-
-[pull]
-    rebase = false
-EOF
-fi
-
 # SSH config -- points at external drive keys (not stored in repo).
 # Only created on the desktop (where /mnt/games exists), not in containers.
 if [ -d /mnt/games/.ssh ]; then

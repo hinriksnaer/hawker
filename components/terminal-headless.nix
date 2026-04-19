@@ -14,5 +14,6 @@
     ../modules/terminal/gh.nix
     ../modules/terminal/opencode.nix
     ../modules/core/hawker-scripts.nix
+    ../modules/core/git.nix
   ];
 }

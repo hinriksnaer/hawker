@@ -9,72 +9,46 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+      lib = nixpkgs.lib;
 
       settings = import ./settings.nix;
+
+      # Auto-discover .nix files from a directory, returning { name = import path; }
+      discoverModules = dir:
+        lib.mapAttrs'
+          (name: _: lib.nameValuePair
+            (lib.removeSuffix ".nix" name)
+            (import (dir + "/${name}"))
+          )
+          (lib.filterAttrs
+            (name: type: type == "regular" && lib.hasSuffix ".nix" name)
+            (builtins.readDir dir)
+          );
+
+      # Auto-discover directories with default.nix (for projects)
+      discoverDirs = dir:
+        lib.mapAttrs'
+          (name: _: lib.nameValuePair name (import (dir + "/${name}")))
+          (lib.filterAttrs
+            (name: type: type == "directory" && builtins.pathExists (dir + "/${name}/default.nix"))
+            (builtins.readDir dir)
+          );
+
     in {
 
-      # ── Individually importable modules ──
-      nixosModules = {
-        # Base
-        base        = import ./modules/core/base.nix;
-
-        # Shell & CLI
-        fish        = import ./modules/core/fish.nix;
-        cli-tools   = import ./modules/core/cli-tools.nix;
-
-        # Editors
-        neovim      = import ./modules/terminal/neovim.nix;
-
-        # Terminal tools
-        tmux        = import ./modules/terminal/tmux.nix;
-        btop        = import ./modules/terminal/btop.nix;
-        lazygit     = import ./modules/terminal/lazygit.nix;
-        yazi        = import ./modules/terminal/yazi.nix;
-        gh          = import ./modules/terminal/gh.nix;
-        opencode    = import ./modules/terminal/opencode.nix;
-        proton-pass = import ./modules/terminal/proton-pass.nix;
-
-        # Desktop
-        hyprland    = import ./modules/desktop/hyprland.nix;
-        kitty       = import ./modules/desktop/kitty.nix;
-        rofi        = import ./modules/desktop/rofi.nix;
-        hyprlock    = import ./modules/desktop/hyprlock.nix;
-        waybar      = import ./modules/desktop/waybar.nix;
-        mako        = import ./modules/desktop/mako.nix;
-        thunar      = import ./modules/apps/thunar.nix;
-        fonts       = import ./modules/desktop/fonts.nix;
-        audio       = import ./modules/hardware/audio.nix;
-        multimedia  = import ./modules/apps/multimedia.nix;
-        firefox     = import ./modules/apps/firefox.nix;
-        discord     = import ./modules/apps/discord.nix;
-        obsidian    = import ./modules/apps/obsidian.nix;
-
-        # Session
-        sddm            = import ./modules/desktop/sddm.nix;
-        desktop-session = import ./modules/desktop/desktop-session.nix;
-        screenshot      = import ./modules/desktop/screenshot.nix;
-        cliphist        = import ./modules/desktop/cliphist.nix;
-
-        # Hardware
-        nvidia      = import ./modules/hardware/nvidia.nix;
-        bluetooth   = import ./modules/hardware/bluetooth.nix;
-        networking  = import ./modules/hardware/networking.nix;
-        fancontrol  = import ./modules/hardware/fancontrol.nix;
-
-        # AI/ML infrastructure
-        cuda-dev    = import ./modules/ai/cuda-dev.nix;
-
-        # Projects
-        helion      = import ./projects/helion;
-        pytorch     = import ./projects/pytorch;
-
-        # Components (composable module collections)
-        terminal          = import ./components/terminal.nix;
-        terminal-headless = import ./components/terminal-headless.nix;
-        ui          = import ./components/ui.nix;
-        apps        = import ./components/apps.nix;
-        media       = import ./components/media.nix;
-      };
+      # ── Individually importable modules (auto-discovered) ──
+      nixosModules =
+        # modules/<category>/*.nix
+        (discoverModules ./modules/core) //
+        (discoverModules ./modules/terminal) //
+        (discoverModules ./modules/desktop) //
+        (discoverModules ./modules/hardware) //
+        (discoverModules ./modules/ai) //
+        (discoverModules ./modules/apps) //
+        # projects/<name>/default.nix
+        (discoverDirs ./projects) //
+        # components/*.nix
+        (discoverModules ./components);
 
       # ── Machine configurations ──
       nixosConfigurations = {
@@ -99,10 +73,7 @@
       checks.${system} = let
         scriptTests = import ./tests { inherit pkgs; src = self; };
       in scriptTests // {
-        # NixOS VM integration test (requires KVM)
         vm-integration = import ./tests/vm-test.nix { inherit pkgs settings; };
-
-        # Container image builds end-to-end
         container-build = self.packages.${system}.container;
       };
 
@@ -120,18 +91,14 @@
           export HAWKER_USER="${settings.username}"
           export HAWKER_PROJECTS="${projects}"
 
-          # Project-specific env vars from NixOS module evaluation
           ${builtins.concatStringsSep "\n" (
             pkgs.lib.mapAttrsToList (k: v: "export ${k}=\"${v}\"") sessionVars
           )}
 
-          # Non-NixOS hosts: expose host NVIDIA driver to Nix binaries.
-          # libcuda.so lives in the host's /usr/lib64, not in the Nix store.
           if [ -d /usr/lib64 ] && [ ! -f /etc/NIXOS ]; then
             export LD_LIBRARY_PATH="/usr/lib64''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           fi
 
-          # Run project setup scripts (idempotent)
           for project in ''${HAWKER_PROJECTS//,/ }; do
             setup="$HOME/hawker/projects/''${project}/setup.sh"
             if [ -f "$setup" ]; then
@@ -141,7 +108,7 @@
         '';
       };
 
-      # ── Container image (for CI and hosts without Nix) ──
+      # ── Container image ──
       packages.${system} = let
         containerConfig = self.nixosConfigurations.container.config;
         containerPackages = containerConfig.environment.systemPackages;
