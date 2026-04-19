@@ -64,25 +64,14 @@ push_to() {
     # so Nix can see them (doesn't need commits, just git add).
     ssh "$host" "cd ~/hawker && git init -q 2>/dev/null; git add -A 2>/dev/null" 
 
-    # Check if remote has Nix -- if so, build remotely (pulls from cache.nixos.org)
-    if ssh "$host" "nix --version" &>/dev/null; then
-        echo "==> Building container on $host (remote build)..."
-        ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-build-logs"
+    echo "==> Building container on $host..."
+    ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-build-logs"
 
-        local image_path
-        image_path=$(ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-out-paths")
+    local stream_script
+    stream_script=$(ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-out-paths")
 
-        echo "==> Loading image on $host..."
-        ssh "$host" "podman load -i $image_path 2>/dev/null || docker load -i $image_path"
-    else
-        # Fallback: build locally, transfer via SSH
-        echo "==> Building container locally..."
-        local image_path
-        image_path=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
-
-        echo "==> Streaming image to $host..."
-        cat "$image_path" | ssh "$host" "podman load 2>&1 || docker load 2>&1"
-    fi
+    echo "==> Loading image on $host..."
+    ssh "$host" "$stream_script | podman load 2>/dev/null || $stream_script | docker load"
 }
 
 run_container() {
@@ -152,9 +141,9 @@ case "${1:-help}" in
 
     run)
         # Local: build, load, run
-        image_path=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
+        stream_script=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
         echo "==> Loading $IMAGE_NAME..."
-        $(detect_runtime) load -i "$image_path"
+        "$stream_script" | $(detect_runtime) load
         echo "==> Starting $IMAGE_NAME..."
         run_container
         ;;

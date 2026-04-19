@@ -1,9 +1,12 @@
-{ pkgs, packages, settings, name ? "hawker-dev" }:
+{ pkgs, packages, settings, sessionVariables ? {}, name ? "hawker-dev" }:
 
 let
   inherit (settings) username;
 
   projects = builtins.concatStringsSep "," (settings.projects or []);
+
+  # Convert NixOS sessionVariables attrset to Docker Env list format
+  sessionEnv = pkgs.lib.mapAttrsToList (k: v: "${k}=${v}") sessionVariables;
 
   repoSrc = builtins.path {
     path = ../.;
@@ -52,7 +55,7 @@ HOSTS
   '';
 
 in
-pkgs.dockerTools.buildLayeredImage {
+pkgs.dockerTools.streamLayeredImage {
   inherit name;
   tag = "latest";
 
@@ -83,7 +86,7 @@ pkgs.dockerTools.buildLayeredImage {
       "HAWKER_PATH=/home/${username}/.local/share/hawker"
       "HAWKER_USER=${username}"
       "HAWKER_PROJECTS=${projects}"
-    ];
+    ] ++ sessionEnv;
     Cmd = [ "${pkgs.fish}/bin/fish" ];
     WorkingDir = "/home/${username}";
   };

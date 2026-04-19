@@ -145,10 +145,12 @@
       packages.${system} = let
         containerConfig = self.nixosConfigurations.container.config;
         containerPackages = containerConfig.environment.systemPackages;
+        containerSessionVars = containerConfig.environment.sessionVariables;
       in {
         container = import ./containers/default.nix {
           inherit pkgs settings;
           packages = containerPackages;
+          sessionVariables = containerSessionVars;
         };
       };
     };
