@@ -41,4 +41,13 @@
     GTK_THEME = "Adwaita:dark";
     TERMINAL = "kitty";
   };
+
+  # Dark mode preference via dconf -- detected by Firefox, Electron apps,
+  # and anything that queries the XDG settings portal or GSettings.
+  programs.dconf.profiles.user.databases = [{
+    settings."org/gnome/desktop/interface" = {
+      color-scheme = "prefer-dark";
+      gtk-theme = "Adwaita-dark";
+    };
+  }];
 }
