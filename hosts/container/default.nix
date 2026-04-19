@@ -14,7 +14,7 @@ in
 {
   imports = [
     # Base system (core packages, nix settings, locale)
-    ../../modules/base.nix
+    ../../modules/core/base.nix
 
     # Terminal tools (headless -- no kitty/Wayland deps)
     ../../components/terminal-headless.nix

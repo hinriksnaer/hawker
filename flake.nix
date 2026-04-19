@@ -16,51 +16,51 @@
       # ── Individually importable modules ──
       nixosModules = {
         # Base
-        base        = import ./modules/base.nix;
+        base        = import ./modules/core/base.nix;
 
         # Shell & CLI
-        fish        = import ./modules/fish.nix;
-        cli-tools   = import ./modules/cli-tools.nix;
+        fish        = import ./modules/core/fish.nix;
+        cli-tools   = import ./modules/core/cli-tools.nix;
 
         # Editors
-        neovim      = import ./modules/neovim.nix;
+        neovim      = import ./modules/terminal/neovim.nix;
 
         # Terminal tools
-        tmux        = import ./modules/tmux.nix;
-        btop        = import ./modules/btop.nix;
-        lazygit     = import ./modules/lazygit.nix;
-        yazi        = import ./modules/yazi.nix;
-        gh          = import ./modules/gh.nix;
+        tmux        = import ./modules/terminal/tmux.nix;
+        btop        = import ./modules/terminal/btop.nix;
+        lazygit     = import ./modules/terminal/lazygit.nix;
+        yazi        = import ./modules/terminal/yazi.nix;
+        gh          = import ./modules/terminal/gh.nix;
 
         # Desktop
-        hyprland    = import ./modules/hyprland.nix;
-        kitty       = import ./modules/kitty.nix;
-        rofi        = import ./modules/rofi.nix;
-        hyprlock    = import ./modules/hyprlock.nix;
-        waybar      = import ./modules/waybar.nix;
-        mako        = import ./modules/mako.nix;
-        thunar      = import ./modules/thunar.nix;
-        fonts       = import ./modules/fonts.nix;
-        audio       = import ./modules/audio.nix;
-        multimedia  = import ./modules/multimedia.nix;
-        firefox     = import ./modules/firefox.nix;
-        discord     = import ./modules/discord.nix;
-        obsidian    = import ./modules/obsidian.nix;
+        hyprland    = import ./modules/desktop/hyprland.nix;
+        kitty       = import ./modules/desktop/kitty.nix;
+        rofi        = import ./modules/desktop/rofi.nix;
+        hyprlock    = import ./modules/desktop/hyprlock.nix;
+        waybar      = import ./modules/desktop/waybar.nix;
+        mako        = import ./modules/desktop/mako.nix;
+        thunar      = import ./modules/apps/thunar.nix;
+        fonts       = import ./modules/desktop/fonts.nix;
+        audio       = import ./modules/hardware/audio.nix;
+        multimedia  = import ./modules/apps/multimedia.nix;
+        firefox     = import ./modules/apps/firefox.nix;
+        discord     = import ./modules/apps/discord.nix;
+        obsidian    = import ./modules/apps/obsidian.nix;
 
         # Session
-        sddm            = import ./modules/sddm.nix;
-        desktop-session = import ./modules/desktop-session.nix;
-        screenshot      = import ./modules/screenshot.nix;
-        cliphist        = import ./modules/cliphist.nix;
+        sddm            = import ./modules/desktop/sddm.nix;
+        desktop-session = import ./modules/desktop/desktop-session.nix;
+        screenshot      = import ./modules/desktop/screenshot.nix;
+        cliphist        = import ./modules/desktop/cliphist.nix;
 
         # Hardware
-        nvidia      = import ./modules/nvidia.nix;
-        bluetooth   = import ./modules/bluetooth.nix;
-        networking  = import ./modules/networking.nix;
-        fancontrol  = import ./modules/fancontrol.nix;
+        nvidia      = import ./modules/hardware/nvidia.nix;
+        bluetooth   = import ./modules/hardware/bluetooth.nix;
+        networking  = import ./modules/hardware/networking.nix;
+        fancontrol  = import ./modules/hardware/fancontrol.nix;
 
         # AI/ML infrastructure
-        cuda-dev    = import ./modules/cuda-dev.nix;
+        cuda-dev    = import ./modules/ai/cuda-dev.nix;
 
         # Projects
         helion      = import ./projects/helion.nix;

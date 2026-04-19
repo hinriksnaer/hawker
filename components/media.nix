@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ../modules/audio.nix
-    # ../modules/multimedia.nix
+    ../modules/hardware/audio.nix
+    # ../modules/apps/multimedia.nix
   ];
 }

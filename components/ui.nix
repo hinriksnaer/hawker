@@ -3,23 +3,23 @@
 {
   imports = [
     # Compositor
-    ../modules/hyprland.nix
-    ../modules/sddm.nix
-    ../modules/desktop-session.nix
+    ../modules/desktop/hyprland.nix
+    ../modules/desktop/sddm.nix
+    ../modules/desktop/desktop-session.nix
 
     # Bar, launcher, notifications
-    ../modules/waybar.nix
-    ../modules/rofi.nix
-    ../modules/mako.nix
+    ../modules/desktop/waybar.nix
+    ../modules/desktop/rofi.nix
+    ../modules/desktop/mako.nix
 
     # Lock screen
-    ../modules/hyprlock.nix
+    ../modules/desktop/hyprlock.nix
 
     # Utilities
-    ../modules/screenshot.nix
-    ../modules/cliphist.nix
+    ../modules/desktop/screenshot.nix
+    ../modules/desktop/cliphist.nix
 
     # Appearance
-    ../modules/fonts.nix
+    ../modules/desktop/fonts.nix
   ];
 }

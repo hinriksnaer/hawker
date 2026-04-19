@@ -5,7 +5,7 @@
     ./hardware-configuration.nix
 
     # Base system
-    ../../modules/base.nix
+    ../../modules/core/base.nix
 
     # Components
     ../../components/terminal.nix
@@ -14,10 +14,10 @@
     ../../components/media.nix
 
     # Hardware
-    ../../modules/nvidia.nix
-    ../../modules/networking.nix
-    ../../modules/bluetooth.nix
-    ../../modules/fancontrol.nix
+    ../../modules/hardware/nvidia.nix
+    ../../modules/hardware/networking.nix
+    ../../modules/hardware/bluetooth.nix
+    ../../modules/hardware/fancontrol.nix
   ];
 
   networking.hostName = "hawker";

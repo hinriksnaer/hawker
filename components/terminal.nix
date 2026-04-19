@@ -4,6 +4,6 @@
 {
   imports = [
     ./terminal-headless.nix
-    ../modules/kitty.nix
+    ../modules/desktop/kitty.nix
   ];
 }

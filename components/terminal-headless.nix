@@ -4,14 +4,14 @@
 
 {
   imports = [
-    ../modules/fish.nix
-    ../modules/tmux.nix
-    ../modules/btop.nix
-    ../modules/lazygit.nix
-    ../modules/yazi.nix
-    ../modules/cli-tools.nix
-    ../modules/neovim.nix
-    ../modules/gh.nix
-    ../modules/opencode.nix
+    ../modules/core/fish.nix
+    ../modules/terminal/tmux.nix
+    ../modules/terminal/btop.nix
+    ../modules/terminal/lazygit.nix
+    ../modules/terminal/yazi.nix
+    ../modules/core/cli-tools.nix
+    ../modules/terminal/neovim.nix
+    ../modules/terminal/gh.nix
+    ../modules/terminal/opencode.nix
   ];
 }
