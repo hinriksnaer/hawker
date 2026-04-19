@@ -60,8 +60,8 @@
         fancontrol  = import ./modules/fancontrol.nix;
 
         # Projects
-        helion      = import ./modules/projects/helion.nix;
-        pytorch     = import ./modules/projects/pytorch.nix;
+        helion      = import ./projects/helion.nix;
+        pytorch     = import ./projects/pytorch.nix;
 
         # Components (composable module collections)
         terminal          = import ./components/terminal.nix;

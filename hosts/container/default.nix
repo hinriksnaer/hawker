@@ -3,8 +3,8 @@
 let
   # Map project names to their NixOS modules
   projectModules = {
-    helion  = ../../modules/projects/helion.nix;
-    pytorch = ../../modules/projects/pytorch.nix;
+    helion  = ../../projects/helion.nix;
+    pytorch = ../../projects/pytorch.nix;
   };
 
   # Import modules for each enabled project

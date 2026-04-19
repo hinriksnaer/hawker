@@ -4,31 +4,22 @@ let
   cfg = config.helion;
   has = backend: builtins.elem backend cfg.backends;
 
-  # Packages per backend
   backendPackages = {
-    cuda = with pkgs; [ cudaPackages.cudatoolkit cudaPackages.cudnn ];
+    cuda = []; # cudatoolkit + cudnn already in cuda-dev.nix
     cute = with pkgs; [ cudaPackages.cutlass ];
     # rocm = with pkgs; [ rocmPackages.clr rocmPackages.rocm-smi ];
     # cpu = [];
   };
 
-  # Env vars per backend
-  backendEnv = lib.optionalAttrs (has "cuda" || has "cute") {
-    CUDA_HOME = "${pkgs.cudaPackages.cudatoolkit}";
-  };
-  # // lib.optionalAttrs (has "rocm") {
-  #   ROCM_PATH = "${pkgs.rocmPackages.clr}";
-  # };
-
-  # Pip extras for helion install
   pipExtras = lib.concatStringsSep "," (
     lib.optional (has "cute") "cute-cu12"
-    # ++ lib.optional (has "rocm") "rocm"
   );
 
   selectedPackages = lib.concatMap (b: backendPackages.${b} or []) cfg.backends;
 in
 {
+  imports = [ ./cuda-dev.nix ];
+
   options.helion = {
     backends = lib.mkOption {
       type = lib.types.listOf (lib.types.enum [ "cuda" "cute" /* "rocm" "cpu" */ ]);
@@ -39,19 +30,11 @@ in
 
   config = {
     environment.systemPackages = with pkgs; [
-      # Python
-      python3
-      python3Packages.pip
-      python3Packages.virtualenv
-      uv
-
-      # Build tools
+      # Helion-specific build tools
       clang_20
-      zlib
-      ninja
     ] ++ selectedPackages;
 
-    environment.sessionVariables = backendEnv // {
+    environment.sessionVariables = {
       HELION_BACKENDS = builtins.concatStringsSep "," cfg.backends;
       HELION_PIP_EXTRAS = if pipExtras != "" then "[${pipExtras}]" else "";
     };
