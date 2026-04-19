@@ -60,6 +60,10 @@ push_to() {
     rsync -a --delete --exclude='.git' --chmod=Du+rwx,Fu+rw \
         "$REPO_DIR/" "${host}:~/hawker/"
 
+    # Flakes require a git repo. Init one on the remote and stage all files
+    # so Nix can see them (doesn't need commits, just git add).
+    ssh "$host" "cd ~/hawker && git init -q 2>/dev/null; git add -A 2>/dev/null" 
+
     # Check if remote has Nix -- if so, build remotely (pulls from cache.nixos.org)
     if ssh "$host" "nix --version" &>/dev/null; then
         echo "==> Building container on $host (remote build)..."
