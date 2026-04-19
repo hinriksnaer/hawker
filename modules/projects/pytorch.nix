@@ -24,7 +24,6 @@
 
       # Libraries pytorch links against
       openblas
-      magma-cuda
       zlib
       libuv
       libpng
