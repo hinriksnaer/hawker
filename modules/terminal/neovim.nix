@@ -4,8 +4,9 @@
   environment.systemPackages = with pkgs; [
     neovim
     tree-sitter
-    nodejs      # required by Copilot and Mason-installed LSPs (pyright)
-    clang-tools # clangd + clang-format (Mason can't build these itself)
+    nodejs      # required by Copilot
+    clang-tools # clangd + clang-format
+    pyright     # Python LSP (Nix-provided, not Mason)
   ];
 
   # Set neovim as default editor
