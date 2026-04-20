@@ -1,4 +1,4 @@
-{ pkgs, packages, username, projects ? [], gpus ? "all", sessionVariables ? {}, name ? "hawker-dev" }:
+{ pkgs, packages, username, projects ? [], gpus ? "all", sessionVariables ? {}, hmActivation ? null, name ? "hawker-dev" }:
 
 let
   projectsStr = builtins.concatStringsSep "," projects;
@@ -24,6 +24,13 @@ let
 
     HOME=$out/home/${username} \
       bash $out/home/${username}/hawker/bootstrap.sh
+
+    # Apply Home Manager config (creates symlinks in $HOME)
+    ${pkgs.lib.optionalString (hmActivation != null) ''
+      HOME=$out/home/${username} \
+      USER=${username} \
+        ${hmActivation}/activate || true
+    ''}
   '';
 
   etcDir = pkgs.runCommand "hawker-etc" {} ''

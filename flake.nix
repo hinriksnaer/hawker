@@ -3,9 +3,13 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, ... }:
+  outputs = { self, nixpkgs, home-manager, ... }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -60,6 +64,12 @@
           inherit system;
           modules = commonModules ++ [
             ./hosts/desktop/default.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.${(import ./settings.nix { }).hawker.username} = import ./home;
+            }
           ];
         };
 
@@ -87,10 +97,15 @@
         containerConfig = self.nixosConfigurations.container.config;
         containerPackages = containerConfig.environment.systemPackages;
         containerSessionVars = containerConfig.environment.sessionVariables;
-        # Derive enabled projects list from enable flags
         enabledProjects = builtins.filter
           (name: hawkerConfig.container.projects.${name}.enable or false)
           (builtins.attrNames hawkerConfig.container.projects);
+        # Pre-build Home Manager activation for use inside the container.
+        # No writable Nix store needed -- the activation script just creates symlinks.
+        hmConfig = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ ./home ];
+        };
       in {
         container = import ./containers/default.nix {
           inherit pkgs;
@@ -99,6 +114,7 @@
           projects = enabledProjects;
           packages = containerPackages;
           sessionVariables = containerSessionVars;
+          hmActivation = hmConfig.activationPackage;
         };
       };
     };
