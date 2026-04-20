@@ -23,40 +23,12 @@ let
     chmod 1777 $out/tmp
     mkdir -p $out/home/${username}
 
-    # Include the repo and run bootstrap
-    cp -r ${repoSrc} $out/home/${username}/hawker
-    chmod -R u+w $out/home/${username}/hawker
-
-    HOME=$out/home/${username} \
-      bash $out/home/${username}/hawker/bootstrap.sh
-
-    # Set up Nix directories for single-user Nix inside the container
+    # Nix config
     mkdir -p $out/nix/var/nix/{profiles,gcroots,db}
-    mkdir -p $out/home/${username}/.nix-profile
-    mkdir -p $out/home/${username}/.nix-defexpr
-
-    # Nix config for the container
-    mkdir -p $out/home/${username}/.config/nix
-    cat > $out/home/${username}/.config/nix/nix.conf << 'NIXCONF'
+    mkdir -p $out/etc/nix
+    cat > $out/etc/nix/nix.conf << 'NIXCONF'
     experimental-features = nix-command flakes
     NIXCONF
-
-    # SSH config for the container (uses key from mounted .ssh)
-    mkdir -p $out/home/${username}/.ssh
-    cat > $out/home/${username}/.ssh/config << 'SSHCONF'
-    Host *
-        IdentityFile ~/.ssh/id_ed25519
-        StrictHostKeyChecking accept-new
-    SSHCONF
-    chmod 700 $out/home/${username}/.ssh
-    chmod 600 $out/home/${username}/.ssh/config
-
-    # Apply Home Manager config (creates symlinks in $HOME)
-    ${pkgs.lib.optionalString (hmActivation != null) ''
-      HOME=$out/home/${username} \
-      USER=${username} \
-        ${hmActivation}/activate || true
-    ''}
   '';
 
   etcDir = pkgs.runCommand "hawker-etc" {} ''
@@ -88,7 +60,7 @@ pkgs.dockerTools.streamLayeredImage {
   # chown or entrypoint hacks needed.
   fakeRootCommands = ''
     chown -R 1000:1000 /home/${username}
-    chown -R 1000:1000 /nix/var
+    chown -R 1000:1000 /nix
     chmod 1777 /tmp
   '';
   enableFakechroot = true;

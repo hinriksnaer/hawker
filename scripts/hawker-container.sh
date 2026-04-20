@@ -87,17 +87,16 @@ start_container() {
         # so CUDA_VISIBLE_DEVICES=4 would hide it.
     fi
 
-    # Mount SSH keys (read-only) for git access
-    if [ -d "$HOME/.ssh" ]; then
-        mounts+=(-v "$HOME/.ssh:/home/${HAWKER_USER:-$USER}/.ssh:ro")
-        extra_args+=(--userns=keep-id)
+    extra_args+=(--userns=keep-id --security-opt label=disable)
+
+    # Forward SSH agent
+    if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
+        mounts+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock")
+        env_args+=(-e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
     fi
 
-    # Persistent volumes
-    mounts+=(-v "${IMAGE_NAME}-repos:/home/${HAWKER_USER:-$USER}/repos")
-    mounts+=(-v "${IMAGE_NAME}-ccache:/home/${HAWKER_USER:-$USER}/.cache/ccache")
-    mounts+=(-v "${IMAGE_NAME}-gcloud:/home/${HAWKER_USER:-$USER}/.config/gcloud")
-    mounts+=(-v "${IMAGE_NAME}-hawker:/home/${HAWKER_USER:-$USER}/hawker")
+    # Persistent home directory -- single volume for all user state
+    mounts+=(-v "${IMAGE_NAME}-home:/home/${HAWKER_USER:-$USER}")
 
     # Clone hawker repo if the persistent volume is empty
     local hawker_repo
@@ -182,12 +181,12 @@ case "${1:-help}" in
         if [ $# -ge 2 ]; then
             echo "==> Cleaning ${IMAGE_NAME} on $2..."
             # shellcheck disable=SC2029
-            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache ${IMAGE_NAME}-gcloud ${IMAGE_NAME}-hawker 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-home 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
         else
             echo "==> Cleaning local $IMAGE_NAME..."
             $(detect_runtime) stop "$IMAGE_NAME" 2>/dev/null || true
             $(detect_runtime) rm "$IMAGE_NAME" 2>/dev/null || true
-            $(detect_runtime) volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" "${IMAGE_NAME}-gcloud" "${IMAGE_NAME}-hawker" 2>/dev/null || true
+            $(detect_runtime) volume rm "${IMAGE_NAME}-home" 2>/dev/null || true
             $(detect_runtime) rmi "$IMAGE_NAME:latest" 2>/dev/null || true
             echo "done"
         fi

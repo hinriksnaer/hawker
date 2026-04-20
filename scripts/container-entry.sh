@@ -6,18 +6,14 @@ set -e
 # ── Clone hawker repo if not present ──
 if [ ! -d ~/hawker/.git ]; then
     echo "==> Cloning hawker repo..."
-    tmp=$(mktemp -d)
-    git clone "$HAWKER_REPO" "$tmp/hawker"
-    rm -rf ~/hawker
-    mv "$tmp/hawker" ~/hawker
-    rm -rf "$tmp"
+    git clone "$HAWKER_REPO" ~/hawker
 fi
 
 # ── Bootstrap (stow dotfiles) ──
-if [ ! -f ~/repos/.bootstrap-done ]; then
+if [ ! -f ~/repos/.bootstrap-done ] && [ -f ~/hawker/bootstrap.sh ]; then
     echo "==> Running bootstrap..."
-    bash ~/hawker/bootstrap.sh
     mkdir -p ~/repos
+    bash ~/hawker/bootstrap.sh || echo "  (bootstrap failed, continuing)"
     touch ~/repos/.bootstrap-done
 fi
 
