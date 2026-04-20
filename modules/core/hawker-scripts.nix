@@ -36,9 +36,6 @@ in
     (mkBash "hawker-container" {
       runtimeInputs = with pkgs; [ rsync openssh git nix coreutils ];
     })
-    (mkBash "hawker-apply" {
-      runtimeInputs = with pkgs; [ nix ];
-    })
     (mkBash "hawker-rofi-wallpaper-select" {
       runtimeInputs = with pkgs; [ rofi swaybg findutils coreutils ];
     })

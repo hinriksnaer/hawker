@@ -3,13 +3,9 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }:
+  outputs = { self, nixpkgs, ... }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -64,12 +60,6 @@
           inherit system;
           modules = commonModules ++ [
             ./hosts/desktop/default.nix
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.${(import ./settings.nix { }).hawker.username} = import ./home;
-            }
           ];
         };
 
@@ -78,14 +68,6 @@
           modules = commonModules ++ [
             ./hosts/container/default.nix
           ];
-        };
-      };
-
-      # ── Standalone Home Manager (for use inside containers) ──
-      homeConfigurations = {
-        "${(import ./settings.nix { }).hawker.username}" = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ ./home ];
         };
       };
 

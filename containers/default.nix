@@ -11,11 +11,6 @@ let
     name = "hawker-src";
   };
 
-  entryScript = pkgs.runCommand "container-entry-bin" {} ''
-    mkdir -p $out/usr/local/bin
-    cp ${pkgs.writeShellScript "container-entry" (builtins.readFile ../scripts/container-entry.sh)} $out/usr/local/bin/container-entry
-  '';
-
   homeDir = pkgs.runCommand "hawker-home" {
     nativeBuildInputs = [ pkgs.stow ];
   } ''
@@ -52,7 +47,7 @@ pkgs.dockerTools.streamLayeredImage {
   inherit name;
   tag = "latest";
 
-  contents = packages ++ [ homeDir etcDir entryScript ];
+  contents = packages ++ [ homeDir etcDir ];
 
   # Set file ownership at build time (Nix sandbox builds everything as root).
   # fakeRootCommands runs in a fakeroot environment so chown works without
