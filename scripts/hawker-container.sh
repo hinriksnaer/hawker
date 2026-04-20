@@ -36,7 +36,7 @@ push_to() {
     stream_script=$(ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-out-paths")
 
     echo "==> Loading image on $host..."
-    ssh "$host" "$stream_script | podman load 2>/dev/null || $stream_script | docker load"
+    ssh "$host" "podman load -i $stream_script 2>/dev/null || docker load -i $stream_script"
 }
 
 enter_container() {
@@ -139,9 +139,9 @@ case "${1:-help}" in
 
     run)
         # Local: build, load, run
-        stream_script=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
+        image_path=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
         echo "==> Loading $IMAGE_NAME..."
-        "$stream_script" | $(detect_runtime) load
+        $(detect_runtime) load -i "$image_path"
         echo "==> Starting $IMAGE_NAME..."
         start_container
         ;;
