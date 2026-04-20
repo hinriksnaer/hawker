@@ -3,8 +3,6 @@
 # This script clones repos and builds from source.
 # Idempotent -- skips projects that are already set up.
 
-REPOS="$HOME/repos"
-
 # Ordered list of projects that depend on each other.
 # pytorch must build before helion (helion imports torch).
 ORDERED="pytorch helion"

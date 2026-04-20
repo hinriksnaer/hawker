@@ -3,6 +3,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./container.nix
 
     # Module groups (each default.nix auto-imports all modules in the dir)
     ../../modules/core
