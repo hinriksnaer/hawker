@@ -41,6 +41,16 @@ let
     experimental-features = nix-command flakes
     NIXCONF
 
+    # SSH config for the container (uses key from mounted .ssh)
+    mkdir -p $out/home/${username}/.ssh
+    cat > $out/home/${username}/.ssh/config << 'SSHCONF'
+    Host *
+        IdentityFile ~/.ssh/id_ed25519
+        StrictHostKeyChecking accept-new
+    SSHCONF
+    chmod 700 $out/home/${username}/.ssh
+    chmod 600 $out/home/${username}/.ssh/config
+
     # Apply Home Manager config (creates symlinks in $HOME)
     ${pkgs.lib.optionalString (hmActivation != null) ''
       HOME=$out/home/${username} \

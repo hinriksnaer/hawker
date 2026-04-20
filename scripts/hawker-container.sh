@@ -87,10 +87,10 @@ start_container() {
         # so CUDA_VISIBLE_DEVICES=4 would hide it.
     fi
 
-    # Forward SSH agent socket
-    if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
-        mounts+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock")
-        env_args+=(-e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
+    # Mount SSH keys (read-only) for git access
+    if [ -d "$HOME/.ssh" ]; then
+        mounts+=(-v "$HOME/.ssh:/home/${HAWKER_USER:-$USER}/.ssh:ro")
+        extra_args+=(--userns=keep-id)
     fi
 
     # Persistent volumes
