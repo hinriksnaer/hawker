@@ -113,22 +113,6 @@
         '';
       };
 
-      # ── Apps (runnable with `nix run`) ──
-      apps.${system} = let
-        mkApp = name: runtimeInputs: {
-          type = "app";
-          program = "${pkgs.writeShellApplication {
-            inherit name;
-            inherit runtimeInputs;
-            text = builtins.readFile ./scripts/${name}.sh;
-            excludeShellChecks = [ "SC2029" "SC2016" ];
-          }}/bin/${name}";
-        };
-      in {
-        # nix run .#container -- deploy ibm-kaiba
-        container = mkApp "hawker-container" (with pkgs; [ rsync openssh git nix coreutils ]);
-      };
-
       # ── Container image ──
       packages.${system} = let
         containerConfig = self.nixosConfigurations.container.config;
