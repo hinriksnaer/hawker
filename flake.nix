@@ -79,6 +79,19 @@
             ./hosts/container/default.nix
           ];
         };
+
+        vm = nixpkgs.lib.nixosSystem {
+          inherit system;
+          modules = commonModules ++ [
+            ./hosts/vm/default.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.${(import ./settings.nix { }).hawker.username} = import ./home;
+            }
+          ];
+        };
       };
 
       # ── Checks (run via `nix flake check`) ──
