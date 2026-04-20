@@ -1,16 +1,11 @@
-# Placeholder -- generate on the VM with:
-#   nixos-generate-config --dir ~/hawker/hosts/vm/
+# Placeholder -- replace with output of nixos-generate-config on the actual VM.
+# For image builds, the disk-image module provides its own fileSystems.
 { lib, ... }:
 
 {
-  # KVM virtio disk
-  fileSystems."/" = {
+  fileSystems."/" = lib.mkDefault {
     device = "/dev/vda1";
     fsType = "ext4";
-  };
-  fileSystems."/boot" = {
-    device = "/dev/vda2";
-    fsType = "vfat";
   };
 
   boot.initrd.availableKernelModules = [ "virtio_pci" "virtio_blk" "virtio_scsi" "virtio_net" ];
