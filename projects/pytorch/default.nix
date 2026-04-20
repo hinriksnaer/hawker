@@ -38,7 +38,7 @@ in
       USE_SYSTEM_NCCL = "1";
       USE_CUFILE = "OFF";     # cuFile (GPU Direct Storage) not in Nix CUDA packages
       USE_NVSHMEM = "OFF";  # pip nvshmem ABI incompatible with older SM targets
-      USE_KINETO = "0";     # profiling -- enable when needed
+      USE_KINETO = "1";     # profiling (torch.profiler) -- needed for kernel benchmarking
       USE_FBGEMM = "0";     # Facebook GEMM -- not needed for compile/inductor work
       USE_NNPACK = "0";     # legacy neural network primitives
       USE_QNNPACK = "0";    # quantized neural network primitives
