@@ -81,6 +81,14 @@
         };
       };
 
+      # ── Standalone Home Manager (for use inside containers) ──
+      homeConfigurations = {
+        "${(import ./settings.nix { }).hawker.username}" = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [ ./home ];
+        };
+      };
+
       # ── Checks (run via `nix flake check`) ──
       checks.${system} = let
         scriptTests = import ./tests { inherit pkgs; src = self; };
