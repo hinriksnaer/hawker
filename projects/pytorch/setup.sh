@@ -45,5 +45,8 @@ echo "    MAX_JOBS=${MAX_JOBS:-auto}, TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIS
 echo "    ccache: ${CMAKE_CXX_COMPILER_LAUNCHER:-none}"
 python -m pip install --no-build-isolation -v -e .
 
+# triton is required for torch.compile/inductor but isn't a pytorch build dependency
+python -m pip install triton
+
 touch "$MARKER"
 echo "==> PyTorch workspace ready"
