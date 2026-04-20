@@ -109,7 +109,7 @@ start_container() {
     # Order matters: pytorch must build torch before helion tries to import it.
     # Run project setup scripts. Fail fast -- if one fails, stop and show the error
     # instead of silently continuing into fish with a broken environment.
-    local setup_cmd='set -e; if [ ! -d ~/hawker/.git ]; then git clone "$HAWKER_REPO" ~/hawker; fi; ordered="pytorch helion"; for p in $ordered; do echo ${HAWKER_PROJECTS//,/ } | grep -qw "$p" || continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done; for p in ${HAWKER_PROJECTS//,/ }; do echo "$ordered" | grep -qw "$p" && continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
+    local setup_cmd='set -e; if [ ! -d ~/hawker/.git ]; then rm -rf ~/hawker/*; git clone "$HAWKER_REPO" ~/hawker; fi; ordered="pytorch helion"; for p in $ordered; do echo ${HAWKER_PROJECTS//,/ } | grep -qw "$p" || continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done; for p in ${HAWKER_PROJECTS//,/ }; do echo "$ordered" | grep -qw "$p" && continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
 
     exec $runtime run -it \
         --name "$IMAGE_NAME" \
