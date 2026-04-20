@@ -50,37 +50,18 @@ run_container() {
     local extra_args=()
 
     # GPU passthrough (controlled by HAWKER_GPUS: "all", "none", or "0,1,4")
+    # GPU passthrough via NVIDIA CDI (Container Device Interface).
+    # CDI handles both device files AND driver libraries (libcuda.so, etc.)
     local gpus="${HAWKER_GPUS:-all}"
     if [ "$gpus" != "none" ]; then
-        # GPU devices
-        extra_args+=(--device /dev/nvidiactl --device /dev/nvidia-uvm --device /dev/nvidia-uvm-tools)
         if [ "$gpus" = "all" ]; then
-            if [ -d "/etc/cdi" ] || [ -d "/var/run/cdi" ]; then
-                extra_args+=(--device nvidia.com/gpu=all)
-            else
-                for dev in /dev/nvidia[0-9]*; do
-                    [ -e "$dev" ] && extra_args+=(--device "$dev")
-                done
-            fi
+            extra_args+=(--device nvidia.com/gpu=all)
         else
             for idx in ${gpus//,/ }; do
-                extra_args+=(--device "/dev/nvidia${idx}")
+                extra_args+=(--device "nvidia.com/gpu=${idx}")
             done
         fi
         env_args+=(-e "CUDA_VISIBLE_DEVICES=${gpus}")
-
-        # Mount host NVIDIA driver libraries (libcuda.so, libnvidia-ml.so, etc.)
-        # --device only exposes device files, not the driver userspace libraries
-        for lib_dir in /usr/lib64 /usr/lib/x86_64-linux-gnu; do
-            if [ -f "${lib_dir}/libcuda.so.1" ]; then
-                mounts+=(-v "${lib_dir}/libcuda.so.1:${lib_dir}/libcuda.so.1:ro")
-                mounts+=(-v "${lib_dir}/libcuda.so:${lib_dir}/libcuda.so:ro")
-                mounts+=(-v "${lib_dir}/libnvidia-ml.so.1:${lib_dir}/libnvidia-ml.so.1:ro")
-                mounts+=(-v "${lib_dir}/libnvidia-ptxjitcompiler.so.1:${lib_dir}/libnvidia-ptxjitcompiler.so.1:ro")
-                env_args+=(-e "LD_LIBRARY_PATH=${lib_dir}")
-                break
-            fi
-        done
     fi
 
     # Forward SSH agent socket
