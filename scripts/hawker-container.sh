@@ -104,13 +104,6 @@ start_container() {
     hawker_repo=$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null) || hawker_repo="https://github.com/hinriksnaer/hawker.git"
     env_args+=(-e "HAWKER_REPO=${hawker_repo}")
 
-    # Project setup runs inside the container where HAWKER_PROJECTS is set.
-    # Each setup script is idempotent and handles its own dependencies.
-    # Order matters: pytorch must build torch before helion tries to import it.
-    # Run project setup scripts. Fail fast -- if one fails, stop and show the error
-    # instead of silently continuing into fish with a broken environment.
-    local setup_cmd='set -e; if [ ! -d ~/hawker/.git ]; then tmp=$(mktemp -d) && git clone "$HAWKER_REPO" "$tmp/hawker" && rm -rf ~/hawker && mv "$tmp/hawker" ~/hawker && rm -rf "$tmp"; fi; ordered="pytorch helion"; for p in $ordered; do echo ${HAWKER_PROJECTS//,/ } | grep -qw "$p" || continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done; for p in ${HAWKER_PROJECTS//,/ }; do echo "$ordered" | grep -qw "$p" && continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
-
     exec $runtime run -it \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
@@ -118,7 +111,7 @@ start_container() {
         "${env_args[@]}" \
         "${extra_args[@]}" \
         "$IMAGE_NAME:latest" \
-        bash -c "${setup_cmd}exec fish"
+        /usr/local/bin/container-entry
 }
 
 # ── Commands ──

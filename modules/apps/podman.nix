@@ -7,6 +7,9 @@
     defaultNetwork.settings.dns_enabled = true;
   };
 
+  # NVIDIA container support (CDI)
+  hardware.nvidia-container-toolkit.enable = true;
+
   # Rootless podman
   security.unprivilegedUsernsClone = true;
 

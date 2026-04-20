@@ -11,6 +11,11 @@ let
     name = "hawker-src";
   };
 
+  entryScript = pkgs.runCommand "container-entry-bin" {} ''
+    mkdir -p $out/usr/local/bin
+    cp ${pkgs.writeShellScript "container-entry" (builtins.readFile ../scripts/container-entry.sh)} $out/usr/local/bin/container-entry
+  '';
+
   homeDir = pkgs.runCommand "hawker-home" {
     nativeBuildInputs = [ pkgs.stow ];
   } ''
@@ -24,6 +29,17 @@ let
 
     HOME=$out/home/${username} \
       bash $out/home/${username}/hawker/bootstrap.sh
+
+    # Set up Nix directories for single-user Nix inside the container
+    mkdir -p $out/nix/var/nix/{profiles,gcroots,db}
+    mkdir -p $out/home/${username}/.nix-profile
+    mkdir -p $out/home/${username}/.nix-defexpr
+
+    # Nix config for the container
+    mkdir -p $out/home/${username}/.config/nix
+    cat > $out/home/${username}/.config/nix/nix.conf << 'NIXCONF'
+    experimental-features = nix-command flakes
+    NIXCONF
 
     # Apply Home Manager config (creates symlinks in $HOME)
     ${pkgs.lib.optionalString (hmActivation != null) ''
@@ -54,7 +70,7 @@ pkgs.dockerTools.streamLayeredImage {
   inherit name;
   tag = "latest";
 
-  contents = packages ++ [ homeDir etcDir ];
+  contents = packages ++ [ homeDir etcDir entryScript ];
 
   # Set file ownership at build time (Nix sandbox builds everything as root).
   # fakeRootCommands runs in a fakeroot environment so chown works without
@@ -62,6 +78,7 @@ pkgs.dockerTools.streamLayeredImage {
   # chown or entrypoint hacks needed.
   fakeRootCommands = ''
     chown -R 1000:1000 /home/${username}
+    chown -R 1000:1000 /nix/var
     chmod 1777 /tmp
   '';
   enableFakechroot = true;

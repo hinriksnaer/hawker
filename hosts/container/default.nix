@@ -29,6 +29,8 @@ in
   environment.systemPackages = with pkgs; [
     openssh
     cacert
+    nix     # for home-manager switch inside the container
+    git
   ];
 
   system.stateVersion = "24.11";

@@ -20,7 +20,7 @@
 
     # ── Container + projects ──
     container = {
-      gpus = "4";
+      gpus = "none";
 
       projects = {
         helion = {
