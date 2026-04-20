@@ -80,6 +80,7 @@ run_container() {
     # Persistent volumes
     mounts+=(-v "${IMAGE_NAME}-repos:/home/${HAWKER_USER:-$USER}/repos")
     mounts+=(-v "${IMAGE_NAME}-ccache:/home/${HAWKER_USER:-$USER}/.cache/ccache")
+    mounts+=(-v "${IMAGE_NAME}-gcloud:/home/${HAWKER_USER:-$USER}/.config/gcloud")
 
     # Project setup runs inside the container where HAWKER_PROJECTS is set.
     # Each setup script is idempotent and handles its own dependencies.
