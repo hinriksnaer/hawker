@@ -7,6 +7,7 @@
       sensible
       vim-tmux-navigator
       yank
+      dotbar
     ];
   };
 }
