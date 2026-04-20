@@ -1,14 +1,11 @@
 { pkgs, lib, config, ... }:
 
 let
-  pc = config.hawker.pytorch;
+  pc = config.hawker.container.projects.pytorch;
   nccl = pkgs.cudaPackages.nccl;
 in
 {
-  imports = [
-    ./options.nix
-    ../../modules/ai/cuda-dev.nix
-  ];
+  imports = [ ../../modules/ai/cuda-dev.nix ];
 
   config = {
     environment.systemPackages = with pkgs; [

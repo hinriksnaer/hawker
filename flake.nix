@@ -87,11 +87,16 @@
         containerConfig = self.nixosConfigurations.container.config;
         containerPackages = containerConfig.environment.systemPackages;
         containerSessionVars = containerConfig.environment.sessionVariables;
+        # Derive enabled projects list from enable flags
+        enabledProjects = builtins.filter
+          (name: hawkerConfig.container.projects.${name}.enable or false)
+          (builtins.attrNames hawkerConfig.container.projects);
       in {
         container = import ./containers/default.nix {
           inherit pkgs;
           inherit (hawkerConfig) username;
-          inherit (hawkerConfig.container) projects gpus;
+          inherit (hawkerConfig.container) gpus;
+          projects = enabledProjects;
           packages = containerPackages;
           sessionVariables = containerSessionVars;
         };

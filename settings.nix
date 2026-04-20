@@ -1,7 +1,6 @@
 # ── User settings ──
 # Single source of truth for all user-specific configuration.
-# Infrastructure options: modules/core/hawker-options.nix
-# Project options: projects/<name>/options.nix
+# All options are type-checked against modules/core/hawker-options.nix.
 { ... }:
 
 {
@@ -19,25 +18,27 @@
       vertexRegion = "us-east5";
     };
 
-    # ── Container settings ──
+    # ── Container + projects ──
     container = {
       gpus = "4";
-      projects = [ "helion" "pytorch" ];
-    };
 
-    # ── Project settings ──
-    helion = {
-      repo = "https://github.com/pytorch/helion.git";
-      branch = "main";
-      torchIndex = "nightly/cu130";
-      backends = [ "cuda" ];
-    };
+      projects = {
+        helion = {
+          enable = true;
+          repo = "https://github.com/pytorch/helion.git";
+          branch = "main";
+          torchIndex = "nightly/cu130";
+          backends = [ "cuda" ];
+        };
 
-    pytorch = {
-      repo = "https://github.com/pytorch/pytorch.git";
-      branch = "main";
-      cudaArch = "9.0";
-      buildTests = false;
+        pytorch = {
+          enable = true;
+          repo = "https://github.com/pytorch/pytorch.git";
+          branch = "main";
+          cudaArch = "9.0";
+          buildTests = false;
+        };
+      };
     };
   };
 }

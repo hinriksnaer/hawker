@@ -1,6 +1,5 @@
-# Typed option declarations for infrastructure configuration.
+# Typed option declarations for all configuration.
 # Values are set in settings.nix. Type errors are caught at evaluation time.
-# Project-specific options live in their respective projects/<name>/default.nix.
 { lib, ... }:
 
 with lib;
@@ -56,15 +55,54 @@ with lib;
         example = "4";
       };
 
-      projects = mkOption {
-        type = types.listOf types.str;
-        default = [];
-        description = ''
-          Projects to include in the dev container. Each entry
-          must have a matching directory in projects/ with a
-          default.nix and setup.sh.
-        '';
-        example = [ "helion" "pytorch" ];
+      projects = {
+        helion = {
+          enable = mkEnableOption "Helion GPU kernel DSL";
+          repo = mkOption {
+            type = types.str;
+            default = "https://github.com/pytorch/helion.git";
+            description = "Helion git repository URL.";
+          };
+          branch = mkOption {
+            type = types.str;
+            default = "main";
+            description = "Helion git branch.";
+          };
+          torchIndex = mkOption {
+            type = types.str;
+            default = "nightly/cu130";
+            description = "PyTorch wheel index for helion (when pytorch project is not enabled).";
+          };
+          backends = mkOption {
+            type = types.listOf (types.enum [ "cuda" "cute" ]);
+            default = [ "cuda" ];
+            description = "GPU backends to enable. Stackable, not mutually exclusive.";
+          };
+        };
+
+        pytorch = {
+          enable = mkEnableOption "PyTorch (build from source)";
+          repo = mkOption {
+            type = types.str;
+            default = "https://github.com/pytorch/pytorch.git";
+            description = "PyTorch git repository URL.";
+          };
+          branch = mkOption {
+            type = types.str;
+            default = "main";
+            description = "PyTorch git branch.";
+          };
+          cudaArch = mkOption {
+            type = types.str;
+            default = "9.0";
+            description = "CUDA architectures to compile for (e.g. '9.0' for H200, '8.0;9.0' for A100+H200).";
+          };
+          buildTests = mkOption {
+            type = types.bool;
+            default = false;
+            description = "Build pytorch test binaries (slower build, only needed for running C++ tests).";
+          };
+        };
       };
     };
   };

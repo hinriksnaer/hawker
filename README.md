@@ -69,21 +69,23 @@ All settings live in `settings.nix`:
     };
 
     container = {
-      gpus = "4";                              # GPU index, "all", or "none"
-      projects = [ "helion" "pytorch" ];
-    };
+      gpus = "4";                            # GPU index, "all", or "none"
 
-    # Project settings (defaults from projects/<name>/options.nix)
-    helion = {
-      repo = "https://github.com/pytorch/helion.git";
-      branch = "main";
-      backends = [ "cuda" ];                   # also: "cute"
-    };
+      projects = {
+        helion = {
+          enable = true;
+          repo = "https://github.com/pytorch/helion.git";
+          branch = "main";
+          backends = [ "cuda" ];             # also: "cute"
+        };
 
-    pytorch = {
-      repo = "https://github.com/pytorch/pytorch.git";
-      branch = "main";
-      cudaArch = "9.0";                        # "8.0;9.0" for multi-arch
+        pytorch = {
+          enable = true;
+          repo = "https://github.com/pytorch/pytorch.git";
+          branch = "main";
+          cudaArch = "9.0";                  # "8.0;9.0" for multi-arch
+        };
+      };
     };
   };
 }

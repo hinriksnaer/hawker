@@ -1,7 +1,7 @@
 { pkgs, lib, config, ... }:
 
 let
-  hc = config.hawker.helion;
+  hc = config.hawker.container.projects.helion;
   has = backend: builtins.elem backend hc.backends;
 
   backendPackages = {
@@ -16,10 +16,7 @@ let
   selectedPackages = lib.concatMap (b: backendPackages.${b} or []) hc.backends;
 in
 {
-  imports = [
-    ./options.nix
-    ../../modules/ai/cuda-dev.nix
-  ];
+  imports = [ ../../modules/ai/cuda-dev.nix ];
 
   config = {
     environment.systemPackages = with pkgs; [
