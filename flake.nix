@@ -82,37 +82,6 @@
         container-build = self.packages.${system}.container;
       };
 
-      # ── Dev shell (native Nix on any Linux host) ──
-      devShells.${system}.default = let
-        containerConfig = self.nixosConfigurations.container.config;
-        containerPackages = containerConfig.environment.systemPackages;
-        sessionVars = containerConfig.environment.sessionVariables;
-        projects = builtins.concatStringsSep "," hawkerConfig.container.projects;
-      in pkgs.mkShell {
-        packages = containerPackages;
-
-        shellHook = ''
-          export HAWKER_PATH="$HOME/.local/share/hawker"
-          export HAWKER_USER="${hawkerConfig.username}"
-          export HAWKER_PROJECTS="${projects}"
-
-          ${builtins.concatStringsSep "\n" (
-            pkgs.lib.mapAttrsToList (k: v: "export ${k}=\"${v}\"") sessionVars
-          )}
-
-          if [ -d /usr/lib64 ] && [ ! -f /etc/NIXOS ]; then
-            export LD_LIBRARY_PATH="/usr/lib64''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-          fi
-
-          for project in ''${HAWKER_PROJECTS//,/ }; do
-            setup="$HOME/hawker/projects/''${project}/setup.sh"
-            if [ -f "$setup" ]; then
-              bash "$setup"
-            fi
-          done
-        '';
-      };
-
       # ── Container image ──
       packages.${system} = let
         containerConfig = self.nixosConfigurations.container.config;

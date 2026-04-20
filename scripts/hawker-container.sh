@@ -124,16 +124,6 @@ case "${1:-help}" in
         run_container
         ;;
 
-    shell)
-        # Native nix develop (no container isolation)
-        if [ $# -ge 2 ]; then
-            ssh -A -tt "$2" "cd ~/hawker && nix develop --command fish"
-        else
-            cd "$REPO_DIR"
-            exec nix develop --command fish
-        fi
-        ;;
-
     run-local)
         run_container
         ;;
@@ -183,7 +173,6 @@ case "${1:-help}" in
         echo "  $0 enter [host]        Enter container (local or remote)"
         echo "  $0 push <host>         Build + push without entering"
         echo "  $0 run                 Build + run container locally"
-        echo "  $0 shell [host]        Enter nix develop shell (no isolation)"
         echo "  $0 status [host]       Check Nix/GPU availability"
         echo "  $0 stop [host]         Stop running container"
         echo "  $0 clean [host]        Remove container, image, and repos volume"
@@ -192,6 +181,5 @@ case "${1:-help}" in
         echo "  $0 deploy my-gpu-host   Deploy to remote host"
         echo "  $0 enter my-gpu-host   Enter existing container"
         echo "  $0 clean my-gpu-host   Fresh start (removes repos/venvs)"
-        echo "  $0 shell               Local dev shell (no container)"
         ;;
 esac
