@@ -97,13 +97,19 @@ start_container() {
     mounts+=(-v "${IMAGE_NAME}-repos:/home/${HAWKER_USER:-$USER}/repos")
     mounts+=(-v "${IMAGE_NAME}-ccache:/home/${HAWKER_USER:-$USER}/.cache/ccache")
     mounts+=(-v "${IMAGE_NAME}-gcloud:/home/${HAWKER_USER:-$USER}/.config/gcloud")
+    mounts+=(-v "${IMAGE_NAME}-hawker:/home/${HAWKER_USER:-$USER}/hawker")
+
+    # Clone hawker repo if the persistent volume is empty
+    local hawker_repo
+    hawker_repo=$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null) || hawker_repo="https://github.com/hinriksnaer/hawker.git"
+    env_args+=(-e "HAWKER_REPO=${hawker_repo}")
 
     # Project setup runs inside the container where HAWKER_PROJECTS is set.
     # Each setup script is idempotent and handles its own dependencies.
     # Order matters: pytorch must build torch before helion tries to import it.
     # Run project setup scripts. Fail fast -- if one fails, stop and show the error
     # instead of silently continuing into fish with a broken environment.
-    local setup_cmd='set -e; ordered="pytorch helion"; for p in $ordered; do echo ${HAWKER_PROJECTS//,/ } | grep -qw "$p" || continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done; for p in ${HAWKER_PROJECTS//,/ }; do echo "$ordered" | grep -qw "$p" && continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
+    local setup_cmd='set -e; if [ ! -d ~/hawker/.git ]; then git clone "$HAWKER_REPO" ~/hawker; fi; ordered="pytorch helion"; for p in $ordered; do echo ${HAWKER_PROJECTS//,/ } | grep -qw "$p" || continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done; for p in ${HAWKER_PROJECTS//,/ }; do echo "$ordered" | grep -qw "$p" && continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
 
     exec $runtime run -it \
         --name "$IMAGE_NAME" \
@@ -183,12 +189,12 @@ case "${1:-help}" in
         if [ $# -ge 2 ]; then
             echo "==> Cleaning ${IMAGE_NAME} on $2..."
             # shellcheck disable=SC2029
-            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache ${IMAGE_NAME}-gcloud 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache ${IMAGE_NAME}-gcloud ${IMAGE_NAME}-hawker 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
         else
             echo "==> Cleaning local $IMAGE_NAME..."
             $(detect_runtime) stop "$IMAGE_NAME" 2>/dev/null || true
             $(detect_runtime) rm "$IMAGE_NAME" 2>/dev/null || true
-            $(detect_runtime) volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" "${IMAGE_NAME}-gcloud" 2>/dev/null || true
+            $(detect_runtime) volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" "${IMAGE_NAME}-gcloud" "${IMAGE_NAME}-hawker" 2>/dev/null || true
             $(detect_runtime) rmi "$IMAGE_NAME:latest" 2>/dev/null || true
             echo "done"
         fi
