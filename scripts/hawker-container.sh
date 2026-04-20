@@ -77,7 +77,9 @@ run_container() {
 
     # Project setup runs inside the container where HAWKER_PROJECTS is set.
     # Each setup script is idempotent and handles its own dependencies.
-    local setup_cmd='for p in ${HAWKER_PROJECTS//,/ }; do s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
+    # Run project setup scripts. Fail fast -- if one fails, stop and show the error
+    # instead of silently continuing into fish with a broken environment.
+    local setup_cmd='set -e; for p in ${HAWKER_PROJECTS//,/ }; do s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
 
     exec $runtime run -it --rm \
         --name "$IMAGE_NAME" \
