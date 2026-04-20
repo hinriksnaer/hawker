@@ -39,7 +39,19 @@ push_to() {
     ssh "$host" "$stream_script | podman load 2>/dev/null || $stream_script | docker load"
 }
 
-run_container() {
+enter_container() {
+    local runtime
+    runtime=$(detect_runtime)
+
+    # If container is already running, attach to it
+    if $runtime container inspect "$IMAGE_NAME" &>/dev/null; then
+        exec $runtime exec -it "$IMAGE_NAME" fish
+    fi
+
+    start_container
+}
+
+start_container() {
     local runtime
     runtime=$(detect_runtime)
 
@@ -86,7 +98,7 @@ run_container() {
     # instead of silently continuing into fish with a broken environment.
     local setup_cmd='set -e; ordered="pytorch helion"; for p in $ordered; do echo ${HAWKER_PROJECTS//,/ } | grep -qw "$p" || continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done; for p in ${HAWKER_PROJECTS//,/ }; do echo "$ordered" | grep -qw "$p" && continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
 
-    exec $runtime run -it --rm \
+    exec $runtime run -it \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
         "${mounts[@]}" \
@@ -103,14 +115,14 @@ case "${1:-help}" in
         [ $# -lt 2 ] && echo "Usage: $0 deploy <host>" && exit 1
         push_to "$2"
         echo "==> Entering container..."
-        ssh -A -tt "$2" 'bash $HOME/hawker/scripts/hawker-container.sh run-local'
+        ssh -A -tt "$2" 'bash $HOME/hawker/scripts/hawker-container.sh start-local'
         ;;
 
     enter)
         if [ $# -ge 2 ]; then
-            ssh -A -tt "$2" 'bash $HOME/hawker/scripts/hawker-container.sh run-local'
+            ssh -A -tt "$2" 'bash $HOME/hawker/scripts/hawker-container.sh enter-local'
         else
-            run_container
+            enter_container
         fi
         ;;
 
@@ -126,11 +138,15 @@ case "${1:-help}" in
         echo "==> Loading $IMAGE_NAME..."
         "$stream_script" | $(detect_runtime) load
         echo "==> Starting $IMAGE_NAME..."
-        run_container
+        start_container
         ;;
 
-    run-local)
-        run_container
+    start-local)
+        start_container
+        ;;
+
+    enter-local)
+        enter_container
         ;;
 
     status)
