@@ -125,8 +125,8 @@
           }}/bin/${name}";
         };
       in {
-        # nix run .#deploy -- ibm-kaiba
-        deploy = mkApp "hawker-container" (with pkgs; [ rsync openssh git nix coreutils ]);
+        # nix run .#container -- deploy ibm-kaiba
+        container = mkApp "hawker-container" (with pkgs; [ rsync openssh git nix coreutils ]);
       };
 
       # ── Container image ──
