@@ -50,10 +50,11 @@ run_container() {
     local extra_args=()
 
     # GPU passthrough (controlled by HAWKER_GPUS: "all", "none", or "0,1,4")
-    # GPU passthrough via NVIDIA CDI (Container Device Interface).
-    # CDI handles both device files AND driver libraries (libcuda.so, etc.)
+    # GPU passthrough: CDI for devices + manual driver library mount.
+    # CDI on this host only maps device nodes, not driver libraries.
     local gpus="${HAWKER_GPUS:-all}"
     if [ "$gpus" != "none" ]; then
+        # Device nodes via CDI
         if [ "$gpus" = "all" ]; then
             extra_args+=(--device nvidia.com/gpu=all)
         else
@@ -62,6 +63,16 @@ run_container() {
             done
         fi
         env_args+=(-e "CUDA_VISIBLE_DEVICES=${gpus}")
+
+        # Driver libraries (libcuda.so, libnvidia-ml.so, etc.)
+        # CDI should handle this but many configs only include device nodes.
+        for lib_dir in /usr/lib64 /usr/lib/x86_64-linux-gnu; do
+            if [ -f "${lib_dir}/libcuda.so.1" ]; then
+                mounts+=(-v "${lib_dir}:${lib_dir}:ro")
+                env_args+=(-e "LD_LIBRARY_PATH=${lib_dir}")
+                break
+            fi
+        done
     fi
 
     # Forward SSH agent socket
