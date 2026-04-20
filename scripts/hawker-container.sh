@@ -49,32 +49,19 @@ run_container() {
     local env_args=(-e "TERM=xterm-256color")
     local extra_args=()
 
-    # GPU passthrough: manual device files + host driver libraries.
-    # CDI hook fails on ibm-kaiba, so we pass devices directly.
+    # GPU passthrough via NVIDIA CDI.
+    # CDI handles device files AND driver libraries when properly configured.
+    # Regenerate CDI spec: sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
     local gpus="${HAWKER_GPUS:-all}"
     if [ "$gpus" != "none" ]; then
-        extra_args+=(--device /dev/nvidiactl --device /dev/nvidia-uvm)
-        [ -e /dev/nvidia-uvm-tools ] && extra_args+=(--device /dev/nvidia-uvm-tools)
-
         if [ "$gpus" = "all" ]; then
-            for dev in /dev/nvidia[0-9]*; do
-                [ -e "$dev" ] && extra_args+=(--device "$dev")
-            done
+            extra_args+=(--device nvidia.com/gpu=all)
         else
             for idx in ${gpus//,/ }; do
-                extra_args+=(--device "/dev/nvidia${idx}")
+                extra_args+=(--device "nvidia.com/gpu=${idx}")
             done
         fi
         env_args+=(-e "CUDA_VISIBLE_DEVICES=${gpus}")
-
-        # Host driver libraries (libcuda.so, libnvidia-ml.so, etc.)
-        for lib_dir in /usr/lib64 /usr/lib/x86_64-linux-gnu; do
-            if [ -f "${lib_dir}/libcuda.so.1" ]; then
-                mounts+=(-v "${lib_dir}:${lib_dir}:ro")
-                env_args+=(-e "LD_LIBRARY_PATH=${lib_dir}")
-                break
-            fi
-        done
     fi
 
     # Forward SSH agent socket
