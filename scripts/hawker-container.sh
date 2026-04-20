@@ -112,7 +112,7 @@ start_container() {
         "${env_args[@]}" \
         "${extra_args[@]}" \
         "$IMAGE_NAME:latest" \
-        bash ~/hawker/scripts/container-entry.sh
+        /usr/local/bin/container-entry
 }
 
 # ── Commands ──
