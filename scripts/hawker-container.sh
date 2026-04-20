@@ -43,11 +43,18 @@ enter_container() {
     local runtime
     runtime=$(detect_runtime)
 
-    # If container is already running, attach to it
-    if $runtime container inspect "$IMAGE_NAME" &>/dev/null; then
+    # If container is running, attach to it
+    if [ "$($runtime inspect -f '{{.State.Running}}' "$IMAGE_NAME" 2>/dev/null)" = "true" ]; then
         exec $runtime exec -it "$IMAGE_NAME" fish
     fi
 
+    # If container exists but is stopped, start it and attach
+    if $runtime container inspect "$IMAGE_NAME" &>/dev/null; then
+        $runtime start "$IMAGE_NAME"
+        exec $runtime exec -it "$IMAGE_NAME" fish
+    fi
+
+    # No container exists, create one
     start_container
 }
 
@@ -164,9 +171,10 @@ case "${1:-help}" in
 
     stop)
         if [ $# -ge 2 ]; then
-            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null || docker stop ${IMAGE_NAME} 2>/dev/null"
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null || docker stop ${IMAGE_NAME} 2>/dev/null; docker rm ${IMAGE_NAME} 2>/dev/null"
         else
-            podman stop "${IMAGE_NAME}" 2>/dev/null || docker stop "${IMAGE_NAME}" 2>/dev/null
+            $(detect_runtime) stop "${IMAGE_NAME}" 2>/dev/null || true
+            $(detect_runtime) rm "${IMAGE_NAME}" 2>/dev/null || true
         fi
         ;;
 
@@ -175,12 +183,12 @@ case "${1:-help}" in
         if [ $# -ge 2 ]; then
             echo "==> Cleaning ${IMAGE_NAME} on $2..."
             # shellcheck disable=SC2029
-            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache ${IMAGE_NAME}-gcloud 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
         else
             echo "==> Cleaning local $IMAGE_NAME..."
             $(detect_runtime) stop "$IMAGE_NAME" 2>/dev/null || true
             $(detect_runtime) rm "$IMAGE_NAME" 2>/dev/null || true
-            $(detect_runtime) volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" 2>/dev/null || true
+            $(detect_runtime) volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" "${IMAGE_NAME}-gcloud" 2>/dev/null || true
             $(detect_runtime) rmi "$IMAGE_NAME:latest" 2>/dev/null || true
             echo "done"
         fi
