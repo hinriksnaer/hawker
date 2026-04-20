@@ -38,7 +38,13 @@ in
       USE_SYSTEM_NCCL = "1";
       USE_CUFILE = "OFF";     # cuFile (GPU Direct Storage) not in Nix CUDA packages
       USE_NVSHMEM = "OFF";  # pip nvshmem ABI incompatible with older SM targets
-      TORCH_CUDA_ARCH_LIST = "9.0";  # H200 only -- dramatically faster builds
+      USE_KINETO = "0";     # profiling -- enable when needed
+      USE_FBGEMM = "0";     # Facebook GEMM -- not needed for compile/inductor work
+      USE_NNPACK = "0";     # legacy neural network primitives
+      USE_QNNPACK = "0";    # quantized neural network primitives
+      USE_XNNPACK = "0";    # XNNPACK -- CPU inference optimization
+      TORCH_CUDA_ARCH_LIST = pc.cudaArch;
+      BUILD_TEST = if pc.buildTests then "1" else "0";
       MAX_JOBS = "64";
       CMAKE_C_COMPILER_LAUNCHER = "ccache";
       CMAKE_CXX_COMPILER_LAUNCHER = "ccache";
