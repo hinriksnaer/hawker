@@ -1,30 +1,23 @@
 { config, pkgs, lib, ... }:
 
 let
-  # Read project enable flags from settings.nix for import decisions.
-  # Can't use config here -- imports can't depend on config.
-  rawSettings = import ../../settings.nix { };
-  rawProjects = rawSettings.hawker.container.projects or {};
+  # Which projects to import. Read directly from settings.nix because
+  # NixOS imports can't depend on config (evaluated before config merges).
+  settings = (import ../../settings.nix { }).hawker.container.projects or {};
+  isEnabled = name: (settings.${name}.enable or false) == true;
+  projectDir = name: ../../projects + "/${name}";
+  hasProject = name: builtins.pathExists (projectDir name + "/default.nix");
 
-  # Auto-discover projects: any directory in projects/ with a default.nix
-  projectsDir = ../../projects;
   allProjects = builtins.attrNames (
-    lib.filterAttrs (name: type:
-      type == "directory" && builtins.pathExists (projectsDir + "/${name}/default.nix")
-    ) (builtins.readDir projectsDir)
+    lib.filterAttrs (n: t: t == "directory" && hasProject n)
+      (builtins.readDir ../../projects)
   );
-
-  # Import projects where enable = true
-  enabledProjects = builtins.filter
-    (p: (rawProjects.${p}.enable or false) == true)
-    allProjects;
-  enabledModules = map (p: projectsDir + "/${p}") enabledProjects;
 in
 {
   imports = [
     ../../modules/core
     ../../modules/terminal
-  ] ++ enabledModules;
+  ] ++ map projectDir (builtins.filter isEnabled allProjects);
 
   # Container-specific: no bootloader, no hardware
   boot.loader.systemd-boot.enable = lib.mkForce false;
