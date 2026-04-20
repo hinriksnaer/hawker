@@ -1,6 +1,7 @@
-# hawker-container - manage dev environments locally and on remote hosts
+# hawker-container - manage NixOS dev containers
 
 IMAGE_NAME="hawker-dev"
+BASE_IMAGE="ghcr.io/skiffos/docker-nixos:latest"
 FLAKE_REF="${HAWKER_FLAKE:-$HOME/hawker}"
 REPO_DIR="$FLAKE_REF"
 
@@ -17,37 +18,23 @@ detect_runtime() {
     fi
 }
 
-
-push_to() {
-    local host="$1"
-
-    echo "==> Syncing repo to $host..."
-    rsync -a --delete --exclude='.git' --chmod=Du+rwx,Fu+rw \
-        "$REPO_DIR/" "${host}:~/hawker/"
-
-    # Flakes require a git repo. Init one on the remote and stage all files
-    # so Nix can see them (doesn't need commits, just git add).
-    ssh "$host" "cd ~/hawker && git init -q 2>/dev/null; git add -A 2>/dev/null" 
-
-    echo "==> Building container on $host..."
-    ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-build-logs"
-
-    local stream_script
-    stream_script=$(ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-out-paths")
-
-    echo "==> Loading image on $host..."
-    ssh "$host" "$stream_script | podman load 2>/dev/null || $stream_script | docker load"
-}
-
 enter_container() {
     local runtime
     runtime=$(detect_runtime)
 
-    # If container is already running, attach to it
-    if $runtime container inspect "$IMAGE_NAME" &>/dev/null; then
-        exec $runtime exec -it "$IMAGE_NAME" fish
+    # If container is running, attach
+    if [ "$($runtime inspect -f '{{.State.Running}}' "$IMAGE_NAME" 2>/dev/null)" = "true" ]; then
+        exec $runtime exec -it "$IMAGE_NAME" /run/current-system/sw/bin/bash -c "export PATH=/run/current-system/sw/bin:\$PATH && cd /home/hawker && exec fish 2>/dev/null || exec bash"
     fi
 
+    # If container exists but stopped, start and attach
+    if $runtime container inspect "$IMAGE_NAME" &>/dev/null; then
+        $runtime start "$IMAGE_NAME"
+        sleep 2  # wait for systemd
+        exec $runtime exec -it "$IMAGE_NAME" /run/current-system/sw/bin/bash -c "export PATH=/run/current-system/sw/bin:\$PATH && cd /home/hawker && exec fish 2>/dev/null || exec bash"
+    fi
+
+    # No container exists, create one
     start_container
 }
 
@@ -58,13 +45,17 @@ start_container() {
     $runtime rm -f "$IMAGE_NAME" 2>/dev/null || true
 
     local mounts=()
-    local env_args=(-e "TERM=xterm-256color")
     local extra_args=()
 
-    # GPU passthrough via NVIDIA CDI.
-    # CDI handles device files AND driver libraries when properly configured.
-    # Regenerate CDI spec: sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
-    # Read GPU config from the flake (HAWKER_GPUS is inside the image, not on the host).
+    # Required for systemd inside the container
+    mounts+=(--tmpfs /run)
+    mounts+=(-v /sys/fs/cgroup:/sys/fs/cgroup:rw)
+    extra_args+=(--cgroupns=host)
+
+    # Mount hawker repo
+    mounts+=(-v "${REPO_DIR}:/home/hawker/hawker")
+
+    # GPU passthrough via NVIDIA CDI
     local gpus
     gpus=$(nix eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.container.gpus" 2>/dev/null) || gpus="all"
     if [ "$gpus" != "none" ]; then
@@ -75,47 +66,39 @@ start_container() {
                 extra_args+=(--device "nvidia.com/gpu=${idx}")
             done
         fi
-        # Don't set CUDA_VISIBLE_DEVICES -- CDI handles device isolation.
-        # When CDI passes GPU 4, it appears as device 0 inside the container,
-        # so CUDA_VISIBLE_DEVICES=4 would hide it.
     fi
 
-    # Forward SSH agent socket
+    # Forward SSH agent
     if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
+        extra_args+=(--security-opt label=disable)
         mounts+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock")
-        env_args+=(-e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
+        extra_args+=(-e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
     fi
 
-    # Persistent volumes
-    mounts+=(-v "${IMAGE_NAME}-repos:/home/${HAWKER_USER:-$USER}/repos")
-    mounts+=(-v "${IMAGE_NAME}-ccache:/home/${HAWKER_USER:-$USER}/.cache/ccache")
-    mounts+=(-v "${IMAGE_NAME}-gcloud:/home/${HAWKER_USER:-$USER}/.config/gcloud")
-
-    # Project setup runs inside the container where HAWKER_PROJECTS is set.
-    # Each setup script is idempotent and handles its own dependencies.
-    # Order matters: pytorch must build torch before helion tries to import it.
-    # Run project setup scripts. Fail fast -- if one fails, stop and show the error
-    # instead of silently continuing into fish with a broken environment.
-    local setup_cmd='set -e; ordered="pytorch helion"; for p in $ordered; do echo ${HAWKER_PROJECTS//,/ } | grep -qw "$p" || continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done; for p in ${HAWKER_PROJECTS//,/ }; do echo "$ordered" | grep -qw "$p" && continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
-
-    exec $runtime run -it \
+    echo "==> Starting $IMAGE_NAME..."
+    $runtime run -d \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
         "${mounts[@]}" \
-        "${env_args[@]}" \
         "${extra_args[@]}" \
-        "$IMAGE_NAME:latest" \
-        bash -c "${setup_cmd}exec fish"
+        "$BASE_IMAGE"
+
+    echo "==> Waiting for systemd..."
+    sleep 3
+
+    echo "==> Applying NixOS config..."
+    $runtime exec "$IMAGE_NAME" /run/current-system/sw/bin/bash -c \
+        "export PATH=/run/current-system/sw/bin:\$PATH && cd /home/hawker/hawker && nixos-rebuild switch --flake .#container 2>&1"
+
+    echo "==> Entering container..."
+    exec $runtime exec -it "$IMAGE_NAME" /run/current-system/sw/bin/bash -c "export PATH=/run/current-system/sw/bin:\$PATH && cd /home/hawker && exec fish 2>/dev/null || exec bash"
 }
 
 # ── Commands ──
 
 case "${1:-help}" in
-    deploy)
-        [ $# -lt 2 ] && echo "Usage: $0 deploy <host>" && exit 1
-        push_to "$2"
-        echo "==> Entering container..."
-        ssh -A -tt "$2" 'bash $HOME/hawker/scripts/hawker-container.sh start-local'
+    start)
+        start_container
         ;;
 
     enter)
@@ -126,23 +109,38 @@ case "${1:-help}" in
         fi
         ;;
 
-    push)
-        [ $# -lt 2 ] && echo "Usage: $0 push <host>" && exit 1
-        push_to "$2"
-        echo "==> Done. Enter with: $0 enter $2"
+    rebuild)
+        # Rebuild NixOS config inside running container
+        echo "==> Rebuilding NixOS config..."
+        $(detect_runtime) exec "$IMAGE_NAME" /run/current-system/sw/bin/bash -c \
+            "export PATH=/run/current-system/sw/bin:\$PATH && cd /home/hawker/hawker && git pull && nixos-rebuild switch --flake .#container 2>&1"
         ;;
 
-    run)
-        # Local: build, load, run
-        stream_script=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
-        echo "==> Loading $IMAGE_NAME..."
-        "$stream_script" | $(detect_runtime) load
-        echo "==> Starting $IMAGE_NAME..."
-        start_container
+    deploy)
+        [ $# -lt 2 ] && echo "Usage: $0 deploy <host>" && exit 1
+        echo "==> Syncing repo to $2..."
+        rsync -a --delete --exclude='.git' --chmod=Du+rwx,Fu+rw \
+            "$REPO_DIR/" "${2}:~/hawker/"
+        ssh "$2" "cd ~/hawker && git init -q 2>/dev/null; git add -A 2>/dev/null"
+        echo "==> Starting container on $2..."
+        ssh -A -tt "$2" 'bash $HOME/hawker/scripts/hawker-container.sh start'
         ;;
 
-    start-local)
-        start_container
+    stop)
+        if [ $# -ge 2 ]; then
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null || docker stop ${IMAGE_NAME} 2>/dev/null"
+        else
+            $(detect_runtime) stop "${IMAGE_NAME}" 2>/dev/null || true
+        fi
+        ;;
+
+    clean)
+        if [ $# -ge 2 ]; then
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; echo done"
+        else
+            $(detect_runtime) stop "${IMAGE_NAME}" 2>/dev/null || true
+            $(detect_runtime) rm "${IMAGE_NAME}" 2>/dev/null || true
+        fi
         ;;
 
     enter-local)
@@ -151,56 +149,22 @@ case "${1:-help}" in
 
     status)
         if [ $# -ge 2 ]; then
-            echo "==> Checking $2..."
-            ssh "$2" "nix --version 2>/dev/null && echo 'Nix: available' || echo 'Nix: not installed'"
-            ssh "$2" "podman --version 2>/dev/null || docker --version 2>/dev/null || echo 'No container runtime'"
-            ssh "$2" "nvidia-smi --query-gpu=gpu_name --format=csv,noheader 2>/dev/null || echo 'No GPUs detected'"
+            ssh "$2" "podman ps -a --filter name=${IMAGE_NAME} 2>/dev/null || docker ps -a --filter name=${IMAGE_NAME}"
         else
-            nix --version
-            podman --version 2>/dev/null || docker --version 2>/dev/null || echo 'No container runtime'
-            nvidia-smi --query-gpu=gpu_name --format=csv,noheader 2>/dev/null || echo 'No GPUs detected'
-        fi
-        ;;
-
-    stop)
-        if [ $# -ge 2 ]; then
-            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null || docker stop ${IMAGE_NAME} 2>/dev/null"
-        else
-            podman stop "${IMAGE_NAME}" 2>/dev/null || docker stop "${IMAGE_NAME}" 2>/dev/null
-        fi
-        ;;
-
-    clean)
-        # Remove persistent volumes (repos, ccache, setup markers)
-        if [ $# -ge 2 ]; then
-            echo "==> Cleaning ${IMAGE_NAME} on $2..."
-            # shellcheck disable=SC2029
-            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
-        else
-            echo "==> Cleaning local $IMAGE_NAME..."
-            $(detect_runtime) stop "$IMAGE_NAME" 2>/dev/null || true
-            $(detect_runtime) rm "$IMAGE_NAME" 2>/dev/null || true
-            $(detect_runtime) volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" 2>/dev/null || true
-            $(detect_runtime) rmi "$IMAGE_NAME:latest" 2>/dev/null || true
-            echo "done"
+            $(detect_runtime) ps -a --filter "name=${IMAGE_NAME}"
         fi
         ;;
 
     help|*)
-        echo "hawker-container - manage dev environments"
+        echo "hawker-container - NixOS dev containers"
         echo ""
         echo "Commands:"
-        echo "  $0 deploy <host>       Build + push + enter container on remote"
-        echo "  $0 enter [host]        Enter container (local or remote)"
-        echo "  $0 push <host>         Build + push without entering"
-        echo "  $0 run                 Build + run container locally"
-        echo "  $0 status [host]       Check Nix/GPU availability"
-        echo "  $0 stop [host]         Stop running container"
-        echo "  $0 clean [host]        Remove container, image, and repos volume"
-        echo ""
-        echo "Examples:"
-        echo "  $0 deploy my-gpu-host   Deploy to remote host"
-        echo "  $0 enter my-gpu-host   Enter existing container"
-        echo "  $0 clean my-gpu-host   Fresh start (removes repos/venvs)"
+        echo "  $0 start              Create and start a new container"
+        echo "  $0 enter [host]       Enter running container (local or remote)"
+        echo "  $0 rebuild            Rebuild NixOS config inside container"
+        echo "  $0 deploy <host>      Sync repo + start container on remote"
+        echo "  $0 stop [host]        Stop container"
+        echo "  $0 clean [host]       Remove container"
+        echo "  $0 status [host]      Show container status"
         ;;
 esac

@@ -1,8 +1,8 @@
+# NixOS configuration for docker-nixos container.
+# Applied via: nixos-rebuild switch --flake ~/hawker#container
 { config, pkgs, lib, ... }:
 
 let
-  # Which projects to import. Read directly from settings.nix because
-  # NixOS imports can't depend on config (evaluated before config merges).
   settings = (import ../../settings.nix { }).hawker.container.projects or {};
   isEnabled = name: (settings.${name}.enable or false) == true;
   projectDir = name: ../../projects + "/${name}";
@@ -19,19 +19,41 @@ in
     ../../modules/terminal
   ] ++ map projectDir (builtins.filter isEnabled allProjects);
 
-  # Container-specific: no bootloader, no hardware
+  # Container-specific
+  boot.isContainer = true;
   boot.loader.systemd-boot.enable = lib.mkForce false;
   boot.loader.grub.enable = lib.mkForce false;
   fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
 
   networking.hostName = "hawker-dev";
+  networking.useHostResolvConf = lib.mkForce false;
+
+  # User
+  users.users.${config.hawker.username} = {
+    isNormalUser = true;
+    uid = 1000;
+    extraGroups = [ "wheel" "video" "render" ];
+  };
+  security.sudo.wheelNeedsPassword = false;
+
+  # Nix
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    trusted-users = [ "root" config.hawker.username ];
+  };
+  nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
     openssh
     cacert
-    nix     # for home-manager switch inside the container
     git
   ];
+
+  # Environment variables for CUDA/CDI
+  environment.sessionVariables = {
+    LD_LIBRARY_PATH = "/usr/lib64:${pkgs.stdenv.cc.cc.lib}/lib";
+    TRITON_LIBCUDA_PATH = "/usr/lib64";
+  };
 
   system.stateVersion = "24.11";
 }
