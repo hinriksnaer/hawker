@@ -49,23 +49,25 @@ run_container() {
     local env_args=(-e "TERM=xterm-256color")
     local extra_args=()
 
-    # GPU passthrough (controlled by HAWKER_GPUS: "all", "none", or "0,1,4")
-    # GPU passthrough: CDI for devices + manual driver library mount.
-    # CDI on this host only maps device nodes, not driver libraries.
+    # GPU passthrough: manual device files + host driver libraries.
+    # CDI hook fails on ibm-kaiba, so we pass devices directly.
     local gpus="${HAWKER_GPUS:-all}"
     if [ "$gpus" != "none" ]; then
-        # Device nodes via CDI
+        extra_args+=(--device /dev/nvidiactl --device /dev/nvidia-uvm)
+        [ -e /dev/nvidia-uvm-tools ] && extra_args+=(--device /dev/nvidia-uvm-tools)
+
         if [ "$gpus" = "all" ]; then
-            extra_args+=(--device nvidia.com/gpu=all)
+            for dev in /dev/nvidia[0-9]*; do
+                [ -e "$dev" ] && extra_args+=(--device "$dev")
+            done
         else
             for idx in ${gpus//,/ }; do
-                extra_args+=(--device "nvidia.com/gpu=${idx}")
+                extra_args+=(--device "/dev/nvidia${idx}")
             done
         fi
         env_args+=(-e "CUDA_VISIBLE_DEVICES=${gpus}")
 
-        # Driver libraries (libcuda.so, libnvidia-ml.so, etc.)
-        # CDI should handle this but many configs only include device nodes.
+        # Host driver libraries (libcuda.so, libnvidia-ml.so, etc.)
         for lib_dir in /usr/lib64 /usr/lib/x86_64-linux-gnu; do
             if [ -f "${lib_dir}/libcuda.so.1" ]; then
                 mounts+=(-v "${lib_dir}:${lib_dir}:ro")
