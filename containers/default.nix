@@ -75,6 +75,12 @@ pkgs.dockerTools.streamLayeredImage {
       "HAWKER_USER=${username}"
       "HAWKER_PROJECTS=${projectsStr}"
       "HAWKER_GPUS=${gpus}"
+      # CDI injects NVIDIA driver libs (libcuda.so) into /usr/lib64 at runtime.
+      # NixOS doesn't include /usr/lib64 in the dynamic linker search path.
+      "LD_LIBRARY_PATH=/usr/lib64"
+      # Triton calls /sbin/ldconfig -p to find libcuda.so, which fails on NixOS
+      # (cache path baked to read-only Nix store). This env var bypasses ldconfig.
+      "TRITON_LIBCUDA_PATH=/usr/lib64"
     ] ++ sessionEnv;
     Cmd = [ "${pkgs.fish}/bin/fish" ];
     WorkingDir = "/home/${username}";

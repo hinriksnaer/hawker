@@ -227,8 +227,8 @@ return {
     local ensure_installed = vim.tbl_keys(servers or {})
     vim.list_extend(ensure_installed, {
       'stylua', -- Used to format Lua code
-      'clangd',
-      'clang-format',
+      -- clangd + clang-format provided by Nix (clang-tools package)
+      -- codelldb provided by Mason (no system package available)
       'codelldb',
     })
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }

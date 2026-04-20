@@ -1,7 +1,7 @@
 # ── User settings ──
 # Single source of truth for all user-specific configuration.
-# Values are type-checked against modules/core/hawker-options.nix.
-# Change these values to match your system, then rebuild.
+# Infrastructure options: modules/core/hawker-options.nix
+# Project options: projects/<name>/options.nix
 { ... }:
 
 {
@@ -36,6 +36,8 @@
     pytorch = {
       repo = "https://github.com/pytorch/pytorch.git";
       branch = "main";
+      cudaArch = "9.0";
+      buildTests = false;
     };
   };
 }

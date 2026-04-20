@@ -52,7 +52,9 @@ run_container() {
     # GPU passthrough via NVIDIA CDI.
     # CDI handles device files AND driver libraries when properly configured.
     # Regenerate CDI spec: sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
-    local gpus="${HAWKER_GPUS:-all}"
+    # Read GPU config from the flake (HAWKER_GPUS is inside the image, not on the host).
+    local gpus
+    gpus=$(nix eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.container.gpus" 2>/dev/null) || gpus="all"
     if [ "$gpus" != "none" ]; then
         if [ "$gpus" = "all" ]; then
             extra_args+=(--device nvidia.com/gpu=all)
@@ -61,7 +63,9 @@ run_container() {
                 extra_args+=(--device "nvidia.com/gpu=${idx}")
             done
         fi
-        env_args+=(-e "CUDA_VISIBLE_DEVICES=${gpus}")
+        # Don't set CUDA_VISIBLE_DEVICES -- CDI handles device isolation.
+        # When CDI passes GPU 4, it appears as device 0 inside the container,
+        # so CUDA_VISIBLE_DEVICES=4 would hide it.
     fi
 
     # Forward SSH agent socket
@@ -77,9 +81,10 @@ run_container() {
 
     # Project setup runs inside the container where HAWKER_PROJECTS is set.
     # Each setup script is idempotent and handles its own dependencies.
+    # Order matters: pytorch must build torch before helion tries to import it.
     # Run project setup scripts. Fail fast -- if one fails, stop and show the error
     # instead of silently continuing into fish with a broken environment.
-    local setup_cmd='set -e; for p in ${HAWKER_PROJECTS//,/ }; do s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
+    local setup_cmd='set -e; ordered="pytorch helion"; for p in $ordered; do echo ${HAWKER_PROJECTS//,/ } | grep -qw "$p" || continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done; for p in ${HAWKER_PROJECTS//,/ }; do echo "$ordered" | grep -qw "$p" && continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
 
     exec $runtime run -it --rm \
         --name "$IMAGE_NAME" \

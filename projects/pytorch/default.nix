@@ -5,7 +5,10 @@ let
   nccl = pkgs.cudaPackages.nccl;
 in
 {
-  imports = [ ../../modules/ai/cuda-dev.nix ];
+  imports = [
+    ./options.nix
+    ../../modules/ai/cuda-dev.nix
+  ];
 
   config = {
     environment.systemPackages = with pkgs; [
@@ -33,7 +36,7 @@ in
       NCCL_LIB_DIR = "${nccl}/lib";
       USE_CUDA = "1";
       USE_CUDNN = "1";
-      CUDNN_ROOT = "${pkgs.cudaPackages.cudnn}";
+      # CUDNN_INCLUDE_PATH / CUDNN_LIBRARY_PATH set in cuda-dev.nix
       USE_NCCL = "1";
       USE_SYSTEM_NCCL = "1";
       USE_CUFILE = "OFF";     # cuFile (GPU Direct Storage) not in Nix CUDA packages
