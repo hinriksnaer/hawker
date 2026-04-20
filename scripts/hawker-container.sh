@@ -36,25 +36,18 @@ push_to() {
     stream_script=$(ssh "$host" "cd ~/hawker && nix build .#container --no-link --print-out-paths")
 
     echo "==> Loading image on $host..."
-    ssh "$host" "podman load -i $stream_script 2>/dev/null || docker load -i $stream_script"
+    ssh "$host" "$stream_script | podman load 2>/dev/null || $stream_script | docker load"
 }
 
 enter_container() {
     local runtime
     runtime=$(detect_runtime)
 
-    # If container is running, attach to it
-    if [ "$($runtime inspect -f '{{.State.Running}}' "$IMAGE_NAME" 2>/dev/null)" = "true" ]; then
-        exec $runtime exec -it "$IMAGE_NAME" fish
-    fi
-
-    # If container exists but is stopped, start it and attach
+    # If container is already running, attach to it
     if $runtime container inspect "$IMAGE_NAME" &>/dev/null; then
-        $runtime start "$IMAGE_NAME"
         exec $runtime exec -it "$IMAGE_NAME" fish
     fi
 
-    # No container exists, create one
     start_container
 }
 
@@ -87,21 +80,23 @@ start_container() {
         # so CUDA_VISIBLE_DEVICES=4 would hide it.
     fi
 
-    extra_args+=(--userns=keep-id --security-opt label=disable)
-
-    # Forward SSH agent
+    # Forward SSH agent socket
     if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "$SSH_AUTH_SOCK" ]; then
         mounts+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock")
         env_args+=(-e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
     fi
 
-    # Persistent home directory -- single volume for all user state
-    mounts+=(-v "${IMAGE_NAME}-home:/home/${HAWKER_USER:-$USER}")
+    # Persistent volumes
+    mounts+=(-v "${IMAGE_NAME}-repos:/home/${HAWKER_USER:-$USER}/repos")
+    mounts+=(-v "${IMAGE_NAME}-ccache:/home/${HAWKER_USER:-$USER}/.cache/ccache")
+    mounts+=(-v "${IMAGE_NAME}-gcloud:/home/${HAWKER_USER:-$USER}/.config/gcloud")
 
-    # Clone hawker repo if the persistent volume is empty
-    local hawker_repo
-    hawker_repo=$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null) || hawker_repo="https://github.com/hinriksnaer/hawker.git"
-    env_args+=(-e "HAWKER_REPO=${hawker_repo}")
+    # Project setup runs inside the container where HAWKER_PROJECTS is set.
+    # Each setup script is idempotent and handles its own dependencies.
+    # Order matters: pytorch must build torch before helion tries to import it.
+    # Run project setup scripts. Fail fast -- if one fails, stop and show the error
+    # instead of silently continuing into fish with a broken environment.
+    local setup_cmd='set -e; ordered="pytorch helion"; for p in $ordered; do echo ${HAWKER_PROJECTS//,/ } | grep -qw "$p" || continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done; for p in ${HAWKER_PROJECTS//,/ }; do echo "$ordered" | grep -qw "$p" && continue; s=~/hawker/projects/${p}/setup.sh; [ -f "$s" ] && bash "$s"; done && '
 
     exec $runtime run -it \
         --name "$IMAGE_NAME" \
@@ -110,7 +105,7 @@ start_container() {
         "${env_args[@]}" \
         "${extra_args[@]}" \
         "$IMAGE_NAME:latest" \
-        /usr/local/bin/container-entry
+        bash -c "${setup_cmd}exec fish"
 }
 
 # ── Commands ──
@@ -139,9 +134,9 @@ case "${1:-help}" in
 
     run)
         # Local: build, load, run
-        image_path=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
+        stream_script=$(nix build "${FLAKE_REF}#container" --no-link --print-out-paths)
         echo "==> Loading $IMAGE_NAME..."
-        $(detect_runtime) load -i "$image_path"
+        "$stream_script" | $(detect_runtime) load
         echo "==> Starting $IMAGE_NAME..."
         start_container
         ;;
@@ -169,10 +164,9 @@ case "${1:-help}" in
 
     stop)
         if [ $# -ge 2 ]; then
-            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null || docker stop ${IMAGE_NAME} 2>/dev/null; docker rm ${IMAGE_NAME} 2>/dev/null"
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null || docker stop ${IMAGE_NAME} 2>/dev/null"
         else
-            $(detect_runtime) stop "${IMAGE_NAME}" 2>/dev/null || true
-            $(detect_runtime) rm "${IMAGE_NAME}" 2>/dev/null || true
+            podman stop "${IMAGE_NAME}" 2>/dev/null || docker stop "${IMAGE_NAME}" 2>/dev/null
         fi
         ;;
 
@@ -181,12 +175,12 @@ case "${1:-help}" in
         if [ $# -ge 2 ]; then
             echo "==> Cleaning ${IMAGE_NAME} on $2..."
             # shellcheck disable=SC2029
-            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-home 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
         else
             echo "==> Cleaning local $IMAGE_NAME..."
             $(detect_runtime) stop "$IMAGE_NAME" 2>/dev/null || true
             $(detect_runtime) rm "$IMAGE_NAME" 2>/dev/null || true
-            $(detect_runtime) volume rm "${IMAGE_NAME}-home" 2>/dev/null || true
+            $(detect_runtime) volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" 2>/dev/null || true
             $(detect_runtime) rmi "$IMAGE_NAME:latest" 2>/dev/null || true
             echo "done"
         fi

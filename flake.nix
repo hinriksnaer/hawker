@@ -7,6 +7,7 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
   };
 
   outputs = { self, nixpkgs, home-manager, ... }:
@@ -113,21 +114,15 @@
         enabledProjects = builtins.filter
           (name: hawkerConfig.container.projects.${name}.enable or false)
           (builtins.attrNames hawkerConfig.container.projects);
-        # Pre-build Home Manager activation for use inside the container.
-        # No writable Nix store needed -- the activation script just creates symlinks.
-        hmConfig = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [ ./home ];
-        };
       in {
         container = import ./containers/default.nix {
           inherit pkgs;
           inherit (hawkerConfig) username;
           inherit (hawkerConfig.container) gpus;
+
           projects = enabledProjects;
           packages = containerPackages;
           sessionVariables = containerSessionVars;
-          hmActivation = hmConfig.activationPackage;
         };
       };
     };
