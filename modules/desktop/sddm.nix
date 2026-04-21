@@ -1,5 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, config, lib, ... }:
 
+let
+  hasNvidia = builtins.elem "nvidia" config.services.xserver.videoDrivers;
+in
 {
   services.displayManager.sddm = {
     enable = true;
@@ -13,7 +16,10 @@
       CursorSize = "24";
     };
     settings.General = {
-      GreeterEnvironment = "WLR_NO_HARDWARE_CURSORS=1,LIBGL_ALWAYS_SOFTWARE=1,XCURSOR_THEME=Adwaita,XCURSOR_SIZE=24";
+      GreeterEnvironment = if hasNvidia then
+        "WLR_NO_HARDWARE_CURSORS=1,LIBVA_DRIVER_NAME=nvidia,GBM_BACKEND=nvidia-drm,__GLX_VENDOR_LIBRARY_NAME=nvidia,XCURSOR_THEME=Adwaita,XCURSOR_SIZE=24"
+      else
+        "XCURSOR_THEME=Adwaita,XCURSOR_SIZE=24";
     };
   };
 

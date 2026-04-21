@@ -1,7 +1,7 @@
 { pkgs, config, lib, ... }:
 
 let
-  hasNvidia = builtins.hasAttr "nvidia" config.hardware && config.hardware.nvidia ? modesetting && config.hardware.nvidia.modesetting.enable or false;
+  hasNvidia = builtins.elem "nvidia" config.services.xserver.videoDrivers;
 in
 {
   virtualisation.podman = {

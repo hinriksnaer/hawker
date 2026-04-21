@@ -1,7 +1,7 @@
 { pkgs, config, lib, ... }:
 
 let
-  hasNvidia = config.hardware.nvidia.modesetting.enable or false;
+  hasNvidia = builtins.elem "nvidia" config.services.xserver.videoDrivers;
   btop-pkg = if hasNvidia then
     pkgs.btop.overrideAttrs (old: {
       postFixup = (old.postFixup or "") + ''
