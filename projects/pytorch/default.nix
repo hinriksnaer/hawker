@@ -5,7 +5,7 @@ let
   nccl = pkgs.cudaPackages.nccl;
 in
 {
-  imports = [ ../../modules/ai/cuda-dev.nix ];
+  imports = [ ../../modules/cuda-dev.nix ];
 
   config = {
     environment.systemPackages = with pkgs; [

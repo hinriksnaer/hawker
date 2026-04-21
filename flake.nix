@@ -18,7 +18,7 @@
 
       # Common modules: options + user settings (imported by all machine configs)
       commonModules = [
-        ./modules/core/hawker-options.nix
+        ./modules/hawker-options.nix
         ./settings.nix
       ];
 
@@ -50,13 +50,8 @@
 
       # ── Individually importable modules (auto-discovered) ──
       nixosModules =
-        (discoverModules ./modules/core) //
-        (discoverModules ./modules/terminal) //
-        (discoverModules ./modules/desktop) //
-        (discoverModules ./modules/hardware) //
-        (discoverModules ./modules/ai) //
-        (discoverModules ./modules/apps) //
-        (discoverDirs ./modules) //
+        (discoverModules ./modules) //
+        (discoverModules ./profiles) //
         (discoverDirs ./projects);
 
       # ── Machine configurations ──

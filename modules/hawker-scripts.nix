@@ -6,7 +6,7 @@
 { pkgs, config, ... }:
 
 let
-  src = ../../scripts;
+  src = ../scripts;
   username = config.hawker.username;
   hawkerPath = "/home/${username}/.local/share/hawker";
 

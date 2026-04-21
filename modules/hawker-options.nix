@@ -11,6 +11,13 @@ with lib;
       description = "System username. Must match your Linux user account.";
     };
 
+    gpu = mkOption {
+      type = types.enum [ "nvidia" "intel" "amd" "none" ];
+      default = "none";
+      description = "GPU driver to use. Configures drivers, kernel modules, VAAPI, and container toolkit.";
+      example = "nvidia";
+    };
+
     defaultTheme = mkOption {
       type = types.str;
       default = "torrentz-hydra";

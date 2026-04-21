@@ -16,7 +16,7 @@ let
   selectedPackages = lib.concatMap (b: backendPackages.${b} or []) hc.backends;
 in
 {
-  imports = [ ../../modules/ai/cuda-dev.nix ];
+  imports = [ ../../modules/cuda-dev.nix ];
 
   config = {
     environment.systemPackages = with pkgs; [

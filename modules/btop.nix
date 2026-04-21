@@ -1,7 +1,7 @@
 { pkgs, config, lib, ... }:
 
 let
-  hasNvidia = builtins.elem "nvidia" config.services.xserver.videoDrivers;
+  hasNvidia = config.hawker.gpu == "nvidia";
   btop-pkg = if hasNvidia then
     pkgs.btop.overrideAttrs (old: {
       postFixup = (old.postFixup or "") + ''
@@ -21,7 +21,7 @@ in
   system.activationScripts.btopConfig = ''
     BTOP_DIR="/home/${username}/.config/btop"
     mkdir -p "$BTOP_DIR/themes"
-    SRC="${../../dotfiles/btop/.config/btop/btop.conf}"
+    SRC="${../dotfiles/btop/.config/btop/btop.conf}"
     if [ -f "$SRC" ]; then
       cp "$SRC" "$BTOP_DIR/btop.conf"
       chown -R ${username}:users "$BTOP_DIR"

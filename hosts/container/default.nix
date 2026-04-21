@@ -15,8 +15,8 @@ let
 in
 {
   imports = [
-    ../../modules/core
-    ../../modules/terminal
+    ../../profiles/core.nix
+    ../../profiles/terminal.nix
   ] ++ map projectDir (builtins.filter isEnabled allProjects);
 
   # Container-specific

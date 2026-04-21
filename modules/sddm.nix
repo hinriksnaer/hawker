@@ -1,7 +1,7 @@
 { pkgs, config, lib, ... }:
 
 let
-  hasNvidia = builtins.elem "nvidia" config.services.xserver.videoDrivers;
+  hasNvidia = config.hawker.gpu == "nvidia";
 in
 {
   services.displayManager.sddm = {

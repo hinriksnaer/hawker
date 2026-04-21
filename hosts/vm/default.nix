@@ -18,8 +18,8 @@ in
   imports = [
     ./hardware-configuration.nix
 
-    ../../modules/core
-    ../../modules/terminal
+    ../../profiles/core.nix
+    ../../profiles/terminal.nix
   ] ++ map projectDir (builtins.filter isEnabled allProjects);
 
   # Boot (KVM VM with UEFI)
