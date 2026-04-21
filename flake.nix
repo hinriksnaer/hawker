@@ -93,6 +93,19 @@
             }
           ];
         };
+
+        laptop = nixpkgs.lib.nixosSystem {
+          inherit system;
+          modules = commonModules ++ [
+            ./hosts/laptop/default.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.${(import ./settings.nix { }).hawker.username} = import ./home;
+            }
+          ];
+        };
       };
 
       # ── Checks (run via `nix flake check`) ──

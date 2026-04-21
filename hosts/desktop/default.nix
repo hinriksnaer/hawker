@@ -10,6 +10,9 @@
     ../../modules/desktop
     ../../modules/hardware
     ../../modules/apps
+
+    # GPU drivers (must be explicit per-host)
+    ../../modules/hardware/nvidia.nix
   ];
 
   networking.hostName = "hawker";
