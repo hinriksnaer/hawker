@@ -5,7 +5,7 @@
 
 {
   hawker = {
-    username = "hgudmund";
+    username = "hawker";
     defaultTheme = "torrentz-hydra";
 
     git = {

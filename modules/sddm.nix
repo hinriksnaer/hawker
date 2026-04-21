@@ -23,6 +23,10 @@ in
     };
   };
 
+  # Grant SDDM's greeter compositor (Weston) access to input devices.
+  # Without this, USB wireless keyboards/mice are invisible to the greeter.
+  users.users.sddm.extraGroups = [ "input" ];
+
   # Default cursor theme (makes Adwaita available system-wide including SDDM)
   environment.etc."icons/default/index.theme".text = ''
     [Icon Theme]
