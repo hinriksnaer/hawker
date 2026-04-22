@@ -5,6 +5,14 @@ IMAGE_TAG="docker-nixos:latest"
 FLAKE_REF="${HAWKER_FLAKE:-$HOME/hawker}"
 NIXOS_BIN=/run/current-system/sw/bin
 
+# Find nix binary (supports nix-portable on hosts without /nix)
+NIX_CMD=""
+if command -v nix &>/dev/null; then
+    NIX_CMD="nix"
+elif [ -x "$HOME/nix-portable" ]; then
+    NIX_CMD="$HOME/nix-portable nix"
+fi
+
 # ── Helpers ──
 
 wait_for_systemd() {
@@ -38,26 +46,18 @@ start_container() {
 
     $runtime rm -f "$IMAGE_NAME" 2>/dev/null || true
 
-    # Build and load the pinned image (local only -- deploy handles remote)
-    if command -v nix &>/dev/null; then
-        echo "==> Building container image..."
-        nix build "${FLAKE_REF}#container"
-        echo "==> Loading image..."
-        $runtime load < "${FLAKE_REF}/result"
-    else
-        # On remote hosts without Nix, image must be pre-loaded via deploy
-        if ! $runtime image exists "$IMAGE_TAG" 2>/dev/null; then
-            echo "Error: image $IMAGE_TAG not found. Run 'hawker-container deploy <host>' from a Nix-enabled machine first." >&2
-            exit 1
-        fi
-    fi
+    # Build and load the pinned docker-nixos image from the flake
+    echo "==> Building container image..."
+    $NIX_CMD build "${FLAKE_REF}#container"
+    echo "==> Loading image..."
+    $runtime load < "${FLAKE_REF}/result"
 
     # GPU passthrough: --privileged provides all /dev/nvidia* device nodes.
     # We mount only the host's driver runtime libs (libcuda.so, libnvidia-ml.so, etc.)
     # at /usr/lib64/host-nvidia. CUDA toolkit, cuDNN, NCCL are Nix-managed (cuda-dev.nix).
     local gpu_args=()
     local gpu_passthrough
-    gpu_passthrough=$(nix eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.container.gpuPassthrough" 2>/dev/null) || gpu_passthrough="none"
+    gpu_passthrough=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.container.gpuPassthrough" 2>/dev/null) || gpu_passthrough="none"
     if [ "$gpu_passthrough" != "none" ]; then
         # Mount host driver libs at /usr/lib64/host-nvidia (LD_LIBRARY_PATH already includes this)
         for lib_dir in /usr/lib64 /usr/lib/x86_64-linux-gnu; do
@@ -127,24 +127,13 @@ enter_container() {
 deploy_to_host() {
     local host=$1
 
-    # Build the image locally (requires Nix)
-    echo "==> Building container image locally..."
-    nix build "${FLAKE_REF}#container"
-
-    # Sync repo to remote (for /config bind mount)
+    # Sync repo to remote (for /config bind mount and nix build)
     echo "==> Syncing repo to ${host}:~/hawker..."
     rsync -a --delete --exclude='.git' --exclude='result' --chmod=Du+rwx,Fu+rw \
         "${FLAKE_REF}/" "${host}:~/hawker/"
     ssh "$host" "cd ~/hawker && git init -q 2>/dev/null; git add -A 2>/dev/null"
 
-    # Copy and load the image on the remote
-    echo "==> Loading container image on ${host}..."
-    ssh "$host" "command -v podman >/dev/null && echo podman || echo docker" | {
-        read -r remote_runtime
-        cat "${FLAKE_REF}/result" | ssh "$host" "${remote_runtime} load"
-    }
-
-    # Start the container on the remote
+    # Start the container on the remote (nix build + podman run happens there)
     echo "==> Starting container on ${host}..."
     ssh -A -tt "$host" "cd ~/hawker && bash scripts/hawker-container.sh start"
 }
