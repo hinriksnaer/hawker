@@ -78,13 +78,13 @@ enter_container() {
     runtime=$(detect_runtime)
 
     if [ "$($runtime inspect -f '{{.State.Running}}' "$IMAGE_NAME" 2>/dev/null)" = "true" ]; then
-        exec $runtime exec -it "$IMAGE_NAME" "$NIXOS_BIN/bash" -l
+        exec $runtime exec -it --user dev -w /home/dev "$IMAGE_NAME" "$NIXOS_BIN/bash" -l
     fi
 
     if $runtime container inspect "$IMAGE_NAME" &>/dev/null; then
         $runtime start "$IMAGE_NAME"
-        sleep 2
-        exec $runtime exec -it "$IMAGE_NAME" "$NIXOS_BIN/bash" -l
+        wait_for_systemd "$runtime"
+        exec $runtime exec -it --user dev -w /home/dev "$IMAGE_NAME" "$NIXOS_BIN/bash" -l
     fi
 
     start_container
@@ -99,6 +99,12 @@ case "${1:-help}" in
 
     enter)
         enter_container
+        ;;
+
+    rebuild)
+        echo "==> Rebuilding NixOS config inside container..."
+        $(detect_runtime) exec -it --user dev -w /home/dev "$IMAGE_NAME" \
+            "$NIXOS_BIN/bash" -c "export PATH=$NIXOS_BIN:\$PATH && sudo nixos-rebuild switch --flake /build#container"
         ;;
 
     stop)
@@ -119,7 +125,8 @@ case "${1:-help}" in
         echo ""
         echo "Commands:"
         echo "  $0 start       Build image, create and start container"
-        echo "  $0 enter       Enter running container"
+        echo "  $0 enter       Enter running container as dev"
+        echo "  $0 rebuild     Rebuild NixOS config inside container"
         echo "  $0 stop        Stop container"
         echo "  $0 clean       Stop and remove container"
         echo "  $0 status      Show container status"

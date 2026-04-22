@@ -1,5 +1,6 @@
 # Typed option declarations for all configuration.
-# Values are set in settings.nix. Type errors are caught at evaluation time.
+# Global values are set in settings.nix. Per-host values are set by each host config
+# reading from hawker.hosts.<name>. Type errors are caught at evaluation time.
 { lib, ... }:
 
 with lib;
@@ -8,7 +9,7 @@ with lib;
   options.hawker = {
     username = mkOption {
       type = types.str;
-      description = "System username. Must match your Linux user account.";
+      description = "System username. Set per-host from settings.nix hosts section.";
     };
 
     gpu = mkOption {
@@ -50,12 +51,20 @@ with lib;
       };
     };
 
+    # Per-host settings (freeform). Keyed by host name.
+    # Each host config reads its section and populates typed options.
+    hosts = mkOption {
+      type = types.raw;
+      default = {};
+      description = "Per-host settings (username, gpu, projects, etc.). Keyed by host name.";
+    };
+
     container = {
-      gpus = mkOption {
+      gpuPassthrough = mkOption {
         type = types.str;
         default = "all";
         description = ''
-          GPUs to pass through to containers.
+          GPU device indices to pass through to containers.
           "all" for all GPUs, "none" to disable, or a
           comma-separated list of indices (e.g. "0,1,4").
         '';

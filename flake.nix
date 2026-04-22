@@ -22,6 +22,9 @@
         ./settings.nix
       ];
 
+      # Per-host settings (read directly, not through module system)
+      settings = (import ./settings.nix { }).hawker;
+
       # Auto-discover .nix files from a directory
       discoverModules = dir:
         lib.mapAttrs'
@@ -61,7 +64,7 @@
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
-              home-manager.users.${(import ./settings.nix { }).hawker.username} = import ./home;
+              home-manager.users.${settings.hosts.desktop.username} = import ./home;
             }
           ];
         };
@@ -76,19 +79,6 @@
         # Alias for docker-nixos bootstrap (options.nix defaults to "default")
         default = self.nixosConfigurations.container;
 
-        vm = nixpkgs.lib.nixosSystem {
-          inherit system;
-          modules = commonModules ++ [
-            ./hosts/vm/default.nix
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.${(import ./settings.nix { }).hawker.username} = import ./home;
-            }
-          ];
-        };
-
         laptop = nixpkgs.lib.nixosSystem {
           inherit system;
           modules = commonModules ++ [
@@ -97,7 +87,7 @@
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
-              home-manager.users.${(import ./settings.nix { }).hawker.username} = import ./home;
+              home-manager.users.${settings.hosts.laptop.username} = import ./home;
             }
           ];
         };

@@ -18,13 +18,16 @@ in
   environment.systemPackages = [ btop-pkg ];
 
   # btop rewrites its config on exit -- copy instead of symlink
-  system.activationScripts.btopConfig = ''
-    BTOP_DIR="/home/${username}/.config/btop"
-    mkdir -p "$BTOP_DIR/themes"
-    SRC="${../dotfiles/btop/.config/btop/btop.conf}"
-    if [ -f "$SRC" ]; then
-      cp "$SRC" "$BTOP_DIR/btop.conf"
-      chown -R ${username}:users "$BTOP_DIR"
-    fi
-  '';
+  system.activationScripts.btopConfig = {
+    deps = [ "users" "groups" ];
+    text = ''
+      BTOP_DIR="/home/${username}/.config/btop"
+      mkdir -p "$BTOP_DIR/themes"
+      SRC="${../dotfiles/btop/.config/btop/btop.conf}"
+      if [ -f "$SRC" ]; then
+        cp "$SRC" "$BTOP_DIR/btop.conf"
+        chown -R ${username}:users "$BTOP_DIR"
+      fi
+    '';
+  };
 }

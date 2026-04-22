@@ -4,8 +4,11 @@
 { config, pkgs, lib, ... }:
 
 let
-  settings = (import ../../settings.nix { }).hawker.container.projects or {};
-  isEnabled = name: (settings.${name}.enable or false) == true;
+  hostSettings = (import ../../settings.nix { }).hawker.hosts.container;
+
+  # Project imports from per-host settings
+  projectSettings = hostSettings.projects or {};
+  isEnabled = name: (projectSettings.${name}.enable or false) == true;
   projectDir = name: ../../projects + "/${name}";
   hasProject = name: builtins.pathExists (projectDir name + "/default.nix");
 
@@ -13,6 +16,8 @@ let
     lib.filterAttrs (n: t: t == "directory" && hasProject n)
       (builtins.readDir ../../projects)
   );
+
+  username = hostSettings.username;
 in
 {
   imports = [
@@ -20,19 +25,23 @@ in
     ../../profiles/terminal.nix
   ] ++ map projectDir (builtins.filter isEnabled allProjects);
 
-  # Container user -- override the host username so base.nix and all
-  # modules that reference config.hawker.username use "dev".
-  hawker.username = lib.mkForce "dev";
+  # ── Per-host settings → module options ──
+  hawker.username = lib.mkForce username;
+  hawker.container.gpuPassthrough = hostSettings.gpuPassthrough;
 
-  # Container user additions (base.nix creates the user, we add uid + groups)
-  users.users.dev = {
+  # Populate project module options from per-host settings
+  hawker.container.projects.helion = projectSettings.helion or {};
+  hawker.container.projects.pytorch = projectSettings.pytorch or {};
+
+  # Container user (base.nix creates the user, we add uid + groups)
+  users.users.${username} = {
     uid = lib.mkForce 1000;
     extraGroups = [ "video" "render" ];
   };
 
   # Nix
   nix.settings = {
-    trusted-users = [ "root" "dev" ];
+    trusted-users = [ "root" username ];
   };
   nixpkgs.config.allowUnfree = true;
 
@@ -43,8 +52,6 @@ in
   ];
 
   # ── Container-specific overrides ──
-  # Security wrappers -- docker-nixos base handles the mount workaround
-  # sudo needs setuid wrappers to work inside the container
 
   # Services that fail in unprivileged containers
   services.nscd.enable = false;
@@ -53,8 +60,24 @@ in
   documentation.man.cache.enable = false;
   systemd.services.mandb.enable = false;
 
-  # btopConfig runs before user creation; skip in containers
-  system.activationScripts.btopConfig = lib.mkForce "";
+  # Suppress kernel mounts that fail in containers
+  systemd.mounts = [
+    { where = "/sys/kernel/tracing"; enable = false; }
+  ];
+
+  # Container setup: runs after user creation on every nixos-rebuild switch.
+  # Fixes home dir ownership, symlinks repo, deploys dotfiles.
+  system.activationScripts.containerSetup = {
+    deps = [ "users" "groups" ];
+    text = ''
+      chown -R ${username}:users /home/${username} 2>/dev/null || true
+      ln -sfn /config /home/${username}/hawker 2>/dev/null || true
+      chown -h ${username}:users /home/${username}/hawker 2>/dev/null || true
+      if [ -d /home/${username}/hawker ]; then
+        /run/current-system/sw/bin/su - ${username} -c 'bash /home/${username}/hawker/bootstrap.sh' || true
+      fi
+    '';
+  };
 
   # Environment variables for CUDA/CDI
   environment.sessionVariables = {
