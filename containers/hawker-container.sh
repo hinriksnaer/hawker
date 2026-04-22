@@ -142,7 +142,7 @@ deploy_to_host() {
 
     # Start the container on the remote (nix build + podman run happens there)
     echo "==> Starting container on ${host}..."
-    ssh -A -tt "$host" "cd ~/hawker && bash scripts/hawker-container.sh start"
+    ssh -A -tt "$host" "cd ~/hawker && bash containers/hawker-container.sh start"
 }
 
 # ── Commands ──
@@ -154,7 +154,7 @@ case "${1:-help}" in
 
     enter)
         if [ $# -ge 2 ]; then
-            ssh -A -tt "$2" "bash ~/hawker/scripts/hawker-container.sh enter"
+            ssh -A -tt "$2" "bash ~/hawker/containers/hawker-container.sh enter"
         else
             enter_container
         fi
@@ -162,7 +162,7 @@ case "${1:-help}" in
 
     rebuild)
         if [ $# -ge 2 ]; then
-            ssh -A -tt "$2" "bash ~/hawker/scripts/hawker-container.sh rebuild"
+            ssh -A -tt "$2" "bash ~/hawker/containers/hawker-container.sh rebuild"
         else
             echo "==> Rebuilding NixOS config inside container..."
             $(detect_runtime) exec -it --user dev -w /home/dev "$IMAGE_NAME" \
