@@ -49,10 +49,20 @@ start_container() {
     # Build and load the pinned docker-nixos image from the flake
     echo "==> Building container image..."
     local image_path
-    image_path=$($NIX_CMD build --print-out-paths "${FLAKE_REF}#container")
+    image_path=$($NIX_CMD build --print-out-paths --no-link "${FLAKE_REF}#container")
     echo "==> Loading image..."
-    # Use NIX_CMD to cat the image -- nix-portable stores /nix in a sandbox
-    $NIX_CMD shell nixpkgs#coreutils -c cat "$image_path" | $runtime load
+    # Try direct path (works on real Nix), then nix-portable store, then existing image
+    if ! $runtime load < "$image_path" 2>/dev/null; then
+        local np_path="${image_path/\/nix\/store/$HOME/.nix-portable/nix/store}"
+        if [ -f "$np_path" ]; then
+            $runtime load < "$np_path"
+        elif $runtime image exists "$IMAGE_TAG" 2>/dev/null; then
+            echo "  (using previously loaded image)"
+        else
+            echo "Error: cannot load image. Use 'hawker-container deploy <host>' to stream it." >&2
+            exit 1
+        fi
+    fi
 
     # GPU passthrough: --privileged provides all /dev/nvidia* device nodes.
     # We mount only the host's driver runtime libs (libcuda.so, libnvidia-ml.so, etc.)
