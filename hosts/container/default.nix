@@ -91,8 +91,12 @@ in
   environment.sessionVariables = {
     LD_LIBRARY_PATH = "/usr/lib64:${pkgs.stdenv.cc.cc.lib}/lib";
     TRITON_LIBCUDA_PATH = "/usr/lib64";
-    PATH = "/usr/bin:$PATH";
   };
+
+  # Add /usr/bin to PATH for CDI-mounted binaries (nvidia-smi, etc.)
+  environment.extraInit = ''
+    export PATH="/usr/bin:$PATH"
+  '';
 
   system.stateVersion = lib.mkForce "24.11";
 }
