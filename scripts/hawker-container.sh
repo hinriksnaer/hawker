@@ -86,8 +86,10 @@ start_container() {
     $runtime run -d \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
-        --privileged \
+        --cap-add SYS_ADMIN \
         --tmpfs /run \
+        -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+        --cgroupns=host \
         -v "${FLAKE_REF}:/config" \
         "${gpu_args[@]}" \
         "$IMAGE_TAG"
