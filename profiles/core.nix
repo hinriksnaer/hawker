@@ -7,5 +7,6 @@
     ../modules/fish.nix
     ../modules/git.nix
     ../modules/hawker-scripts.nix
+    ../containers/cli.nix
   ];
 }
