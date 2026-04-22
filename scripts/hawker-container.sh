@@ -64,28 +64,21 @@ start_container() {
         fi
     fi
 
-    # GPU passthrough: --privileged provides all /dev/nvidia* device nodes.
-    # We mount only the host's driver runtime libs (libcuda.so, libnvidia-ml.so, etc.)
-    # at /usr/lib64/host-nvidia. CUDA toolkit, cuDNN, NCCL are Nix-managed (cuda-dev.nix).
+    # GPU passthrough via NVIDIA CDI.
+    # CDI mounts only NVIDIA driver libs (libcuda, libnvidia-ml, nvidia-smi, etc.)
+    # at standard paths (/usr/lib64, /usr/bin). CUDA toolkit, cuDNN, NCCL are
+    # Nix-managed inside the container (cuda-dev.nix).
     local gpu_args=()
     local gpu_passthrough
     gpu_passthrough=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.container.gpuPassthrough" 2>/dev/null) || gpu_passthrough="none"
     if [ "$gpu_passthrough" != "none" ]; then
-        # Mount host driver libs at /usr/lib64/host-nvidia (LD_LIBRARY_PATH already includes this)
-        for lib_dir in /usr/lib64 /usr/lib/x86_64-linux-gnu; do
-            if [ -f "${lib_dir}/libcuda.so" ] || [ -f "${lib_dir}/libcuda.so.1" ]; then
-                gpu_args+=(-v "${lib_dir}:/usr/lib64/host-nvidia:ro")
-                break
-            fi
-        done
-
-        # Mount nvidia-smi
-        local nvidia_smi
-        nvidia_smi=$(command -v nvidia-smi 2>/dev/null) || true
-        if [ -n "$nvidia_smi" ]; then
-            gpu_args+=(-v "$(readlink -f "$nvidia_smi"):/usr/bin/nvidia-smi:ro")
+        if [ "$gpu_passthrough" = "all" ]; then
+            gpu_args+=(--device nvidia.com/gpu=all)
+        else
+            for idx in ${gpu_passthrough//,/ }; do
+                gpu_args+=(--device "nvidia.com/gpu=${idx}")
+            done
         fi
-
         echo "==> GPU passthrough: $gpu_passthrough"
     fi
 

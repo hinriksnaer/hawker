@@ -79,10 +79,12 @@ in
     '';
   };
 
-  # Environment variables for GPU driver libs (host-mounted at /usr/lib64/host-nvidia)
+  # Environment variables for CUDA/CDI
+  # CDI mounts host NVIDIA driver libs at /usr/lib64 inside the container.
+  # CUDA toolkit, cuDNN, NCCL paths are set by cuda-dev.nix via Nix store.
   environment.sessionVariables = {
-    LD_LIBRARY_PATH = "/usr/lib64/host-nvidia:/usr/lib64:${pkgs.stdenv.cc.cc.lib}/lib";
-    TRITON_LIBCUDA_PATH = "/usr/lib64/host-nvidia";
+    LD_LIBRARY_PATH = "/usr/lib64:${pkgs.stdenv.cc.cc.lib}/lib";
+    TRITON_LIBCUDA_PATH = "/usr/lib64";
   };
 
   system.stateVersion = lib.mkForce "24.11";
