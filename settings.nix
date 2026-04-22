@@ -34,7 +34,7 @@
 
       container = {
         username = "dev";
-        gpuPassthrough = "none";
+        gpuPassthrough = "4";
 
         projects = {
           helion = {

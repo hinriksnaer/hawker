@@ -38,11 +38,44 @@ start_container() {
 
     $runtime rm -f "$IMAGE_NAME" 2>/dev/null || true
 
-    # Build and load the pinned image from the flake
-    echo "==> Building container image..."
-    nix build "${FLAKE_REF}#container"
-    echo "==> Loading image..."
-    $runtime load < "${FLAKE_REF}/result"
+    # Build and load the pinned image (local only -- deploy handles remote)
+    if command -v nix &>/dev/null; then
+        echo "==> Building container image..."
+        nix build "${FLAKE_REF}#container"
+        echo "==> Loading image..."
+        $runtime load < "${FLAKE_REF}/result"
+    else
+        # On remote hosts without Nix, image must be pre-loaded via deploy
+        if ! $runtime image exists "$IMAGE_TAG" 2>/dev/null; then
+            echo "Error: image $IMAGE_TAG not found. Run 'hawker-container deploy <host>' from a Nix-enabled machine first." >&2
+            exit 1
+        fi
+    fi
+
+    # GPU passthrough: --privileged provides all /dev/nvidia* device nodes.
+    # We mount only the host's driver runtime libs (libcuda.so, libnvidia-ml.so, etc.)
+    # at /usr/lib64/host-nvidia. CUDA toolkit, cuDNN, NCCL are Nix-managed (cuda-dev.nix).
+    local gpu_args=()
+    local gpu_passthrough
+    gpu_passthrough=$(nix eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.container.gpuPassthrough" 2>/dev/null) || gpu_passthrough="none"
+    if [ "$gpu_passthrough" != "none" ]; then
+        # Mount host driver libs at /usr/lib64/host-nvidia (LD_LIBRARY_PATH already includes this)
+        for lib_dir in /usr/lib64 /usr/lib/x86_64-linux-gnu; do
+            if [ -f "${lib_dir}/libcuda.so" ] || [ -f "${lib_dir}/libcuda.so.1" ]; then
+                gpu_args+=(-v "${lib_dir}:/usr/lib64/host-nvidia:ro")
+                break
+            fi
+        done
+
+        # Mount nvidia-smi
+        local nvidia_smi
+        nvidia_smi=$(command -v nvidia-smi 2>/dev/null) || true
+        if [ -n "$nvidia_smi" ]; then
+            gpu_args+=(-v "$(readlink -f "$nvidia_smi"):/usr/bin/nvidia-smi:ro")
+        fi
+
+        echo "==> GPU passthrough: $gpu_passthrough"
+    fi
 
     echo "==> Starting $IMAGE_NAME..."
     $runtime run -d \
@@ -51,6 +84,7 @@ start_container() {
         --privileged \
         --tmpfs /run \
         -v "${FLAKE_REF}:/config" \
+        "${gpu_args[@]}" \
         "$IMAGE_TAG"
 
     wait_for_systemd "$runtime"
@@ -90,6 +124,31 @@ enter_container() {
     start_container
 }
 
+deploy_to_host() {
+    local host=$1
+
+    # Build the image locally (requires Nix)
+    echo "==> Building container image locally..."
+    nix build "${FLAKE_REF}#container"
+
+    # Sync repo to remote (for /config bind mount)
+    echo "==> Syncing repo to ${host}:~/hawker..."
+    rsync -a --delete --exclude='.git' --exclude='result' --chmod=Du+rwx,Fu+rw \
+        "${FLAKE_REF}/" "${host}:~/hawker/"
+    ssh "$host" "cd ~/hawker && git init -q 2>/dev/null; git add -A 2>/dev/null"
+
+    # Copy and load the image on the remote
+    echo "==> Loading container image on ${host}..."
+    ssh "$host" "command -v podman >/dev/null && echo podman || echo docker" | {
+        read -r remote_runtime
+        cat "${FLAKE_REF}/result" | ssh "$host" "${remote_runtime} load"
+    }
+
+    # Start the container on the remote
+    echo "==> Starting container on ${host}..."
+    ssh -A -tt "$host" "cd ~/hawker && bash scripts/hawker-container.sh start"
+}
+
 # ── Commands ──
 
 case "${1:-help}" in
@@ -98,37 +157,63 @@ case "${1:-help}" in
         ;;
 
     enter)
-        enter_container
+        if [ $# -ge 2 ]; then
+            ssh -A -tt "$2" "bash ~/hawker/scripts/hawker-container.sh enter"
+        else
+            enter_container
+        fi
         ;;
 
     rebuild)
-        echo "==> Rebuilding NixOS config inside container..."
-        $(detect_runtime) exec -it --user dev -w /home/dev "$IMAGE_NAME" \
-            "$NIXOS_BIN/bash" -c "export PATH=$NIXOS_BIN:\$PATH && sudo nixos-rebuild switch --flake /build#container"
+        if [ $# -ge 2 ]; then
+            ssh -A -tt "$2" "bash ~/hawker/scripts/hawker-container.sh rebuild"
+        else
+            echo "==> Rebuilding NixOS config inside container..."
+            $(detect_runtime) exec -it --user dev -w /home/dev "$IMAGE_NAME" \
+                "$NIXOS_BIN/bash" -c "export PATH=$NIXOS_BIN:\$PATH && sudo nixos-rebuild switch --flake /build#container"
+        fi
+        ;;
+
+    deploy)
+        [ $# -lt 2 ] && echo "Usage: $0 deploy <host>" && exit 1
+        deploy_to_host "$2"
         ;;
 
     stop)
-        $(detect_runtime) stop "${IMAGE_NAME}" 2>/dev/null || true
+        if [ $# -ge 2 ]; then
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null || docker stop ${IMAGE_NAME} 2>/dev/null || true"
+        else
+            $(detect_runtime) stop "${IMAGE_NAME}" 2>/dev/null || true
+        fi
         ;;
 
     clean)
-        $(detect_runtime) stop "${IMAGE_NAME}" 2>/dev/null || true
-        $(detect_runtime) rm "${IMAGE_NAME}" 2>/dev/null || true
+        if [ $# -ge 2 ]; then
+            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; docker stop ${IMAGE_NAME} 2>/dev/null; docker rm ${IMAGE_NAME} 2>/dev/null; echo done"
+        else
+            $(detect_runtime) stop "${IMAGE_NAME}" 2>/dev/null || true
+            $(detect_runtime) rm "${IMAGE_NAME}" 2>/dev/null || true
+        fi
         ;;
 
     status)
-        $(detect_runtime) ps -a --filter "name=${IMAGE_NAME}"
+        if [ $# -ge 2 ]; then
+            ssh "$2" "podman ps -a --filter name=${IMAGE_NAME} 2>/dev/null || docker ps -a --filter name=${IMAGE_NAME}"
+        else
+            $(detect_runtime) ps -a --filter "name=${IMAGE_NAME}"
+        fi
         ;;
 
     help|*)
         echo "hawker-container - NixOS dev containers"
         echo ""
         echo "Commands:"
-        echo "  $0 start       Build image, create and start container"
-        echo "  $0 enter       Enter running container as dev"
-        echo "  $0 rebuild     Rebuild NixOS config inside container"
-        echo "  $0 stop        Stop container"
-        echo "  $0 clean       Stop and remove container"
-        echo "  $0 status      Show container status"
+        echo "  $0 start              Build image, create and start container"
+        echo "  $0 enter [host]       Enter running container (local or remote)"
+        echo "  $0 rebuild [host]     Rebuild NixOS config inside container"
+        echo "  $0 deploy <host>      Build image locally, sync + start on remote"
+        echo "  $0 stop [host]        Stop container"
+        echo "  $0 clean [host]       Stop and remove container"
+        echo "  $0 status [host]      Show container status"
         ;;
 esac

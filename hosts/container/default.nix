@@ -79,10 +79,10 @@ in
     '';
   };
 
-  # Environment variables for CUDA/CDI
+  # Environment variables for GPU driver libs (host-mounted at /usr/lib64/host-nvidia)
   environment.sessionVariables = {
-    LD_LIBRARY_PATH = "/usr/lib64:${pkgs.stdenv.cc.cc.lib}/lib";
-    TRITON_LIBCUDA_PATH = "/usr/lib64";
+    LD_LIBRARY_PATH = "/usr/lib64/host-nvidia:/usr/lib64:${pkgs.stdenv.cc.cc.lib}/lib";
+    TRITON_LIBCUDA_PATH = "/usr/lib64/host-nvidia";
   };
 
   system.stateVersion = lib.mkForce "24.11";
