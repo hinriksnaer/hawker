@@ -43,7 +43,6 @@ in
   nix.settings = {
     trusted-users = [ "root" username ];
   };
-  nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
     openssh

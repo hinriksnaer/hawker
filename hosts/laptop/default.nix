@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ ... }:
 
 let
   hostSettings = (import ../../settings.nix { }).hawker.hosts.laptop;

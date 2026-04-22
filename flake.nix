@@ -16,9 +16,9 @@
       pkgs = nixpkgs.legacyPackages.${system};
       lib = nixpkgs.lib;
 
-      # Common modules: options + user settings (imported by all machine configs)
+      # Common modules: user settings (imported by all machine configs)
+      # Note: hawker-options.nix is imported via profiles/core.nix
       commonModules = [
-        ./modules/hawker-options.nix
         ./settings.nix
       ];
 

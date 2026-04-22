@@ -69,7 +69,7 @@ All settings live in `settings.nix`:
     };
 
     container = {
-      gpus = "4";                            # GPU index, "all", or "none"
+      gpuPassthrough = "4";                    # GPU index, "all", or "none"
 
       projects = {
         helion = {
