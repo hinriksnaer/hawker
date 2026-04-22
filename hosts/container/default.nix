@@ -1,5 +1,6 @@
 # NixOS configuration for docker-nixos container.
-# Applied via: nixos-rebuild switch --flake ~/hawker#container
+# Docker workarounds are handled by the docker-nixos base image via extendModules.
+# This file only defines what's specific to the hawker dev environment.
 { config, pkgs, lib, ... }:
 
 let
@@ -19,27 +20,19 @@ in
     ../../profiles/terminal.nix
   ] ++ map projectDir (builtins.filter isEnabled allProjects);
 
-  # Container-specific
-  boot.isContainer = true;
-  boot.loader.systemd-boot.enable = lib.mkForce false;
-  boot.loader.grub.enable = lib.mkForce false;
-  fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
+  # Container user -- override the host username so base.nix and all
+  # modules that reference config.hawker.username use "dev".
+  hawker.username = lib.mkForce "dev";
 
-  networking.hostName = "hawker-dev";
-  networking.useHostResolvConf = lib.mkForce false;
-
-  # User
-  users.users.${config.hawker.username} = {
-    isNormalUser = true;
-    uid = 1000;
-    extraGroups = [ "wheel" "video" "render" ];
+  # Container user additions (base.nix creates the user, we add uid + groups)
+  users.users.dev = {
+    uid = lib.mkForce 1000;
+    extraGroups = [ "video" "render" ];
   };
-  security.sudo.wheelNeedsPassword = false;
 
   # Nix
   nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
-    trusted-users = [ "root" config.hawker.username ];
+    trusted-users = [ "root" "dev" ];
   };
   nixpkgs.config.allowUnfree = true;
 
@@ -49,11 +42,25 @@ in
     git
   ];
 
+  # ── Container-specific overrides ──
+  # Security wrappers -- docker-nixos base handles the mount workaround
+  # sudo needs setuid wrappers to work inside the container
+
+  # Services that fail in unprivileged containers
+  services.nscd.enable = false;
+  system.nssModules = lib.mkForce [];
+  systemd.oomd.enable = false;
+  documentation.man.cache.enable = false;
+  systemd.services.mandb.enable = false;
+
+  # btopConfig runs before user creation; skip in containers
+  system.activationScripts.btopConfig = lib.mkForce "";
+
   # Environment variables for CUDA/CDI
   environment.sessionVariables = {
     LD_LIBRARY_PATH = "/usr/lib64:${pkgs.stdenv.cc.cc.lib}/lib";
     TRITON_LIBCUDA_PATH = "/usr/lib64";
   };
 
-  system.stateVersion = "24.11";
+  system.stateVersion = lib.mkForce "24.11";
 }

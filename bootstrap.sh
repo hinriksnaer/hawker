@@ -19,7 +19,7 @@ for dir in "$DOTFILES_DIR"/*/; do
     fi
 
     echo "  stow: $module"
-    stow -d "$DOTFILES_DIR" -t "$HOME" --no-folding --restow "$module" 2>&1 | grep -v "BUG" || true
+    stow -d "$DOTFILES_DIR" -t "$HOME" --no-folding --adopt --restow "$module" 2>&1 | grep -v "BUG" || true
 done
 
 # ── Theme directory ──

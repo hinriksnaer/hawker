@@ -43,9 +43,6 @@
             (builtins.readDir dir)
           );
 
-      # Access hawker config from a nixosConfiguration
-      hawkerConfig = self.nixosConfigurations.container.config.hawker;
-
     in {
 
       # ── Individually importable modules (auto-discovered) ──
@@ -75,6 +72,9 @@
             ./hosts/container/default.nix
           ];
         };
+
+        # Alias for docker-nixos bootstrap (options.nix defaults to "default")
+        default = self.nixosConfigurations.container;
 
         vm = nixpkgs.lib.nixosSystem {
           inherit system;
@@ -114,24 +114,7 @@
         container-build = self.packages.${system}.container;
       };
 
-      # ── Container image ──
-      packages.${system} = let
-        containerConfig = self.nixosConfigurations.container.config;
-        containerPackages = containerConfig.environment.systemPackages;
-        containerSessionVars = containerConfig.environment.sessionVariables;
-        enabledProjects = builtins.filter
-          (name: hawkerConfig.container.projects.${name}.enable or false)
-          (builtins.attrNames hawkerConfig.container.projects);
-      in {
-        container = import ./containers/default.nix {
-          inherit pkgs;
-          inherit (hawkerConfig) username;
-          inherit (hawkerConfig.container) gpus;
-
-          projects = enabledProjects;
-          packages = containerPackages;
-          sessionVariables = containerSessionVars;
-        };
-      };
+      # ── Container image (docker-nixos base, pinned) ──
+      packages.${system}.container = import ./containers/default.nix { inherit pkgs; };
     };
 }
