@@ -48,9 +48,10 @@ start_container() {
 
     # Build and load the pinned docker-nixos image from the flake
     echo "==> Building container image..."
-    $NIX_CMD build "${FLAKE_REF}#container"
+    local image_path
+    image_path=$($NIX_CMD build --print-out-paths "${FLAKE_REF}#container")
     echo "==> Loading image..."
-    $runtime load < "${FLAKE_REF}/result"
+    $runtime load < "$image_path"
 
     # GPU passthrough: --privileged provides all /dev/nvidia* device nodes.
     # We mount only the host's driver runtime libs (libcuda.so, libnvidia-ml.so, etc.)
