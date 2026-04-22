@@ -70,7 +70,7 @@ start_container() {
     fi
 
     echo "==> Container ready."
-    exec $runtime exec -it --user dev -w /home/dev "$IMAGE_NAME" "$NIXOS_BIN/bash" -l
+    exec $runtime exec -it --user dev -w /home/dev "$IMAGE_NAME" "$NIXOS_BIN/fish" -l
 }
 
 enter_container() {
@@ -78,13 +78,13 @@ enter_container() {
     runtime=$(detect_runtime)
 
     if [ "$($runtime inspect -f '{{.State.Running}}' "$IMAGE_NAME" 2>/dev/null)" = "true" ]; then
-        exec $runtime exec -it --user dev -w /home/dev "$IMAGE_NAME" "$NIXOS_BIN/bash" -l
+        exec $runtime exec -it --user dev -w /home/dev "$IMAGE_NAME" "$NIXOS_BIN/fish" -l
     fi
 
     if $runtime container inspect "$IMAGE_NAME" &>/dev/null; then
         $runtime start "$IMAGE_NAME"
         wait_for_systemd "$runtime"
-        exec $runtime exec -it --user dev -w /home/dev "$IMAGE_NAME" "$NIXOS_BIN/bash" -l
+        exec $runtime exec -it --user dev -w /home/dev "$IMAGE_NAME" "$NIXOS_BIN/fish" -l
     fi
 
     start_container

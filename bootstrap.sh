@@ -13,8 +13,8 @@ echo "==> Deploying dotfiles via stow (--no-folding)..."
 for dir in "$DOTFILES_DIR"/*/; do
     module=$(basename "$dir")
 
-    # Skip: themes (symlinked separately), btop (copied by NixOS activation)
-    if [ "$module" = "themes" ] || [ "$module" = "btop" ]; then
+    # Skip: themes (symlinked separately), btop (NixOS activation), fish (home-manager)
+    if [ "$module" = "themes" ] || [ "$module" = "btop" ] || [ "$module" = "fish" ]; then
         continue
     fi
 

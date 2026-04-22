@@ -73,6 +73,12 @@
           inherit system;
           modules = commonModules ++ [
             ./hosts/container/default.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.${settings.hosts.container.username} = import ./home;
+            }
           ];
         };
 
