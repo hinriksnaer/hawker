@@ -65,6 +65,12 @@ in
     { where = "/sys/kernel/tracing"; enable = false; }
   ];
 
+  # FHS compatibility: CDI-mounted binaries (nvidia-smi) need /lib64/ld-linux-x86-64.so.2
+  system.activationScripts.ldLinker = ''
+    mkdir -p /lib64
+    ln -sfn ${pkgs.glibc}/lib/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
+  '';
+
   # Container setup: runs after user creation on every nixos-rebuild switch.
   # Fixes home dir ownership, symlinks repo, deploys dotfiles.
   system.activationScripts.containerSetup = {
@@ -85,6 +91,7 @@ in
   environment.sessionVariables = {
     LD_LIBRARY_PATH = "/usr/lib64:${pkgs.stdenv.cc.cc.lib}/lib";
     TRITON_LIBCUDA_PATH = "/usr/lib64";
+    PATH = "/usr/bin:$PATH";
   };
 
   system.stateVersion = lib.mkForce "24.11";
