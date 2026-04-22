@@ -51,7 +51,8 @@ start_container() {
     local image_path
     image_path=$($NIX_CMD build --print-out-paths "${FLAKE_REF}#container")
     echo "==> Loading image..."
-    $runtime load < "$image_path"
+    # Use NIX_CMD to cat the image -- nix-portable stores /nix in a sandbox
+    $NIX_CMD shell nixpkgs#coreutils -c cat "$image_path" | $runtime load
 
     # GPU passthrough: --privileged provides all /dev/nvidia* device nodes.
     # We mount only the host's driver runtime libs (libcuda.so, libnvidia-ml.so, etc.)
