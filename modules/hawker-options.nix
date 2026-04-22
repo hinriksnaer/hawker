@@ -49,6 +49,11 @@ with lib;
         default = "us-east5";
         description = "GCP region for Vertex AI.";
       };
+      cloudMlRegion = mkOption {
+        type = types.str;
+        default = "global";
+        description = "Cloud ML region for OpenCode.";
+      };
     };
 
     # Per-host settings (freeform). Keyed by host name.

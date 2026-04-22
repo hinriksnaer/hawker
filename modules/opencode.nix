@@ -16,10 +16,10 @@ in
 
   environment.sessionVariables = lib.optionalAttrs hasVertex {
     CLAUDE_CODE_USE_VERTEX = "1";
-    CLOUD_ML_REGION = oc.vertexRegion;
+    CLOUD_ML_REGION = oc.cloudMlRegion;
     ANTHROPIC_VERTEX_PROJECT_ID = oc.vertexProject;
     GOOGLE_CLOUD_PROJECT = oc.vertexProject;
-    VERTEX_LOCATION = "global";
+    VERTEX_LOCATION = oc.cloudMlRegion;
   };
 
   system.activationScripts.opencodeThemes = ''
