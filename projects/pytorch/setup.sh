@@ -35,12 +35,20 @@ fi
 
 cd "$WORKSPACE"
 
-# NixOS patch: remove PyTorch's vendored FindCUDAToolkit.cmake so CMake uses
-# its standard module, which respects CMAKE_PREFIX_PATH (set by cuda-dev.nix).
-# PyTorch's version resolves nvcc symlinks into individual Nix store packages
-# that don't contain headers. This is the same fix nixpkgs applies upstream.
+# NixOS patch: replace PyTorch's vendored FindCUDAToolkit.cmake with a
+# passthrough to CMake's standard module, which respects CMAKE_PREFIX_PATH
+# (set by cuda-dev.nix). PyTorch's version resolves nvcc symlinks into
+# individual Nix store packages that don't contain headers.
+# We can't just delete the file because cmake's install step copies it.
 # See: nixpkgs/pkgs/development/python-modules/torch/source/default.nix
-rm -f cmake/Modules/FindCUDAToolkit.cmake
+cat > cmake/Modules/FindCUDAToolkit.cmake << 'NIXEOF'
+# NixOS: delegate to CMake's built-in FindCUDAToolkit module.
+set(_nixos_cmake_module_path "${CMAKE_MODULE_PATH}")
+list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+find_package(CUDAToolkit ${CUDAToolkit_FIND_VERSION})
+set(CMAKE_MODULE_PATH "${_nixos_cmake_module_path}")
+unset(_nixos_cmake_module_path)
+NIXEOF
 
 # Install dev dependencies (upstream recommended method)
 echo "==> Installing PyTorch dev dependencies..."
