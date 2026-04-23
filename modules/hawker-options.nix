@@ -64,6 +64,8 @@ with lib;
       description = "Per-host settings (username, gpu, projects, etc.). Keyed by host name.";
     };
 
+    # Container options. Project-specific options are declared in
+    # each project's options.nix (auto-discovered by the container config).
     container = {
       gpuPassthrough = mkOption {
         type = types.str;
@@ -74,56 +76,6 @@ with lib;
           comma-separated list of indices (e.g. "0,1,4").
         '';
         example = "4";
-      };
-
-      projects = {
-        helion = {
-          enable = mkEnableOption "Helion GPU kernel DSL";
-          repo = mkOption {
-            type = types.str;
-            default = "https://github.com/pytorch/helion.git";
-            description = "Helion git repository URL.";
-          };
-          branch = mkOption {
-            type = types.str;
-            default = "main";
-            description = "Helion git branch.";
-          };
-          torchIndex = mkOption {
-            type = types.str;
-            default = "nightly/cu130";
-            description = "PyTorch wheel index for helion (when pytorch project is not enabled).";
-          };
-          backends = mkOption {
-            type = types.listOf (types.enum [ "cuda" "cute" ]);
-            default = [ "cuda" ];
-            description = "GPU backends to enable. Stackable, not mutually exclusive.";
-          };
-        };
-
-        pytorch = {
-          enable = mkEnableOption "PyTorch (build from source)";
-          repo = mkOption {
-            type = types.str;
-            default = "https://github.com/pytorch/pytorch.git";
-            description = "PyTorch git repository URL.";
-          };
-          branch = mkOption {
-            type = types.str;
-            default = "main";
-            description = "PyTorch git branch.";
-          };
-          cudaArch = mkOption {
-            type = types.str;
-            default = "9.0";
-            description = "CUDA architectures to compile for (e.g. '9.0' for H200, '8.0;9.0' for A100+H200).";
-          };
-          buildTests = mkOption {
-            type = types.bool;
-            default = false;
-            description = "Build pytorch test binaries (slower build, only needed for running C++ tests).";
-          };
-        };
       };
     };
   };

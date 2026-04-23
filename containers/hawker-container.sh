@@ -160,6 +160,12 @@ case "${1:-help}" in
         fi
         ;;
 
+    build)
+        shift
+        $(detect_runtime) exec -it --user dev -w /home/dev "$IMAGE_NAME" \
+            "$NIXOS_BIN/bash" -lc "hawker-build $*"
+        ;;
+
     rebuild)
         if [ $# -ge 2 ]; then
             ssh -A -tt "$2" "bash ~/hawker/containers/hawker-container.sh rebuild"
@@ -206,6 +212,7 @@ case "${1:-help}" in
         echo "Commands:"
         echo "  $0 start              Build image, create and start container"
         echo "  $0 enter [host]       Enter running container (local or remote)"
+        echo "  $0 build [args...]    Build project sources (delegates to hawker-build)"
         echo "  $0 rebuild [host]     Rebuild NixOS config inside container"
         echo "  $0 deploy <host>      Build image locally, sync + start on remote"
         echo "  $0 stop [host]        Stop container"

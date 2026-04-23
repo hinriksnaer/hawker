@@ -6,16 +6,27 @@
 let
   hostSettings = (import ../../settings.nix { }).hawker.hosts.container;
 
-  # Project imports from per-host settings
+  # Auto-discover projects from the projects/ directory.
+  # Each project has: options.nix (typed options), default.nix (config), setup.sh (build).
   projectSettings = hostSettings.projects or {};
   isEnabled = name: (projectSettings.${name}.enable or false) == true;
   projectDir = name: ../../projects + "/${name}";
   hasProject = name: builtins.pathExists (projectDir name + "/default.nix");
+  hasOptions = name: builtins.pathExists (projectDir name + "/options.nix");
 
   allProjects = builtins.attrNames (
     lib.filterAttrs (n: t: t == "directory" && hasProject n)
       (builtins.readDir ../../projects)
   );
+
+  enabledProjects = builtins.filter isEnabled allProjects;
+
+  # Sort enabled projects by buildOrder (set in each project's options.nix).
+  # Lower values build first (pytorch=10, helion=20, new projects default=100).
+  sortedProjects = lib.sort (a: b:
+    config.hawker.container.projects.${a}.buildOrder <
+    config.hawker.container.projects.${b}.buildOrder
+  ) enabledProjects;
 
   username = hostSettings.username;
 in
@@ -23,15 +34,18 @@ in
   imports = [
     ../../profiles/core.nix
     ../../profiles/terminal.nix
-  ] ++ map projectDir (builtins.filter isEnabled allProjects);
+  ]
+  # Import options.nix from ALL projects (so option declarations exist even when disabled)
+  ++ map (n: projectDir n + "/options.nix") (builtins.filter hasOptions allProjects)
+  # Import default.nix (config + deps) only from enabled projects
+  ++ map projectDir enabledProjects;
 
   # ── Per-host settings → module options ──
   hawker.username = lib.mkForce username;
   hawker.container.gpuPassthrough = hostSettings.gpuPassthrough;
 
-  # Populate project module options from per-host settings
-  hawker.container.projects.helion = projectSettings.helion or {};
-  hawker.container.projects.pytorch = projectSettings.pytorch or {};
+  # Populate project module options from per-host settings (auto-discovered)
+  hawker.container.projects = lib.genAttrs allProjects (name: projectSettings.${name} or {});
 
   # Container user (base.nix creates the user, we add uid + groups)
   users.users.${username} = {
@@ -90,6 +104,8 @@ in
   environment.sessionVariables = {
     LD_LIBRARY_PATH = "/usr/lib64:${pkgs.stdenv.cc.cc.lib}/lib";
     TRITON_LIBCUDA_PATH = "/usr/lib64";
+    # Enabled projects sorted by buildOrder -- consumed by hawker-build
+    HAWKER_PROJECTS = builtins.concatStringsSep " " sortedProjects;
   };
 
   # Add /usr/bin to PATH for CDI-mounted binaries (nvidia-smi, etc.)

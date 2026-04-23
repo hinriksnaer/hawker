@@ -33,6 +33,9 @@ in
 
   environment.systemPackages = [
     # Bash scripts with explicit deps
+    (mkBash "hawker-build" {
+      runtimeInputs = with pkgs; [ coreutils ];
+    })
     (mkBash "hawker-rofi-wallpaper-select" {
       runtimeInputs = with pkgs; [ rofi swaybg findutils coreutils ];
     })
