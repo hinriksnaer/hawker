@@ -26,7 +26,11 @@ uv pip install pip 2>/dev/null || true
 
 if [ ! -d "$WORKSPACE" ]; then
     echo "==> Cloning ${PYTORCH_REPO} (${PYTORCH_BRANCH})..."
-    git clone --recursive --branch "${PYTORCH_BRANCH}" "${PYTORCH_REPO}" "$WORKSPACE"
+    git clone --branch "${PYTORCH_BRANCH}" "${PYTORCH_REPO}" "$WORKSPACE"
+    cd "$WORKSPACE"
+    git submodule sync
+    git submodule update --init --recursive --depth 1
+    cd "$REPOS"
 fi
 
 cd "$WORKSPACE"
