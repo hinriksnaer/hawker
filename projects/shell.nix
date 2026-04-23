@@ -1,10 +1,10 @@
 # Shared development shell for all projects.
+# Available via: nix develop (on a NixOS host or for local development).
 # Nix's setup hooks automatically populate CMAKE_PREFIX_PATH,
-# PKG_CONFIG_PATH, etc. from buildInputs — no manual env var wiring.
+# PKG_CONFIG_PATH, etc. from buildInputs.
 #
-# Used by hawker-build via: nix develop --impure --command bash setup.sh
-# The --impure flag inherits NixOS session variables (USE_CUDA, CUDA_HOME,
-# PYTORCH_REPO, etc.) while the devShell adds cmake/compiler paths.
+# Inside the container, packages are baked into the image by
+# streamLayeredImage — this shell is not used there.
 #
 # To add deps for a new project, add them to buildInputs below.
 { pkgs }:

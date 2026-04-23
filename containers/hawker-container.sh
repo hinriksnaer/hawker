@@ -158,7 +158,7 @@ case "${1:-help}" in
         runtime=$(detect_runtime)
         if [ $# -ge 2 ]; then
             echo "==> Cleaning ${IMAGE_NAME} on $2..."
-            ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null; podman rm ${IMAGE_NAME} 2>/dev/null; podman volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache 2>/dev/null; podman rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
+            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache 2>/dev/null; \$rt rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
         else
             echo "==> Cleaning local $IMAGE_NAME..."
             $runtime stop "$IMAGE_NAME" 2>/dev/null || true
@@ -171,7 +171,7 @@ case "${1:-help}" in
 
     status)
         if [ $# -ge 2 ]; then
-            ssh "$2" "podman inspect -f '{{.State.Status}}' ${IMAGE_NAME} 2>/dev/null || echo 'not found'"
+            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt inspect -f '{{.State.Status}}' ${IMAGE_NAME} 2>/dev/null || echo 'not found'"
         else
             $(detect_runtime) inspect -f '{{.State.Status}}' "$IMAGE_NAME" 2>/dev/null || echo "not found"
         fi

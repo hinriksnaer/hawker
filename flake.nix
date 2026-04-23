@@ -82,7 +82,7 @@
           ];
         };
 
-        # Alias for docker-nixos bootstrap (options.nix defaults to "default")
+        # Alias used by bootstrap.sh to read default theme from container config
         default = self.nixosConfigurations.container;
 
         laptop = nixpkgs.lib.nixosSystem {

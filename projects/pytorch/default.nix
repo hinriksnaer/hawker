@@ -30,7 +30,7 @@ in
       USE_CUDNN = "1";
       # CUDNN_INCLUDE_PATH / CUDNN_LIBRARY_PATH set in cuda-dev.nix
       USE_NCCL = "1";
-      USE_SYSTEM_NCCL = "0";   # bundled NCCL (system NCCL can't use binary cache during create-switch-script)
+      USE_SYSTEM_NCCL = "0";   # bundled NCCL (simpler than providing system NCCL in container image)
       # Bundled NCCL links -lcudart_static. The linker needs to find it in cudatoolkit/lib.
       LIBRARY_PATH = "${cudaToolkit}/lib";
       USE_CUFILE = "OFF";      # cuFile (GPU Direct Storage) not in Nix CUDA packages

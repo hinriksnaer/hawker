@@ -130,10 +130,9 @@ Host commands (manage the container from outside):
 hawker-container start              # build image + start container
 hawker-container enter [host]       # enter running container (local or remote)
 hawker-container update             # pull latest, upgrade CLI, rebuild container
-hawker-container rebuild [host]     # rebuild NixOS config inside container (no restart)
 hawker-container deploy <host>      # clone/pull repo on remote + start container
 hawker-container stop [host]        # stop container
-hawker-container clean [host]       # remove everything (fresh start)
+hawker-container clean [host]       # remove container, image, and volumes
 hawker-container status [host]      # show container status
 ```
 
