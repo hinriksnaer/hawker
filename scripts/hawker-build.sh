@@ -171,18 +171,12 @@ for proj in "${PROJECTS[@]}"; do
     if bash "$setup"; then
         echo "==> $proj done"
     else
-        echo "==> $proj FAILED" >&2
-        FAILED+=("$proj")
+        echo ""
+        echo "Build failed: $proj" >&2
+        echo "Remaining projects skipped." >&2
+        exit 1
     fi
 done
-
-# ── Summary ──
-
-if [ ${#FAILED[@]} -gt 0 ]; then
-    echo ""
-    echo "Failed projects: ${FAILED[*]}"
-    exit 1
-fi
 
 echo ""
 echo "All projects built successfully."
