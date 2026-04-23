@@ -133,7 +133,6 @@ case "${1:-help}" in
         $NIX_CMD profile upgrade hawker-container 2>/dev/null || true
 
         echo "==> Rebuilding container..."
-        local runtime
         runtime=$(detect_runtime)
         $runtime stop "${IMAGE_NAME}" 2>/dev/null || true
         $runtime rm "${IMAGE_NAME}" 2>/dev/null || true
@@ -154,7 +153,6 @@ case "${1:-help}" in
         ;;
 
     clean)
-        local runtime
         runtime=$(detect_runtime)
         if [ $# -ge 2 ]; then
             echo "==> Cleaning ${IMAGE_NAME} on $2..."
