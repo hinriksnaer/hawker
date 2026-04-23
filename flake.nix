@@ -17,7 +17,7 @@
       lib = nixpkgs.lib;
 
       # Common modules: user settings (imported by all machine configs)
-      # Note: hawker-options.nix is imported via profiles/core.nix
+      # Note: hawker-options.nix is imported via roles/core.nix
       commonModules = [
         ./settings.nix
       ];
@@ -51,7 +51,7 @@
       # ── Individually importable modules (auto-discovered) ──
       nixosModules =
         (discoverModules ./modules) //
-        (discoverModules ./profiles) //
+        (discoverModules ./roles) //
         (discoverDirs ./projects);
 
       # ── Machine configurations ──

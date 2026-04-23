@@ -6,11 +6,11 @@ in
 {
   imports = [
     ./hardware-configuration.nix
-    ../../profiles/core.nix
-    ../../profiles/terminal.nix
-    ../../profiles/desktop.nix
-    ../../profiles/hardware.nix
-    ../../profiles/apps.nix
+    ../../roles/core.nix
+    ../../roles/terminal.nix
+    ../../roles/desktop.nix
+    ../../roles/hardware.nix
+    ../../roles/apps.nix
     ../../modules/fancontrol.nix
   ];
 

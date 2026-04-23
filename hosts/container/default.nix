@@ -32,8 +32,8 @@ let
 in
 {
   imports = [
-    ../../profiles/core.nix
-    ../../profiles/terminal.nix
+    ../../roles/core.nix
+    ../../roles/terminal.nix
   ]
   # Import options.nix from ALL projects (so option declarations exist even when disabled)
   ++ map (n: projectDir n + "/options.nix") (builtins.filter hasOptions allProjects)

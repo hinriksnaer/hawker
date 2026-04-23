@@ -1,6 +1,6 @@
 # Container management CLI (hawker-container command).
 # Wraps containers/hawker-container.sh with runtime dependencies.
-# Imported by profiles/core.nix so the command is available on all hosts
+# Imported by roles/core.nix so the command is available on all hosts
 # (deploy and manage remote dev containers from any machine).
 { pkgs, ... }:
 

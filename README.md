@@ -238,7 +238,7 @@ modules/              38 NixOS modules (flat, one per tool/service)
   gpu.nix             GPU driver dispatch (nvidia/intel/amd/none)
   ...
 
-profiles/             named module collections
+roles/                named module collections (assigned to hosts)
   core.nix            base system, fish, cli-tools, git, scripts
   terminal.nix        neovim, tmux, btop, lazygit, yazi, gh, opencode
   desktop.nix         hyprland, kitty, waybar, mako, rofi, sddm, fonts
