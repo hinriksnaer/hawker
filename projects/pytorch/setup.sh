@@ -39,10 +39,15 @@ python -m pip install --group dev
 # which are properly configured for this environment
 python -m pip uninstall -y cmake ninja 2>/dev/null || true
 
+# Ensure CMake can find CUDA headers in the Nix store.
+# nvcc resolves to cuda_nvcc (no headers), but the merged cudatoolkit has them.
+export CMAKE_PREFIX_PATH="${CUDA_HOME}${CMAKE_PREFIX_PATH:+:$CMAKE_PREFIX_PATH}"
+
 # Build and install PyTorch in editable mode (upstream recommended method)
 echo "==> Installing PyTorch in editable mode (compiles from source)..."
 echo "    MAX_JOBS=${MAX_JOBS:-auto}, TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST:-auto}"
 echo "    ccache: ${CMAKE_CXX_COMPILER_LAUNCHER:-none}"
+echo "    CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
 python -m pip install --no-build-isolation -v -e .
 
 # triton is required for torch.compile/inductor but isn't a pytorch build dependency
