@@ -2,15 +2,13 @@
 
 let
   pc = config.hawker.container.projects.pytorch;
-  nccl = pkgs.cudaPackages.nccl;
+  cudaToolkit = pkgs.cudaPackages.cudatoolkit;
 in
 {
   imports = [ ../../modules/cuda-dev.nix ];
 
   config = {
     environment.systemPackages = with pkgs; [
-      nccl
-      nccl.dev
       gfortran
       openblas
       libuv
@@ -32,10 +30,9 @@ in
       USE_CUDNN = "1";
       # CUDNN_INCLUDE_PATH / CUDNN_LIBRARY_PATH set in cuda-dev.nix
       USE_NCCL = "1";
-      USE_SYSTEM_NCCL = "1";
-      NCCL_ROOT = "${nccl}";
-      NCCL_INCLUDE_DIR = "${nccl.dev}/include";
-      NCCL_LIB_DIR = "${nccl}/lib";
+      USE_SYSTEM_NCCL = "0";   # bundled NCCL (system NCCL can't use binary cache during create-switch-script)
+      # Bundled NCCL links -lcudart_static. The linker needs to find it in cudatoolkit/lib.
+      LIBRARY_PATH = "${cudaToolkit}/lib";
       USE_CUFILE = "OFF";      # cuFile (GPU Direct Storage) not in Nix CUDA packages
       USE_NVSHMEM = "OFF";     # pip nvshmem ABI incompatible with older SM targets
       USE_KINETO = "1";        # profiling (torch.profiler) -- needed for kernel benchmarking
