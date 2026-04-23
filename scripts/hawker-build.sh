@@ -14,6 +14,7 @@
 
 REPOS="$HOME/repos"
 PROJECTS_DIR="$HOME/hawker/projects"
+FLAKE_REF="$HOME/hawker"
 
 # ── Helpers ──
 
@@ -166,7 +167,9 @@ for proj in "${PROJECTS[@]}"; do
     fi
 
     echo "==> Building $proj..."
-    if bash "$setup"; then
+    # Run inside the devShell so cmake gets proper search paths via Nix hooks.
+    # --impure inherits NixOS session variables (USE_CUDA, CUDA_HOME, etc.)
+    if nix develop "$FLAKE_REF" --impure --command bash "$setup"; then
         echo "==> $proj done"
     else
         echo ""

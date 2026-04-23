@@ -110,6 +110,9 @@
         container-build = self.packages.${system}.container;
       };
 
+      # ── Development shell (shared across all projects) ──
+      devShells.${system}.default = import ./projects/shell.nix { inherit pkgs; };
+
       # ── Packages ──
       packages.${system} = {
         # OCI container image (docker-nixos base, pinned)
