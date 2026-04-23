@@ -45,14 +45,13 @@
             torchIndex = "nightly/cu130";
             backends = [ "cute" ];
           };
-          #
-          # pytorch = {
-          #   enable = true;
-          #   repo = "https://github.com/pytorch/pytorch.git";
-          #   branch = "main";
-          #   cudaArch = "9.0";
-          #   buildTests = false;
-          # };
+          pytorch = {
+            enable = true;
+            repo = "https://github.com/pytorch/pytorch.git";
+            branch = "main";
+            cudaArch = "9.0";
+            buildTests = false;
+          };
         };
       };
     };
