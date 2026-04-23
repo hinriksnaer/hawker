@@ -85,6 +85,12 @@ start_container() {
     # Ensure persistent directories exist on host
     mkdir -p "$HOME/repos" "$HOME/.cache/ccache" "$HOME/nix-container"
 
+    # Optional mounts (only if they exist on host)
+    local optional_mounts=()
+    if [ -d "$HOME/.ssh" ]; then
+        optional_mounts+=(-v "$HOME/.ssh:/home/dev/.ssh-host:ro")
+    fi
+
     echo "==> Starting $IMAGE_NAME..."
     $runtime run -d \
         --name "$IMAGE_NAME" \
@@ -98,7 +104,7 @@ start_container() {
         -v "$HOME/nix-container:/nix" \
         -v "$HOME/repos:/home/dev/repos" \
         -v "$HOME/.cache/ccache:/home/dev/.cache/ccache" \
-        -v "$HOME/.ssh:/home/dev/.ssh-host:ro" \
+        "${optional_mounts[@]}" \
         "${gpu_args[@]}" \
         "$IMAGE_TAG"
 
