@@ -16,6 +16,10 @@ let
   inherit (pkgs) cudaPackages;
   cudaToolkit = cudaPackages.cudatoolkit;
   cudnn = cudaPackages.cudnn;
+  # CUDA-compatible GCC (14.x). nixpkgs-unstable ships GCC 15 by default,
+  # but CUDA 12.9's nvcc only supports up to GCC 14. backendStdenv provides
+  # the correct version — same mechanism nixpkgs uses for its own CUDA builds.
+  cudaGcc = cudaPackages.backendStdenv.cc;
 in
 {
   environment.systemPackages = with pkgs; [
@@ -34,7 +38,8 @@ in
     # Build tools
     cmake
     ninja
-    gcc
+    gcc       # system GCC (15.x) for general C/C++ builds
+    cudaGcc   # GCC 14.x for nvcc host compilation
     gnumake
     pkg-config
     zlib
@@ -51,6 +56,9 @@ in
     CUDA_HOME = "${cudaToolkit}";
     CUDA_PATH = "${cudaToolkit}";
     CMAKE_PREFIX_PATH = "${cudaToolkit}";
+    # nvcc host compiler: GCC 14 (system GCC 15 is unsupported by CUDA 12.9).
+    # Respected by both PyTorch's cmake and NCCL's Makefile.
+    CUDAHOSTCXX = "${cudaGcc}/bin/cc";
     CUDNN_INCLUDE_DIR = "${cudnn.include}/include";
     CUDNN_LIB_DIR = "${cudnn.lib}/lib";
     CUDNN_INCLUDE_PATH = "${cudnn.include}/include";
