@@ -134,11 +134,22 @@ enter_container() {
 deploy_to_host() {
     local host=$1
 
-    # Sync repo to remote (for /config bind mount and nix build)
+    # Get the remote URL from local git config
+    local remote_url
+    remote_url=$(git -C "${FLAKE_REF}" remote get-url origin 2>/dev/null) || {
+        echo "Error: cannot determine git remote URL from ${FLAKE_REF}" >&2
+        exit 1
+    }
+
+    # Clone or pull the repo on the remote host (uses SSH agent forwarding)
     echo "==> Syncing repo to ${host}:~/hawker..."
-    rsync -a --delete --exclude='.git' --exclude='result' --chmod=Du+rwx,Fu+rw \
-        "${FLAKE_REF}/" "${host}:~/hawker/"
-    ssh "$host" "cd ~/hawker && git init -q 2>/dev/null; git add -A 2>/dev/null"
+    ssh -A "$host" "
+        if [ -d ~/hawker/.git ]; then
+            cd ~/hawker && git pull --ff-only
+        else
+            git clone '${remote_url}' ~/hawker
+        fi
+    "
 
     # Start the container on the remote (nix build + podman run happens there)
     echo "==> Starting container on ${host}..."
