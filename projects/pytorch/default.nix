@@ -2,12 +2,15 @@
 
 let
   pc = config.hawker.container.projects.pytorch;
+  nccl = pkgs.cudaPackages.nccl;
 in
 {
   imports = [ ../../modules/cuda-dev.nix ];
 
   config = {
     environment.systemPackages = with pkgs; [
+      nccl
+      nccl.dev
       gfortran
       openblas
       libuv
@@ -29,7 +32,10 @@ in
       USE_CUDNN = "1";
       # CUDNN_INCLUDE_PATH / CUDNN_LIBRARY_PATH set in cuda-dev.nix
       USE_NCCL = "1";
-      USE_SYSTEM_NCCL = "0";   # let PyTorch build bundled NCCL (avoids nixpkgs build failures)
+      USE_SYSTEM_NCCL = "1";
+      NCCL_ROOT = "${nccl}";
+      NCCL_INCLUDE_DIR = "${nccl.dev}/include";
+      NCCL_LIB_DIR = "${nccl}/lib";
       USE_CUFILE = "OFF";      # cuFile (GPU Direct Storage) not in Nix CUDA packages
       USE_NVSHMEM = "OFF";     # pip nvshmem ABI incompatible with older SM targets
       USE_KINETO = "1";        # profiling (torch.profiler) -- needed for kernel benchmarking
