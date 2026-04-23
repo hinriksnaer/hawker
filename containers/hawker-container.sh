@@ -83,7 +83,8 @@ start_container() {
     fi
 
     # Ensure persistent directories exist on host
-    mkdir -p "$HOME/repos" "$HOME/.cache/ccache" "$HOME/nix-container"
+    local nix_container="/mnt/podman_storage/$(whoami)/nix-container"
+    mkdir -p "$HOME/repos" "$HOME/.cache/ccache" "$nix_container"
 
     # Optional mounts (only if they exist on host)
     local optional_mounts=()
@@ -101,7 +102,7 @@ start_container() {
         --cgroupns=host \
         -v "${FLAKE_REF}:/config" \
         -v "${FLAKE_REF}:/home/dev/hawker" \
-        -v "$HOME/nix-container:/nix" \
+        -v "$nix_container:/nix" \
         -v "$HOME/repos:/home/dev/repos" \
         -v "$HOME/.cache/ccache:/home/dev/.cache/ccache" \
         "${optional_mounts[@]}" \
