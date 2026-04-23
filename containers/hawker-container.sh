@@ -82,6 +82,9 @@ start_container() {
         echo "==> GPU passthrough: $gpu_passthrough"
     fi
 
+    # Ensure persistent directories exist on host
+    mkdir -p "$HOME/repos" "$HOME/.cache/ccache"
+
     echo "==> Starting $IMAGE_NAME..."
     $runtime run -d \
         --name "$IMAGE_NAME" \
@@ -91,6 +94,9 @@ start_container() {
         -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
         --cgroupns=host \
         -v "${FLAKE_REF}:/config" \
+        -v "$HOME/repos:/home/dev/repos" \
+        -v "$HOME/.cache/ccache:/home/dev/.cache/ccache" \
+        -v "$HOME/.ssh:/home/dev/.ssh:ro" \
         "${gpu_args[@]}" \
         "$IMAGE_TAG"
 
