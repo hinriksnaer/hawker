@@ -57,7 +57,7 @@ in
   environment.sessionVariables = {
     CUDA_HOME = "${cudaToolkit}";
     CUDA_PATH = "${cudaToolkit}";
-    CMAKE_PREFIX_PATH = "${cudaToolkit}";
+    CMAKE_PREFIX_PATH = "${cudaToolkit}:${pkgs.python3}";
     CUDNN_INCLUDE_DIR = "${cudnn.include}/include";
     CUDNN_LIB_DIR = "${cudnn.lib}/lib";
     CUDNN_INCLUDE_PATH = "${cudnn.include}/include";
