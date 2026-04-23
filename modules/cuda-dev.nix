@@ -35,9 +35,12 @@ in
   environment.sessionVariables = {
     CUDA_HOME = "${cudaPackages.cudatoolkit}";
     CUDA_PATH = "${cudaPackages.cudatoolkit}";
-    # CMake FindCUDAToolkit uses these (not CUDA_HOME) to locate headers + libs
+    # CMake needs CMAKE_PREFIX_PATH to find CUDA headers/libs in Nix store.
+    # PyTorch's custom FindCUDAToolkit.cmake derives the toolkit root from the
+    # nvcc binary path (/run/current-system/sw/bin/nvcc), which doesn't contain
+    # headers. CMAKE_PREFIX_PATH is read by PyTorch's setup.py and passed to cmake.
+    CMAKE_PREFIX_PATH = "${cudaPackages.cudatoolkit}";
     CUDAToolkit_ROOT = "${cudaPackages.cudatoolkit}";
-    CUDA_TOOLKIT_ROOT_DIR = "${cudaPackages.cudatoolkit}";
     CUDNN_INCLUDE_DIR = "${cudaPackages.cudnn.include}/include";
     CUDNN_LIB_DIR = "${cudaPackages.cudnn.lib}/lib";
     # PyTorch FindCUDNN uses CUDNN_INCLUDE_PATH / CUDNN_LIBRARY_PATH (not _DIR)
