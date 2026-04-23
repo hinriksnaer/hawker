@@ -19,6 +19,8 @@ let
     mkdir -p $out/tmp
     chmod 1777 $out/tmp
     mkdir -p $out/home/${username}
+    mkdir -p $out/home/${username}/.cache
+    mkdir -p $out/home/${username}/.local/share/fish
 
     cp -r ${repoSrc} $out/home/${username}/hawker
     chmod -R u+w $out/home/${username}/hawker
@@ -65,6 +67,9 @@ pkgs.dockerTools.streamLayeredImage {
       "SHELL=${pkgs.fish}/bin/fish"
       "HOME=/home/${username}"
       "USER=${username}"
+      "XDG_DATA_HOME=/home/${username}/.local/share"
+      "XDG_CONFIG_HOME=/home/${username}/.config"
+      "XDG_CACHE_HOME=/home/${username}/.cache"
       "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
       "NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
     ] ++ sessionEnv;
