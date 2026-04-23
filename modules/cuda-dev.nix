@@ -35,6 +35,9 @@ in
   environment.sessionVariables = {
     CUDA_HOME = "${cudaPackages.cudatoolkit}";
     CUDA_PATH = "${cudaPackages.cudatoolkit}";
+    # CMake FindCUDAToolkit uses these (not CUDA_HOME) to locate headers + libs
+    CUDAToolkit_ROOT = "${cudaPackages.cudatoolkit}";
+    CUDA_TOOLKIT_ROOT_DIR = "${cudaPackages.cudatoolkit}";
     CUDNN_INCLUDE_DIR = "${cudaPackages.cudnn.include}/include";
     CUDNN_LIB_DIR = "${cudaPackages.cudnn.lib}/lib";
     # PyTorch FindCUDNN uses CUDNN_INCLUDE_PATH / CUDNN_LIBRARY_PATH (not _DIR)
