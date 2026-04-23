@@ -110,11 +110,6 @@
         container-build = self.packages.${system}.container;
       };
 
-      # ── Development shell (shared across all projects) ──
-      devShells.${system}.default = import ./projects/shell.nix {
-        pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
-      };
-
       # ── Packages ──
       packages.${system} = let
         containerConfig = self.nixosConfigurations.container.config;
