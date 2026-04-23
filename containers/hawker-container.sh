@@ -82,17 +82,7 @@ start_container() {
         echo "==> GPU passthrough: $gpu_passthrough"
     fi
 
-    # Ensure persistent directories exist on host
-    mkdir -p "$HOME/repos" "$HOME/.cache/ccache"
-
-    # SSH mount (only if keys exist on host)
-    local ssh_mount=""
-    if [ -d "$HOME/.ssh" ]; then
-        ssh_mount="-v $HOME/.ssh:/home/dev/.ssh-host:ro"
-    fi
-
     echo "==> Starting $IMAGE_NAME..."
-    # shellcheck disable=SC2086
     $runtime run -d \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
@@ -101,10 +91,6 @@ start_container() {
         -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
         --cgroupns=host \
         -v "${FLAKE_REF}:/config" \
-        -v "${FLAKE_REF}:/home/dev/hawker" \
-        -v "$HOME/repos:/home/dev/repos" \
-        -v "$HOME/.cache/ccache:/home/dev/.cache/ccache" \
-        $ssh_mount \
         "${gpu_args[@]}" \
         "$IMAGE_TAG"
 
