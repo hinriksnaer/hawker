@@ -110,7 +110,14 @@
         container-build = self.packages.${system}.container;
       };
 
-      # ── Container image (docker-nixos base, pinned) ──
-      packages.${system}.container = import ./containers/default.nix { inherit pkgs; };
+      # ── Packages ──
+      packages.${system} = {
+        # OCI container image (docker-nixos base, pinned)
+        container = import ./containers/default.nix { inherit pkgs; };
+
+        # Standalone CLI for managing containers (installable on any host with Nix)
+        hawker-container = pkgs.writeShellScriptBin "hawker-container"
+          (builtins.readFile ./containers/hawker-container.sh);
+      };
     };
 }
