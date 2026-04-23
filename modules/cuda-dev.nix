@@ -2,83 +2,59 @@
 # Imported by project modules that need GPU development tools.
 # Packages deduplicate via NixOS module system -- safe to import multiple times.
 #
-# Uses individual cudaPackages (not the legacy cudatoolkit meta-package),
-# joined into a single store path for CUDA_HOME / CMAKE_PREFIX_PATH.
+# cudaPackages.cudatoolkit is a symlinkJoin of all individual CUDA redist
+# packages (cuda_cudart, cuda_nvcc, libcublas, etc.) with all outputs
+# (lib, dev, include) merged into one store path. This gives us a single
+# CUDA_HOME with headers, libraries, and tools — exactly what cmake and
+# pip-based builds expect.
+#
 # Projects should remove any vendored FindCUDAToolkit.cmake that bypasses
 # standard cmake search (see projects/pytorch/setup.sh, following nixpkgs).
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 
 let
   inherit (pkgs) cudaPackages;
+  cudaToolkit = cudaPackages.cudatoolkit;
   cudnn = cudaPackages.cudnn;
-
-  # Individual CUDA packages needed for GPU development.
-  # Mirrors nixpkgs' torch buildInputs for compatibility.
-  # Each redist package has split outputs (out, dev, lib, include, static,
-  # stubs). We collect the lib + dev + include outputs so the joined path
-  # has both headers and shared libraries for cmake to find.
-  cudaPkgs = with cudaPackages; [
-    cuda_cccl          # <thrust/*>, <cub/*>
-    cuda_cudart        # cuda_runtime.h + libcudart
-    cuda_cupti         # profiling (torch.profiler / kineto)
-    cuda_nvcc          # nvcc compiler + crt/host_config.h
-    cuda_nvml_dev      # <nvml.h>
-    cuda_nvrtc         # runtime compilation
-    cuda_nvtx          # NVTX tracing markers
-    libcublas          # cuBLAS
-    libcufft           # cuFFT
-    libcurand          # cuRAND
-    libcusolver        # cuSOLVER
-    libcusparse        # cuSPARSE
-  ];
-
-  # Collect all split outputs (lib, dev, include) from each package.
-  # Redist packages put .so files in lib and headers in dev/include.
-  collectOutputs = pkg:
-    let names = pkg.outputs or [ "out" ];
-        wanted = [ "out" "lib" "dev" "include" ];
-    in map (o: pkg.${o}) (builtins.filter (o: builtins.elem o names) wanted);
-
-  # Unified CUDA root: join all outputs into one store path so
-  # CUDA_HOME and CMAKE_PREFIX_PATH point to a single directory with
-  # all headers, libs, and tools.
-  cudaJoined = pkgs.symlinkJoin {
-    name = "cuda-joined-${cudaPackages.cudaMajorMinorVersion}";
-    paths = lib.concatMap collectOutputs cudaPkgs;
-  };
 in
 {
-  environment.systemPackages = [
+  environment.systemPackages = with pkgs; [
     # Python
-    pkgs.python3
-    pkgs.python3Packages.pip
-    pkgs.python3Packages.virtualenv
-    pkgs.uv
+    python3
+    python3Packages.pip
+    python3Packages.virtualenv
+    uv
 
-    # CUDA
-    cudaJoined
+    # CUDA toolkit (merged symlinkJoin of all redist packages + outputs)
+    cudaToolkit
     cudnn
     cudnn.include
     cudnn.lib
 
     # Build tools
-    pkgs.cmake
-    pkgs.ninja
-    pkgs.gcc
-    pkgs.gnumake
-    pkgs.pkg-config
-    pkgs.zlib
-    pkgs.glibc.bin
+    cmake
+    ninja
+    gcc
+    gnumake
+    pkg-config
+    zlib
+    glibc.bin
   ];
 
+  # CUDA binary cache (pre-built CUDA packages from nixos-cuda.org)
+  nix.settings = {
+    substituters = [ "https://cache.nixos-cuda.org" ];
+    trusted-public-keys = [ "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=" ];
+  };
+
   environment.sessionVariables = {
-    CUDA_HOME = "${cudaJoined}";
-    CUDA_PATH = "${cudaJoined}";
-    CMAKE_PREFIX_PATH = "${cudaJoined}";
+    CUDA_HOME = "${cudaToolkit}";
+    CUDA_PATH = "${cudaToolkit}";
+    CMAKE_PREFIX_PATH = "${cudaToolkit}";
     CUDNN_INCLUDE_DIR = "${cudnn.include}/include";
     CUDNN_LIB_DIR = "${cudnn.lib}/lib";
     CUDNN_INCLUDE_PATH = "${cudnn.include}/include";
     CUDNN_LIBRARY_PATH = "${cudnn.lib}/lib";
-    CPATH = "${cudaJoined}/include:${cudnn.include}/include";
+    CPATH = "${cudaToolkit}/include:${cudnn.include}/include";
   };
 }
