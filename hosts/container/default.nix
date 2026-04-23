@@ -90,8 +90,36 @@ in
     deps = [ "users" "groups" ];
     text = ''
       chown -R ${username}:users /home/${username} 2>/dev/null || true
-      ln -sfn /config /home/${username}/hawker 2>/dev/null || true
-      chown -h ${username}:users /home/${username}/hawker 2>/dev/null || true
+
+      # Copy SSH keys from staging mount with correct ownership/permissions.
+      # ~/.ssh-host is mounted read-only from the host; SSH requires keys
+      # owned by the current user with 600 permissions.
+      if [ -d /home/${username}/.ssh-host ]; then
+        mkdir -p /home/${username}/.ssh
+        cp -f /home/${username}/.ssh-host/* /home/${username}/.ssh/ 2>/dev/null || true
+        chown -R ${username}:users /home/${username}/.ssh
+        chmod 700 /home/${username}/.ssh
+        chmod 600 /home/${username}/.ssh/* 2>/dev/null || true
+        chmod 644 /home/${username}/.ssh/*.pub 2>/dev/null || true
+        chmod 644 /home/${username}/.ssh/known_hosts 2>/dev/null || true
+      fi
+
+      # Clone a writable copy of the repo from upstream (replaces /config symlink).
+      # This lets git pull/push work inside the container.
+      # Falls back to /config symlink if clone fails (e.g. no network).
+      if [ ! -d /home/${username}/hawker/.git ]; then
+        rm -f /home/${username}/hawker 2>/dev/null || true
+        REMOTE_URL=$(git -C /config remote get-url origin 2>/dev/null || echo "")
+        if [ -n "$REMOTE_URL" ]; then
+          /run/current-system/sw/bin/su - ${username} -c \
+            "git clone '$REMOTE_URL' /home/${username}/hawker" 2>/dev/null || \
+            ln -sfn /config /home/${username}/hawker
+        else
+          ln -sfn /config /home/${username}/hawker
+        fi
+        chown -h ${username}:users /home/${username}/hawker 2>/dev/null || true
+      fi
+
       if [ -d /home/${username}/hawker ]; then
         /run/current-system/sw/bin/su - ${username} -c 'bash /home/${username}/hawker/bootstrap.sh' || true
       fi

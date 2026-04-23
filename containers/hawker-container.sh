@@ -82,17 +82,29 @@ start_container() {
         echo "==> GPU passthrough: $gpu_passthrough"
     fi
 
+    # Persistent project repos (source, venvs, build dirs)
+    mkdir -p "$HOME/repos"
+
+    # Build container run args
+    local run_args=(
+        -d
+        --name "$IMAGE_NAME"
+        --hostname "$IMAGE_NAME"
+        --cap-add SYS_ADMIN
+        --tmpfs /run
+        -v /sys/fs/cgroup:/sys/fs/cgroup:rw
+        --cgroupns=host
+        -v "${FLAKE_REF}:/config"
+        -v "$HOME/repos:/home/dev/repos"
+    )
+    # SSH keys (mounted to staging path, copied with correct perms by activation script)
+    if [ -d "$HOME/.ssh" ]; then
+        run_args+=(-v "$HOME/.ssh:/home/dev/.ssh-host:ro")
+    fi
+    run_args+=("${gpu_args[@]}" "$IMAGE_TAG")
+
     echo "==> Starting $IMAGE_NAME..."
-    $runtime run -d \
-        --name "$IMAGE_NAME" \
-        --hostname "$IMAGE_NAME" \
-        --cap-add SYS_ADMIN \
-        --tmpfs /run \
-        -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
-        --cgroupns=host \
-        -v "${FLAKE_REF}:/config" \
-        "${gpu_args[@]}" \
-        "$IMAGE_TAG"
+    $runtime run "${run_args[@]}"
 
     wait_for_systemd "$runtime"
 
