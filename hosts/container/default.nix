@@ -90,10 +90,23 @@ in
     deps = [ "users" "groups" ];
     text = ''
       chown -R ${username}:users /home/${username} 2>/dev/null || true
-      ln -sfn /config /home/${username}/hawker 2>/dev/null || true
-      chown -h ${username}:users /home/${username}/hawker 2>/dev/null || true
-      # Mark /config as git safe directory (bind-mounted from host, different owner)
+
+      # Copy SSH keys from mounted staging path with correct ownership/permissions.
+      # ~/.ssh-host is mounted read-only from the host; SSH requires keys owned
+      # by the current user with 600 permissions.
+      if [ -d /home/${username}/.ssh-host ]; then
+        mkdir -p /home/${username}/.ssh
+        cp -f /home/${username}/.ssh-host/* /home/${username}/.ssh/ 2>/dev/null || true
+        chown -R ${username}:users /home/${username}/.ssh
+        chmod 700 /home/${username}/.ssh
+        chmod 600 /home/${username}/.ssh/* 2>/dev/null || true
+        chmod 644 /home/${username}/.ssh/*.pub 2>/dev/null || true
+        chmod 644 /home/${username}/.ssh/known_hosts 2>/dev/null || true
+      fi
+
+      # Mark bind-mounted paths as git safe directories (different owner on host)
       /run/current-system/sw/bin/su - ${username} -c 'git config --global --add safe.directory /config' 2>/dev/null || true
+      /run/current-system/sw/bin/su - ${username} -c 'git config --global --add safe.directory /home/${username}/hawker' 2>/dev/null || true
       if [ -d /home/${username}/hawker ]; then
         /run/current-system/sw/bin/su - ${username} -c 'bash /home/${username}/hawker/bootstrap.sh' || true
       fi

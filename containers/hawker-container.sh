@@ -94,10 +94,11 @@ start_container() {
         -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
         --cgroupns=host \
         -v "${FLAKE_REF}:/config" \
+        -v "${FLAKE_REF}:/home/dev/hawker" \
         -v "$HOME/nix-container:/nix" \
         -v "$HOME/repos:/home/dev/repos" \
         -v "$HOME/.cache/ccache:/home/dev/.cache/ccache" \
-        -v "$HOME/.ssh:/home/dev/.ssh:ro" \
+        -v "$HOME/.ssh:/home/dev/.ssh-host:ro" \
         "${gpu_args[@]}" \
         "$IMAGE_TAG"
 
