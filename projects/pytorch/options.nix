@@ -35,5 +35,11 @@
       default = false;
       description = "Build pytorch test binaries (slower build, only needed for running C++ tests).";
     };
+
+    maxJobs = lib.mkOption {
+      type = lib.types.int;
+      default = 32;
+      description = "Max parallel compile jobs (ninja -j). Lower if hitting process limits in containers.";
+    };
   };
 }

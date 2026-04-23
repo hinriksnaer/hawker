@@ -39,7 +39,7 @@ in
       USE_XNNPACK = "0";       # XNNPACK -- CPU inference optimization
       TORCH_CUDA_ARCH_LIST = pc.cudaArch;
       BUILD_TEST = if pc.buildTests then "1" else "0";
-      MAX_JOBS = "64";
+      MAX_JOBS = toString pc.maxJobs;
       CMAKE_C_COMPILER_LAUNCHER = "ccache";
       CMAKE_CXX_COMPILER_LAUNCHER = "ccache";
       CMAKE_CUDA_COMPILER_LAUNCHER = "ccache";
