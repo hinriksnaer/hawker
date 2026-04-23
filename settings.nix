@@ -51,6 +51,7 @@
             branch = "viable/strict";
             cudaArch = "9.0";
             buildTests = false;
+            maxJobs = 32;
           };
         };
       };
