@@ -14,7 +14,10 @@ let
 
   # Individual CUDA packages needed for GPU development.
   # Mirrors nixpkgs' torch buildInputs for compatibility.
-  cudaDeps = with cudaPackages; [
+  # Each redist package has split outputs (out, dev, lib, include, static,
+  # stubs). We collect the lib + dev + include outputs so the joined path
+  # has both headers and shared libraries for cmake to find.
+  cudaPkgs = with cudaPackages; [
     cuda_cccl          # <thrust/*>, <cub/*>
     cuda_cudart        # cuda_runtime.h + libcudart
     cuda_cupti         # profiling (torch.profiler / kineto)
@@ -29,12 +32,19 @@ let
     libcusparse        # cuSPARSE
   ];
 
-  # Unified CUDA root: join individual packages into one store path so
+  # Collect all split outputs (lib, dev, include) from each package.
+  # Redist packages put .so files in lib and headers in dev/include.
+  collectOutputs = pkg:
+    let names = pkg.outputs or [ "out" ];
+        wanted = [ "out" "lib" "dev" "include" ];
+    in map (o: pkg.${o}) (builtins.filter (o: builtins.elem o names) wanted);
+
+  # Unified CUDA root: join all outputs into one store path so
   # CUDA_HOME and CMAKE_PREFIX_PATH point to a single directory with
   # all headers, libs, and tools.
   cudaJoined = pkgs.symlinkJoin {
     name = "cuda-joined-${cudaPackages.cudaMajorMinorVersion}";
-    paths = cudaDeps;
+    paths = lib.concatMap collectOutputs cudaPkgs;
   };
 in
 {
