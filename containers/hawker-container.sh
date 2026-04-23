@@ -67,6 +67,7 @@ start_container() {
     $runtime run -it \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
+        -v "${FLAKE_REF}:/home/${user}/hawker" \
         -v "${IMAGE_NAME}-repos:/home/${user}/repos" \
         -v "${IMAGE_NAME}-ccache:/home/${user}/.cache/ccache" \
         "${ssh_args[@]}" \
