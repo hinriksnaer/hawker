@@ -83,7 +83,7 @@ start_container() {
     fi
 
     # Ensure persistent directories exist on host
-    mkdir -p "$HOME/repos" "$HOME/.cache/ccache"
+    mkdir -p "$HOME/repos" "$HOME/.cache/ccache" "$HOME/nix-container"
 
     echo "==> Starting $IMAGE_NAME..."
     $runtime run -d \
@@ -94,6 +94,7 @@ start_container() {
         -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
         --cgroupns=host \
         -v "${FLAKE_REF}:/config" \
+        -v "$HOME/nix-container:/nix" \
         -v "$HOME/repos:/home/dev/repos" \
         -v "$HOME/.cache/ccache:/home/dev/.cache/ccache" \
         -v "$HOME/.ssh:/home/dev/.ssh:ro" \
