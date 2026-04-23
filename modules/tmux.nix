@@ -11,18 +11,17 @@
       sensible
       vim-tmux-navigator
       yank
-      {
-        plugin = dotbar;
-        extraConfig = ''
-          set -g @tmux-dotbar-position top
-          set -g @tmux-dotbar-fg "colour8"
-          set -g @tmux-dotbar-bg "default"
-          set -g @tmux-dotbar-fg-current "colour7"
-          set -g @tmux-dotbar-fg-session "colour8"
-          set -g @tmux-dotbar-fg-prefix "colour14"
-        '';
-      }
+      dotbar
     ];
+    extraConfigBeforePlugins = ''
+      # Dotbar theme
+      set -g @tmux-dotbar-position top
+      set -g @tmux-dotbar-fg "colour8"
+      set -g @tmux-dotbar-bg "default"
+      set -g @tmux-dotbar-fg-current "colour7"
+      set -g @tmux-dotbar-fg-session "colour8"
+      set -g @tmux-dotbar-fg-prefix "colour14"
+    '';
     extraConfig = ''
       # Mouse support
       set -g mouse on
