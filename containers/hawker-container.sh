@@ -85,13 +85,14 @@ start_container() {
     # Ensure persistent directories exist on host
     mkdir -p "$HOME/repos" "$HOME/.cache/ccache"
 
-    # Optional mounts (only if they exist on host)
-    local optional_mounts=()
+    # SSH mount (only if keys exist on host)
+    local ssh_mount=""
     if [ -d "$HOME/.ssh" ]; then
-        optional_mounts+=(-v "$HOME/.ssh:/home/dev/.ssh-host:ro")
+        ssh_mount="-v $HOME/.ssh:/home/dev/.ssh-host:ro"
     fi
 
     echo "==> Starting $IMAGE_NAME..."
+    # shellcheck disable=SC2086
     $runtime run -d \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
@@ -101,10 +102,9 @@ start_container() {
         --cgroupns=host \
         -v "${FLAKE_REF}:/config" \
         -v "${FLAKE_REF}:/home/dev/hawker" \
-
         -v "$HOME/repos:/home/dev/repos" \
         -v "$HOME/.cache/ccache:/home/dev/.cache/ccache" \
-        "${optional_mounts[@]}" \
+        $ssh_mount \
         "${gpu_args[@]}" \
         "$IMAGE_TAG"
 
