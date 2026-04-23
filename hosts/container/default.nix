@@ -120,6 +120,27 @@ in
         chown -h ${username}:users /home/${username}/hawker 2>/dev/null || true
       fi
 
+      # Point docker-nixos build flake to ~/hawker so nixos-rebuild uses the
+      # writable repo. The /build/flake.nix wrapper combines the user config
+      # with docker-nixos's container base module (fileSystems, boot, etc.)
+      if [ -d /home/${username}/hawker/.git ] && [ -d /build ]; then
+        cat > /build/flake.nix << 'BUILDEOF'
+{
+  description = "Container";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    container-base-config.url = "path:/baseconfig";
+    user-config.url = "path:/home/${username}/hawker";
+  };
+  outputs = { nixpkgs, user-config, container-base-config, ... }@inputs: {
+    nixosConfigurations.container = user-config.nixosConfigurations.container.extendModules {
+      modules = [container-base-config.nixosModules.containerConfig];
+    };
+  };
+}
+BUILDEOF
+      fi
+
       if [ -d /home/${username}/hawker ]; then
         /run/current-system/sw/bin/su - ${username} -c 'bash /home/${username}/hawker/bootstrap.sh' || true
       fi
