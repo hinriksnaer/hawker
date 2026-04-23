@@ -58,7 +58,7 @@ hawker-build
 To update after pushing changes:
 
 ```bash
-cd ~/hawker && git pull && nix profile upgrade hawker-container
+hawker-container update
 ```
 
 ### Host setup
@@ -124,18 +124,20 @@ All settings live in `settings.nix`:
 
 ## Container Commands
 
+Host commands (manage the container from outside):
+
 ```bash
-hawker-container start              # build image + start container (local)
+hawker-container start              # build image + start container
 hawker-container enter [host]       # enter running container (local or remote)
-hawker-container build [args...]    # build project sources (delegates to hawker-build)
-hawker-container rebuild [host]     # rebuild NixOS config inside container
+hawker-container update             # pull latest, upgrade CLI, rebuild container
+hawker-container rebuild [host]     # rebuild NixOS config inside container (no restart)
 hawker-container deploy <host>      # clone/pull repo on remote + start container
 hawker-container stop [host]        # stop container
 hawker-container clean [host]       # remove everything (fresh start)
 hawker-container status [host]      # show container status
 ```
 
-### Building projects
+### Building projects (inside the container)
 
 Once inside the container, use `hawker-build` to build project sources:
 

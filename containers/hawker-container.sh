@@ -171,10 +171,17 @@ case "${1:-help}" in
         fi
         ;;
 
-    build)
-        shift
-        $(detect_runtime) exec -it --user dev -w /home/dev "$IMAGE_NAME" \
-            "$NIXOS_BIN/bash" -lc "hawker-build $*"
+    update)
+        echo "==> Pulling latest changes..."
+        git -C "${FLAKE_REF}" pull --ff-only
+
+        echo "==> Upgrading hawker-container CLI..."
+        $NIX_CMD profile upgrade hawker-container 2>/dev/null || true
+
+        echo "==> Rebuilding container..."
+        $(detect_runtime) stop "${IMAGE_NAME}" 2>/dev/null || true
+        $(detect_runtime) rm "${IMAGE_NAME}" 2>/dev/null || true
+        start_container
         ;;
 
     rebuild)
@@ -223,11 +230,13 @@ case "${1:-help}" in
         echo "Commands:"
         echo "  $0 start              Build image, create and start container"
         echo "  $0 enter [host]       Enter running container (local or remote)"
-        echo "  $0 build [args...]    Build project sources (delegates to hawker-build)"
-        echo "  $0 rebuild [host]     Rebuild NixOS config inside container"
-        echo "  $0 deploy <host>      Build image locally, sync + start on remote"
+        echo "  $0 update             Pull latest, upgrade CLI, rebuild container"
+        echo "  $0 rebuild [host]     Rebuild NixOS config inside container (no restart)"
+        echo "  $0 deploy <host>      Clone/pull repo on remote + start container"
         echo "  $0 stop [host]        Stop container"
         echo "  $0 clean [host]       Stop and remove container"
         echo "  $0 status [host]      Show container status"
+        echo ""
+        echo "Inside the container, use 'hawker-build' to build project sources."
         ;;
 esac
