@@ -7,15 +7,16 @@ Also includes a full NixOS desktop with Hyprland.
 
 ## What You Get
 
-- **GPU containers** with CUDA 12.9, cuDNN 9.13, NCCL, torch.compile -- all working
+- **GPU containers** with CUDA 12.9, cuDNN 9.13, torch.compile -- all working
 - **One-command deploy** to any remote host with GPUs
 - **Persistent state** -- repos, builds, and ccache survive container restarts
 - **Single config file** (`settings.nix`) controls everything
 - **Drop-in projects** -- add a directory, it's auto-discovered
+- **Build ordering** -- projects declare a `buildOrder` priority, lower builds first
 
 ## Quickstart
 
-You need: a local machine with Nix, a remote GPU host with Nix + podman.
+You need: a local machine with Nix, a remote GPU host with podman (or docker).
 
 ```bash
 # 1. Clone
@@ -26,32 +27,26 @@ cd ~/hawker
 
 # 3. Deploy to a GPU host
 hawker-container deploy my-gpu-host
+
+# 4. Build project sources inside the container
+hawker-build
 ```
 
 First deploy takes ~10 minutes (builds remotely, pulls from cache.nixos.org).
 After that, deploys rebuild only what changed (seconds).
 
-## Installing Nix
-
-Required on both your local machine and the remote host.
-
-```bash
-# Install Nix (no root needed)
-curl -L https://nixos.org/nix/install | sh -s -- --no-daemon
-mkdir -p ~/.config/nix
-echo 'experimental-features = nix-command flakes' > ~/.config/nix/nix.conf
-```
-
 ### Remote host setup
 
-The remote host also needs podman (or docker) and NVIDIA drivers with CDI:
+The remote host needs podman (or docker) and NVIDIA drivers with CDI:
 
 ```bash
 # Generate CDI spec (run once after driver install/update, requires sudo)
 sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
 
-# Optional: increase parallel builds
-echo 'max-jobs = 16' >> ~/.config/nix/nix.conf
+# Install Nix if not already present (no root needed)
+curl -L https://nixos.org/nix/install | sh -s -- --no-daemon
+mkdir -p ~/.config/nix
+echo 'experimental-features = nix-command flakes' > ~/.config/nix/nix.conf
 ```
 
 ## Configuration
@@ -61,14 +56,13 @@ All settings live in `settings.nix`:
 ```nix
 {
   hawker = {
-    username = "hawker";
-
     git = {
       name = "your-github-username";
       email = "you@example.com";
     };
 
-    container = {
+    hosts.container = {
+      username = "dev";
       gpuPassthrough = "4";                    # GPU index, "all", or "none"
 
       projects = {
@@ -76,14 +70,14 @@ All settings live in `settings.nix`:
           enable = true;
           repo = "https://github.com/pytorch/helion.git";
           branch = "main";
-          backends = [ "cuda" ];             # also: "cute"
+          backends = [ "cuda" ];               # also: "cute"
         };
 
         pytorch = {
           enable = true;
           repo = "https://github.com/pytorch/pytorch.git";
-          branch = "main";
-          cudaArch = "9.0";                  # "8.0;9.0" for multi-arch
+          branch = "viable/strict";
+          cudaArch = "9.0";                    # "8.0;9.0" for multi-arch
         };
       };
     };
@@ -95,36 +89,53 @@ All settings live in `settings.nix`:
 
 ```bash
 hawker-container deploy <host>    # build + push + enter
-hawker-container enter <host>     # enter existing container
-hawker-container push <host>      # build + push without entering
-hawker-container status <host>    # check Nix/GPU availability
-hawker-container stop <host>      # stop running container
-hawker-container clean <host>     # remove everything (fresh start)
+hawker-container enter [host]     # enter existing container (local or remote)
+hawker-container build [args...]  # build project sources (delegates to hawker-build)
+hawker-container rebuild [host]   # rebuild NixOS config inside container
+hawker-container stop [host]      # stop running container
+hawker-container clean [host]     # remove everything (fresh start)
+hawker-container status [host]    # show container status
 ```
+
+### Building projects
+
+Once inside the container, use `hawker-build` to build project sources:
+
+```bash
+hawker-build                        # build all enabled projects (in buildOrder)
+hawker-build helion                 # build only helion
+hawker-build pytorch helion         # build specific projects (auto-sorted)
+hawker-build --force                # rebuild all (keep source, re-run install)
+hawker-build --clean pytorch        # nuke workspace + rebuild from scratch
+hawker-build --status               # show build state of all projects
+```
+
+Projects build in the order defined by their `buildOrder` option (lower first).
+When both pytorch and helion are enabled, pytorch builds first (buildOrder=10)
+so helion can use the source-built torch instead of downloading nightly wheels.
+
+If any project fails, remaining projects are skipped.
 
 ### What's inside
 
 ```
 ~/repos/              persistent volume
   .venv/              shared Python venv across all projects
-  helion/             cloned on first entry
-  pytorch/            built from source on first entry (~3248 compile steps)
+  helion/             cloned on first hawker-build
+  pytorch/            built from source on first hawker-build
 ~/.cache/ccache/      persistent compilation cache (25GB max)
-~/hawker/             this repo (baked into image)
+~/hawker/             this repo (bind-mounted from host)
 ```
-
-When both projects are enabled, pytorch builds first. Helion detects the
-source-built torch and skips downloading nightly wheels.
 
 ## Adding a Project
 
-1. Create `projects/<name>/options.nix` (typed option declarations)
-2. Create `projects/<name>/default.nix` (imports `options.nix` + `modules/ai/cuda-dev.nix`, packages, env vars)
+1. Create `projects/<name>/options.nix` (typed option declarations with `buildOrder`)
+2. Create `projects/<name>/default.nix` (imports `modules/cuda-dev.nix`, packages, env vars)
 3. Create `projects/<name>/setup.sh` (clone repo, install into shared venv)
-4. Add `"<name>"` to `container.projects` in `settings.nix`
+4. Add `<name> = { enable = true; ... }` to `container.projects` in `settings.nix`
 
-No other files need editing. Options are auto-discovered by both desktop and
-container configs.
+No other files need editing. Options are auto-discovered by the container config.
+The project is auto-sorted by `buildOrder` and `hawker-build` picks it up.
 
 ## NixOS Desktop
 
@@ -167,24 +178,31 @@ Super+Shift+W    Next wallpaper
 
 ```
 settings.nix          all user config (single source of truth)
-flake.nix             2 machine configs, 1 container package, tests
+flake.nix             3 machine configs, 1 container package, tests
 
-modules/
-  core/               base system, fish, cli-tools, git, scripts
-  terminal/           neovim, tmux, btop, lazygit, yazi, gh, opencode
-  desktop/            hyprland, kitty, waybar, mako, rofi, sddm, fonts
-  hardware/           nvidia, bluetooth, networking, audio
-  ai/                 shared CUDA + cuDNN + Python base
-  apps/               firefox, discord, obsidian, steam, podman
+modules/              38 NixOS modules (flat, one per tool/service)
+  cuda-dev.nix        shared CUDA toolkit + cuDNN + Python base
+  hawker-options.nix  typed option declarations
+  hawker-scripts.nix  CLI scripts (hawker-build, theme tools, etc.)
+  gpu.nix             GPU driver dispatch (nvidia/intel/amd/none)
+  ...
+
+profiles/             named module collections
+  core.nix            base system, fish, cli-tools, git, scripts
+  terminal.nix        neovim, tmux, btop, lazygit, yazi, gh, opencode
+  desktop.nix         hyprland, kitty, waybar, mako, rofi, sddm, fonts
+  hardware.nix        GPU, bluetooth, networking, audio
+  apps.nix            firefox, discord, obsidian, steam, podman
 
 projects/
   helion/             options.nix + default.nix + setup.sh
   pytorch/            options.nix + default.nix + setup.sh
 
-containers/           OCI image builder
-hosts/                machine configs (desktop, container)
+containers/           OCI image builder + CLI
+hosts/                machine configs (desktop, laptop, container)
 dotfiles/             stow-managed configs + 12 themes
-tests/                22 unit tests + VM integration + CI
+scripts/              runtime utilities (theme engine, hawker-build, etc.)
+tests/                unit tests + VM integration + CI
 ```
 
 ## Tests
