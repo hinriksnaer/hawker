@@ -48,7 +48,7 @@
           pytorch = {
             enable = true;
             repo = "https://github.com/pytorch/pytorch.git";
-            branch = "main";
+            branch = "viable/strict";
             cudaArch = "9.0";
             buildTests = false;
           };
