@@ -116,9 +116,18 @@
       };
 
       # ── Packages ──
-      packages.${system} = {
-        # OCI container image (docker-nixos base, pinned)
-        container = import ./containers/default.nix { inherit pkgs; };
+      packages.${system} = let
+        containerConfig = self.nixosConfigurations.container.config;
+        containerPackages = containerConfig.environment.systemPackages;
+        containerSessionVars = containerConfig.environment.sessionVariables;
+      in {
+        # OCI container image (streamLayeredImage, built by Nix)
+        container = import ./containers/default.nix {
+          inherit pkgs;
+          inherit (settings.hosts.container) username;
+          packages = containerPackages;
+          sessionVariables = containerSessionVars;
+        };
 
         # Standalone CLI for managing containers (installable on any host with Nix)
         hawker-container = pkgs.writeShellScriptBin "hawker-container"
