@@ -92,6 +92,8 @@ in
       chown -R ${username}:users /home/${username} 2>/dev/null || true
       ln -sfn /config /home/${username}/hawker 2>/dev/null || true
       chown -h ${username}:users /home/${username}/hawker 2>/dev/null || true
+      # Mark /config as git safe directory (bind-mounted from host, different owner)
+      /run/current-system/sw/bin/su - ${username} -c 'git config --global --add safe.directory /config' 2>/dev/null || true
       if [ -d /home/${username}/hawker ]; then
         /run/current-system/sw/bin/su - ${username} -c 'bash /home/${username}/hawker/bootstrap.sh' || true
       fi

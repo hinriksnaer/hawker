@@ -111,7 +111,9 @@
       };
 
       # ── Development shell (shared across all projects) ──
-      devShells.${system}.default = import ./projects/shell.nix { inherit pkgs; };
+      devShells.${system}.default = import ./projects/shell.nix {
+        pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
+      };
 
       # ── Packages ──
       packages.${system} = {
