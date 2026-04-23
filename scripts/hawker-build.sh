@@ -142,8 +142,6 @@ fi
 
 # ── Build ──
 
-FAILED=()
-
 for proj in "${PROJECTS[@]}"; do
     setup="$PROJECTS_DIR/$proj/setup.sh"
     marker="$REPOS/.${proj}-setup-done"
