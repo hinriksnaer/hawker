@@ -16,7 +16,9 @@ Also includes a full NixOS desktop with Hyprland.
 
 ## Quickstart
 
-You need: a local machine with Nix, a remote GPU host with podman (or docker).
+### Deploy from your local machine
+
+You need: a local machine with Nix, a remote GPU host with podman.
 
 ```bash
 # 1. Clone
@@ -25,29 +27,63 @@ cd ~/hawker
 
 # 2. Edit settings.nix -- set your username, git identity, GPU index, and projects
 
-# 3. Deploy to a GPU host
+# 3. Deploy to a GPU host (clones repo on remote via git, starts container)
 hawker-container deploy my-gpu-host
 
 # 4. Build project sources inside the container
 hawker-build
 ```
 
-First deploy takes ~10 minutes (builds remotely, pulls from cache.nixos.org).
-After that, deploys rebuild only what changed (seconds).
+### Run directly on a GPU host
 
-### Remote host setup
+If you have Nix on the GPU host itself, you can skip the deploy step:
 
-The remote host needs podman (or docker) and NVIDIA drivers with CDI:
+```bash
+# 1. Clone
+git clone https://github.com/hinriksnaer/hawker.git ~/hawker
+cd ~/hawker
+
+# 2. Edit settings.nix
+
+# 3. Install the CLI
+nix profile install ~/hawker#hawker-container
+
+# 4. Start the container
+hawker-container start
+
+# 5. Build project sources inside the container
+hawker-build
+```
+
+To update after pushing changes:
+
+```bash
+cd ~/hawker && git pull && nix profile upgrade hawker-container
+```
+
+### Host setup
+
+The GPU host needs podman (or docker) and NVIDIA drivers with CDI:
 
 ```bash
 # Generate CDI spec (run once after driver install/update, requires sudo)
 sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+```
 
-# Install Nix if not already present (no root needed)
+Installing Nix on the host is recommended for faster builds:
+
+```bash
+# Create /nix (requires root once, then everything runs unprivileged)
+sudo mkdir -p /nix && sudo chown $USER /nix
+
+# Install Nix (no root needed)
 curl -L https://nixos.org/nix/install | sh -s -- --no-daemon
 mkdir -p ~/.config/nix
 echo 'experimental-features = nix-command flakes' > ~/.config/nix/nix.conf
 ```
+
+Without Nix on the host, `hawker-container deploy` from your local machine
+still works -- it clones the repo and builds remotely.
 
 ## Configuration
 
@@ -78,6 +114,7 @@ All settings live in `settings.nix`:
           repo = "https://github.com/pytorch/pytorch.git";
           branch = "viable/strict";
           cudaArch = "9.0";                    # "8.0;9.0" for multi-arch
+          maxJobs = 32;                        # parallel compile jobs
         };
       };
     };
@@ -88,13 +125,14 @@ All settings live in `settings.nix`:
 ## Container Commands
 
 ```bash
-hawker-container deploy <host>    # build + push + enter
-hawker-container enter [host]     # enter existing container (local or remote)
-hawker-container build [args...]  # build project sources (delegates to hawker-build)
-hawker-container rebuild [host]   # rebuild NixOS config inside container
-hawker-container stop [host]      # stop running container
-hawker-container clean [host]     # remove everything (fresh start)
-hawker-container status [host]    # show container status
+hawker-container start              # build image + start container (local)
+hawker-container enter [host]       # enter running container (local or remote)
+hawker-container build [args...]    # build project sources (delegates to hawker-build)
+hawker-container rebuild [host]     # rebuild NixOS config inside container
+hawker-container deploy <host>      # clone/pull repo on remote + start container
+hawker-container stop [host]        # stop container
+hawker-container clean [host]       # remove everything (fresh start)
+hawker-container status [host]      # show container status
 ```
 
 ### Building projects
@@ -137,6 +175,19 @@ If any project fails, remaining projects are skipped.
 No other files need editing. Options are auto-discovered by the container config.
 The project is auto-sorted by `buildOrder` and `hawker-build` picks it up.
 
+## CUDA Environment
+
+The container uses `cudaPackages.cudatoolkit` (a merged symlinkJoin of all
+individual CUDA redist packages) for a unified `CUDA_HOME` with headers,
+libraries, and tools. `cudaPackages.backendStdenv.cc` (GCC 14) is used as
+the nvcc host compiler since nixpkgs-unstable ships GCC 15 which CUDA 12.9
+does not support.
+
+Projects that build with cmake should remove any vendored `FindCUDAToolkit.cmake`
+so cmake's standard module is used (which respects `CMAKE_PREFIX_PATH`). See
+`projects/pytorch/setup.sh` for an example -- this follows the same fix nixpkgs
+applies upstream.
+
 ## NixOS Desktop
 
 Not required for GPU container usage. This is a full desktop environment
@@ -178,10 +229,10 @@ Super+Shift+W    Next wallpaper
 
 ```
 settings.nix          all user config (single source of truth)
-flake.nix             3 machine configs, 1 container package, tests
+flake.nix             3 machine configs, 2 packages, tests
 
 modules/              38 NixOS modules (flat, one per tool/service)
-  cuda-dev.nix        shared CUDA toolkit + cuDNN + Python base
+  cuda-dev.nix        CUDA toolkit + cuDNN + Python + GCC 14 for nvcc
   hawker-options.nix  typed option declarations
   hawker-scripts.nix  CLI scripts (hawker-build, theme tools, etc.)
   gpu.nix             GPU driver dispatch (nvidia/intel/amd/none)
@@ -198,7 +249,7 @@ projects/
   helion/             options.nix + default.nix + setup.sh
   pytorch/            options.nix + default.nix + setup.sh
 
-containers/           OCI image builder + CLI
+containers/           OCI image builder + CLI (hawker-container)
 hosts/                machine configs (desktop, laptop, container)
 dotfiles/             stow-managed configs + 12 themes
 scripts/              runtime utilities (theme engine, hawker-build, etc.)
