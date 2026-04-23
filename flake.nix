@@ -3,14 +3,9 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }:
+  outputs = { self, nixpkgs, ... }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -60,12 +55,6 @@
           inherit system;
           modules = commonModules ++ [
             ./hosts/desktop/default.nix
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.${settings.hosts.desktop.username} = import ./home;
-            }
           ];
         };
 
@@ -73,12 +62,6 @@
           inherit system;
           modules = commonModules ++ [
             ./hosts/container/default.nix
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.${settings.hosts.container.username} = import ./home;
-            }
           ];
         };
 
@@ -89,12 +72,6 @@
           inherit system;
           modules = commonModules ++ [
             ./hosts/laptop/default.nix
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.${settings.hosts.laptop.username} = import ./home;
-            }
           ];
         };
       };
