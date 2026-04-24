@@ -1,20 +1,10 @@
 # hawker
 
-Reproducible GPU dev containers on any machine. One config, one command.
+NixOS config for GPU dev containers and a desktop environment.
 
-Built for pytorch/helion development on shared GPU servers (NVIDIA H200).
-Also includes a full NixOS desktop with Hyprland.
-
-## What You Get
-
-- **GPU containers** with CUDA 12.9, cuDNN 9.13, GCC 14, torch.compile
-- **Nix-native OCI images** via `streamLayeredImage` — no Docker base, no systemd
-- **One-command deploy** to any remote host with GPUs
-- **Persistent state** — repos, builds, and ccache survive container rebuilds
-- **Fast iteration** — config changes rebuild in seconds (Nix layer caching)
-- **Single config file** (`settings.nix`) controls everything
-- **Drop-in projects** — add a directory, it's auto-discovered
-- **Build ordering** — projects declare a `buildOrder` priority, lower builds first
+CUDA 12.9, cuDNN 9.13, GCC 14. Containers built with `streamLayeredImage`
+(no Docker base, no systemd). Config changes rebuild in seconds via Nix
+layer caching. Repos and ccache persist across rebuilds via named volumes.
 
 ## Dev Container Setup
 
