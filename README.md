@@ -73,8 +73,9 @@ The container is a Nix-built OCI image (`streamLayeredImage`):
 ```
 ~/repos/              persistent volume (named, survives rebuilds)
   .venv/              shared Python venv across all projects
-  helion/             cloned on first hawker-build
   pytorch/            built from source on first hawker-build
+  helion/             cloned on first hawker-build
+  vllm/               cloned on first hawker-build
 ~/.cache/ccache/      persistent compilation cache (25GB max)
 ~/hawker/             this repo (bind-mounted from host)
 ```
@@ -105,8 +106,9 @@ hawker-build --status               # show build state of all projects
 ```
 
 Projects build in the order defined by their `buildOrder` option (lower first).
-When both pytorch and helion are enabled, pytorch builds first (buildOrder=10)
-so helion can use the source-built torch instead of downloading nightly wheels.
+When multiple projects are enabled, pytorch builds first (buildOrder=10),
+then helion (20), then vllm (30) — so downstream projects use the
+source-built torch instead of downloading nightly wheels.
 
 ## Configuration
 
@@ -125,6 +127,14 @@ All settings live in `settings.nix`:
       gpuPassthrough = "4";                    # GPU index, "all", or "none"
 
       projects = {
+        pytorch = {
+          enable = true;
+          repo = "https://github.com/pytorch/pytorch.git";
+          branch = "viable/strict";
+          cudaArch = "9.0";                    # "8.0;9.0" for multi-arch
+          maxJobs = 32;                        # parallel compile jobs
+        };
+
         helion = {
           enable = true;
           repo = "https://github.com/pytorch/helion.git";
@@ -132,12 +142,12 @@ All settings live in `settings.nix`:
           backends = [ "cuda" ];               # also: "cute"
         };
 
-        pytorch = {
+        vllm = {
           enable = true;
-          repo = "https://github.com/pytorch/pytorch.git";
-          branch = "viable/strict";
-          cudaArch = "9.0";                    # "8.0;9.0" for multi-arch
-          maxJobs = 32;                        # parallel compile jobs
+          repo = "https://github.com/vllm-project/vllm.git";
+          branch = "main";                     # or a tag like "v0.19.1"
+          cudaArch = "9.0";                    # fallback if pytorch disabled
+          maxJobs = 32;
         };
       };
     };
@@ -222,8 +232,9 @@ roles/                named module collections (assigned to hosts)
   apps.nix            firefox, discord, obsidian, steam, podman
 
 projects/
-  helion/             options.nix + default.nix + setup.sh
   pytorch/            options.nix + default.nix + setup.sh
+  helion/             options.nix + default.nix + setup.sh
+  vllm/               options.nix + default.nix + setup.sh
 
 containers/           streamLayeredImage builder + hawker-container CLI
 hosts/                machine configs (desktop, laptop, container)
