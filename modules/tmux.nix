@@ -18,6 +18,9 @@ let
   tmuxConf = pkgs.writeTextDir "etc/tmux.conf" ''
     set-option -sa terminal-overrides ",xterm*:Tc"
     set -g mouse on
+    set -g escape-time 0
+    set -g history-limit 50000
+    set -g focus-events on
 
     unbind C-b
     set -g prefix C-Space
@@ -28,6 +31,12 @@ let
     bind j select-pane -D
     bind k select-pane -U
     bind l select-pane -R
+
+    # Pane resizing (prefix + H/J/K/L, repeatable)
+    bind -r H resize-pane -L 5
+    bind -r J resize-pane -D 5
+    bind -r K resize-pane -U 5
+    bind -r L resize-pane -R 5
 
     # Start windows and panes at 1, not 0
     set -g base-index 1
