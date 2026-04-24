@@ -30,6 +30,14 @@ let
   '';
 
   etcDir = pkgs.runCommand "hawker-etc" {} ''
+    # FHS compatibility: scripts with #!/usr/bin/env need this
+    mkdir -p $out/usr/bin
+    ln -s ${pkgs.coreutils}/bin/env $out/usr/bin/env
+    # Also provide /bin/sh and /bin/bash for scripts that need them
+    mkdir -p $out/bin
+    ln -s ${pkgs.bash}/bin/bash $out/bin/bash
+    ln -s ${pkgs.bash}/bin/bash $out/bin/sh
+
     mkdir -p $out/etc/ssh
     echo "root:x:0:0:root:/root:/bin/bash" > $out/etc/passwd
     echo "${username}:x:1000:1000::/home/${username}:${pkgs.fish}/bin/fish" >> $out/etc/passwd
