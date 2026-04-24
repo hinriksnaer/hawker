@@ -29,15 +29,10 @@ let
       bash $out/home/${username}/hawker/bootstrap.sh
   '';
 
-  etcDir = pkgs.runCommand "hawker-etc" {} ''
-    # FHS compatibility: scripts with #!/usr/bin/env need this
-    mkdir -p $out/usr/bin
-    ln -s ${pkgs.coreutils}/bin/env $out/usr/bin/env
-    # Also provide /bin/sh and /bin/bash for scripts that need them
-    mkdir -p $out/bin
-    ln -s ${pkgs.bash}/bin/bash $out/bin/bash
-    ln -s ${pkgs.bash}/bin/bash $out/bin/sh
+  # FHS compatibility helpers from dockerTools
+  inherit (pkgs.dockerTools) usrBinEnv binSh;
 
+  etcDir = pkgs.runCommand "hawker-etc" {} ''
     mkdir -p $out/etc/ssh
     echo "root:x:0:0:root:/root:/bin/bash" > $out/etc/passwd
     echo "${username}:x:1000:1000::/home/${username}:${pkgs.fish}/bin/fish" >> $out/etc/passwd
@@ -57,7 +52,7 @@ pkgs.dockerTools.streamLayeredImage {
   inherit name;
   tag = "latest";
 
-  contents = packages ++ [ homeDir etcDir ];
+  contents = packages ++ [ homeDir etcDir usrBinEnv binSh ];
 
   fakeRootCommands = ''
     chown -R 1000:1000 /home/${username}
