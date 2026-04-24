@@ -53,6 +53,14 @@
             buildTests = false;
             maxJobs = 32;
           };
+          vllm = {
+            enable = true;
+            repo = "https://github.com/vllm-project/vllm.git";
+            branch = "main";
+            cudaArch = "9.0";
+            maxJobs = 32;
+            torchIndex = "nightly/cu130";
+          };
         };
       };
     };
