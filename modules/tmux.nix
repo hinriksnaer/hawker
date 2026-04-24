@@ -1,6 +1,6 @@
-# Tmux package + plugins. Config is in dotfiles/tmux/ (stow-managed).
-# Plugins are Nix-managed -- this module generates /etc/tmux-plugins.conf
-# with run-shell lines pointing to Nix store paths. The dotfile sources it.
+# Tmux — full config including plugins, all managed by Nix.
+# The module generates /etc/tmux.conf with plugin run-shell lines
+# using bash to handle streamLayeredImage permission issues.
 { pkgs, ... }:
 
 let
@@ -11,17 +11,60 @@ let
     dotbar
   ];
 
-  # Generate run-shell lines for each plugin's .tmux entry point.
-  # Uses "bash <script>" instead of direct execution because
-  # streamLayeredImage may not preserve the execute bit on Nix store files.
-  pluginConf = pkgs.runCommand "tmux-plugin-conf" {} (
-    "mkdir -p $out/etc\n"
-    + ": > $out/etc/tmux-plugins.conf\n"
-    + builtins.concatStringsSep "\n" (map (p:
-      ''for f in ${p}/share/tmux-plugins/*/*.tmux; do [ -f "$f" ] && echo "run-shell 'bash $f'" >> $out/etc/tmux-plugins.conf; done''
-    ) plugins)
-  );
+  pluginRunLines = builtins.concatStringsSep "\n" (map (p:
+    ''run-shell "bash ${p}/share/tmux-plugins/${p.pluginName}/${p.pluginName}.tmux"''
+  ) plugins);
+
+  tmuxConf = pkgs.writeTextDir "etc/tmux.conf" ''
+    set-option -sa terminal-overrides ",xterm*:Tc"
+    set -g mouse on
+
+    unbind C-b
+    set -g prefix C-Space
+    bind C-Space send-prefix
+
+    # Vim style pane selection
+    bind h select-pane -L
+    bind j select-pane -D
+    bind k select-pane -U
+    bind l select-pane -R
+
+    # Start windows and panes at 1, not 0
+    set -g base-index 1
+    set -g pane-base-index 1
+    set-window-option -g pane-base-index 1
+    set-option -g renumber-windows on
+
+    # Shift arrow to switch windows
+    bind -n S-Left  previous-window
+    bind -n S-Right next-window
+
+    # Shift Alt vim keys to switch windows
+    bind -n M-H previous-window
+    bind -n M-L next-window
+
+    # Dotbar theme
+    set -g @tmux-dotbar-position top
+    set -g @tmux-dotbar-fg "colour8"
+    set -g @tmux-dotbar-bg "default"
+    set -g @tmux-dotbar-fg-current "colour7"
+    set -g @tmux-dotbar-fg-session "colour8"
+    set -g @tmux-dotbar-fg-prefix "colour14"
+
+    # vi-mode
+    set-window-option -g mode-keys vi
+    bind-key -T copy-mode-vi v send-keys -X begin-selection
+    bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
+    bind-key -T copy-mode-vi y send-keys -X copy-selection-and-cancel
+
+    # Splits in current path
+    bind '"' split-window -v -c "#{pane_current_path}"
+    bind % split-window -h -c "#{pane_current_path}"
+
+    # Plugins (Nix-managed, loaded via bash to handle permissions)
+    ${pluginRunLines}
+  '';
 in
 {
-  environment.systemPackages = [ pkgs.tmux pluginConf ] ++ plugins;
+  environment.systemPackages = [ pkgs.tmux tmuxConf ] ++ plugins;
 }
