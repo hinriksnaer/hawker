@@ -42,7 +42,6 @@
     QT_AUTO_SCREEN_SCALE_FACTOR = "1";
     GDK_BACKEND = "wayland";
     MOZ_ENABLE_WAYLAND = "1";
-    SDL_VIDEODRIVER = "wayland";
     CLUTTER_BACKEND = "wayland";
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
     _JAVA_AWT_WM_NONREPARENTING = "1";

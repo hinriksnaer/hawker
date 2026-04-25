@@ -11,6 +11,7 @@ in
     ../../roles/desktop.nix
     ../../roles/hardware.nix
     ../../roles/apps.nix
+    ../../roles/gaming.nix
     ../../modules/fancontrol.nix
   ];
 
