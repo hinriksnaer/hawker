@@ -83,17 +83,6 @@
         };
       };
 
-      # ── Checks (run via `nix flake check`) ──
-      checks.${system} = let
-        scriptTests = import ./tests { inherit pkgs; src = self; };
-      in scriptTests // {
-        vm-integration = import ./tests/vm-test.nix {
-          inherit pkgs;
-          hawkerConfig = self.nixosConfigurations.desktop.config.hawker;
-        };
-        container-build = self.packages.${system}.container;
-      };
-
       # ── Packages ──
       packages.${system} = let
         containerConfig = self.nixosConfigurations.container.config;

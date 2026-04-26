@@ -33,6 +33,12 @@
     networkmanagerapplet  # nm-applet tray icon
   ];
 
+  # Default cursor theme fallback (XDG/X11 apps outside the compositor)
+  environment.etc."icons/default/index.theme".text = ''
+    [Icon Theme]
+    Inherits=Adwaita
+  '';
+
   environment.sessionVariables = {
     XCURSOR_THEME = "Adwaita";
     XCURSOR_SIZE = "24";

@@ -1,6 +1,6 @@
 # GPU driver configuration, dispatched by hawker.gpu option.
-# Centralises driver selection, kernel modules, VAAPI, session variables,
-# and SDDM greeter hints so that per-host configs only need to set one option.
+# Centralises driver selection, kernel modules, VAAPI, and session variables
+# so that per-host configs only need to set one option.
 { config, lib, pkgs, ... }:
 
 let

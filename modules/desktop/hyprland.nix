@@ -40,6 +40,13 @@
       wlogout
     ];
 
+    # Auto-start Hyprland via UWSM on TTY login
+    programs.fish.interactiveShellInit = ''
+      if uwsm check may-start
+          exec uwsm start hyprland-uwsm.desktop
+      end
+    '';
+
     # Wayland environment variables
     # Note: GDK_BACKEND is intentionally omitted -- GTK auto-detects Wayland
     # under Hyprland, and forcing it breaks XWayland apps (e.g. Unity games).

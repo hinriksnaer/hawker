@@ -213,21 +213,20 @@ Super+Shift+W    Next wallpaper
 
 ```
 settings.nix          all user config (single source of truth)
-flake.nix             3 machine configs, 2 packages, tests
+flake.nix             3 machine configs, 2 packages
 
 modules/              NixOS modules (flat, one per tool/service)
   cuda-dev.nix        CUDA toolkit + cuDNN + Python + GCC 14
   tmux.nix            full tmux config + Nix-managed plugins
   fish.nix            fish shell + starship + fzf + zoxide
   hawker-options.nix  typed option declarations
-  hawker-scripts.nix  CLI scripts (hawker-build, theme tools, etc.)
   gpu.nix             GPU driver dispatch (nvidia/intel/amd/none)
   ...
 
 roles/                named module collections (assigned to hosts)
-  core.nix            base system, fish, cli-tools, git, scripts
+  core.nix            base system, fish, cli-tools, git, themes
   terminal.nix        neovim, tmux, btop, lazygit, yazi, gh, opencode
-  desktop.nix         hyprland, kitty, waybar, mako, rofi, sddm, fonts
+  desktop.nix         hyprland, kitty, waybar, mako, rofi, fonts
   hardware.nix        GPU, bluetooth, networking, audio
   apps.nix            firefox, discord, obsidian, steam, podman
 
@@ -239,12 +238,4 @@ projects/
 containers/           streamLayeredImage builder + hawker-container CLI
 hosts/                machine configs (desktop, laptop, container)
 dotfiles/             stow-managed configs + 12 themes
-scripts/              runtime utilities (theme engine, hawker-build, etc.)
-tests/                unit tests + VM integration + CI
-```
-
-## Tests
-
-```bash
-nix flake check       # everything: script tests + VM integration + container build
 ```
