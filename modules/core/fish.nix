@@ -9,6 +9,11 @@
     enable = true;
 
     interactiveShellInit = ''
+      # Auto-start Hyprland via UWSM on TTY login
+      if uwsm check may-start
+          exec uwsm start hyprland-uwsm.desktop
+      end
+
       # Vi mode
       fish_vi_key_bindings
 

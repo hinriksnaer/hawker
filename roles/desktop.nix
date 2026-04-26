@@ -11,7 +11,7 @@
     ../modules/desktop/power-menu
     ../modules/desktop/rofi.nix
     ../modules/desktop/screenshot.nix
-    ../modules/desktop/sddm.nix
+    ../modules/desktop/login.nix
     ../modules/desktop/theme
     ../modules/desktop/waybar.nix
   ];

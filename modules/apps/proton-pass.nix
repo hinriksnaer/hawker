@@ -53,7 +53,6 @@ in
   # gnome-keyring for general secret storage (other apps, not pass-cli)
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.login.enableGnomeKeyring = true;
-  security.pam.services.sddm.enableGnomeKeyring = true;
 
   # Disable GCR SSH agent -- Proton Pass manages SSH keys instead.
   # Without this, GCR claims SSH_AUTH_SOCK and SSH never reaches Proton Pass.
