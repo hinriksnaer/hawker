@@ -24,5 +24,11 @@
     pamixer      # CLI mixer (used by waybar right-click mute)
     playerctl
     alsa-utils
+
+    # Volume control script with OSD notifications
+    (writeScriptBin "volume-control" ''
+      #!${fish}/bin/fish
+      ${builtins.readFile ./volume-control.fish}
+    '')
   ];
 }

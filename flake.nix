@@ -44,12 +44,15 @@
     in {
 
       # ── Individually importable modules (auto-discovered) ──
-      nixosModules =
-        (discoverModules ./modules/core) //
-        (discoverModules ./modules/terminal) //
-        (discoverModules ./modules/desktop) //
-        (discoverModules ./modules/hardware) //
-        (discoverModules ./modules/apps) //
+      # discoverModules finds .nix files, discoverDirs finds directories with default.nix
+      nixosModules = let
+        discoverAll = dir: (discoverModules dir) // (discoverDirs dir);
+      in
+        (discoverAll ./modules/core) //
+        (discoverAll ./modules/terminal) //
+        (discoverAll ./modules/desktop) //
+        (discoverAll ./modules/hardware) //
+        (discoverAll ./modules/apps) //
         (discoverModules ./roles) //
         (discoverDirs ./projects);
 
