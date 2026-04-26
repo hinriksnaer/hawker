@@ -1,9 +1,6 @@
 #!/usr/bin/env fish
 # Set a specific theme by name
-# Automatically detects terminal-only vs desktop environment
 # Usage: hawker-theme-set <theme-name>
-
-# Find script directory for calling other scripts
 
 if test (count $argv) -lt 1
     echo "Usage: hawker-theme-set <theme-name>"
@@ -13,32 +10,52 @@ if test (count $argv) -lt 1
     exit 1
 end
 
-# Detect if we're in a desktop environment (Hyprland/Wayland)
-if command -v hyprctl >/dev/null 2>&1; and test -n "$WAYLAND_DISPLAY"
-    # Desktop environment - use desktop theme switcher
-    exec hawker-theme-set-desktop $argv
+set theme_name (echo $argv[1] | string lower | string replace -a ' ' '-')
+set pretty_name (echo $theme_name | sed 's/-/ /g; s/\b\(.\)/\u\1/g')
+
+# Verify theme exists
+if test -n "$HAWKER_PATH"; and test -d "$HAWKER_PATH/themes"
+    set themes_dir "$HAWKER_PATH/themes"
 else
-    # Terminal-only environment - use terminal theme switcher
-    set theme_name (echo $argv[1] | string lower | string replace -a ' ' '-')
-    set pretty_name (echo $theme_name | sed 's/-/ /g; s/\b\(.\)/\u\1/g')
+    set themes_dir "$HOME/.local/share/hawker/themes"
+end
 
+if not test -d "$themes_dir/$theme_name"
+    echo "Error: Theme '$theme_name' does not exist"
     echo ""
-    echo "Switching to theme: $pretty_name"
-    echo ""
+    echo "Available themes:"
+    hawker-theme-list
+    exit 1
+end
 
-    set result (hawker-theme-set-terminal $theme_name)
+# 1. Write global state
+mkdir -p "$HOME/.config/hawker"
+echo "$theme_name" > "$HOME/.config/hawker/current-theme"
 
-    if test $status -eq 0
+# 2. Apply terminal themes (always)
+echo ""
+echo "Switching to theme: $pretty_name"
+echo ""
+
+set result (hawker-theme-set-terminal $theme_name)
+set terminal_status $status
+
+# 3. Apply desktop themes (only if available)
+if command -v hawker-theme-set-desktop >/dev/null 2>&1
+    hawker-theme-set-desktop $theme_name
+else
+    # Terminal-only output
+    if test $terminal_status -eq 0
         set counts (string split ":" $result)
         set applied $counts[1]
         set skipped $counts[2]
 
         echo ""
-        echo "✓ Theme switched to: $pretty_name"
-        echo "  Applied: $applied  •  Skipped: $skipped"
+        echo "Theme switched to: $pretty_name"
+        echo "  Applied: $applied  Skipped: $skipped"
         echo ""
     else
-        echo "✗ Failed to switch theme"
+        echo "Failed to switch theme"
         exit 1
     end
 end

@@ -159,17 +159,6 @@ else
     warning "No theme hooks found at $hooks_dir"
 end
 
-# Apply terminal themes (neovim, btop theme copy)
-echo ""
-info "Applying terminal themes"
-set terminal_result (hawker-theme-set-terminal $theme_name)
-set terminal_counts (string split ":" $terminal_result)
-set terminal_applied $terminal_counts[1]
-set terminal_skipped $terminal_counts[2]
-set applied_count (math $applied_count + $terminal_applied)
-set skipped_count (math $skipped_count + $terminal_skipped)
-success "Terminal themes applied"
-
 # Set wallpaper
 echo ""
 info "Setting wallpaper"

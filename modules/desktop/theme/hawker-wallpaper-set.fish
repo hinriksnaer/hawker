@@ -12,22 +12,17 @@ else
     echo "Error: Active profile not found"
     exit 1
 end
-set hyprland_conf "$HOME/.config/hypr/hyprland.conf"
 set current_wallpaper_link "$HOME/.config/hypr/wallpapers/current"
 
 # Determine theme name
 if test (count $argv) -ge 1
     set theme_name (echo $argv[1] | string lower | string replace -a ' ' '-')
 else
-    # Extract current theme from hyprland.conf
-    set current_line (grep "source.*themes.*hyprland.conf" $hyprland_conf 2>/dev/null)
-
-    if test -z "$current_line"
+    set theme_name (hawker-theme-current 2>/dev/null)
+    if test -z "$theme_name"
         echo "Error: No theme set and no theme name provided"
         exit 1
     end
-
-    set theme_name (echo $current_line | sed 's|.*themes/\([^/]*\)/.*|\1|')
 end
 
 set backgrounds_dir "$themes_dir/$theme_name/backgrounds"

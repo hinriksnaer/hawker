@@ -2,36 +2,14 @@
 # Cycle to the previous theme in the list
 # Usage: hawker-theme-prev
 
-
-# Get all available themes (sorted) from hawker-theme-list (includes custom themes)
-set available_themes
-for theme_name in (hawker-theme-list)
-    # Convert pretty name back to theme name (lowercase, spaces to dashes)
-    set theme_slug (echo $theme_name | string lower | string replace -a ' ' '-')
-    set -a available_themes $theme_slug
-end
+set available_themes (hawker-theme-list)
 
 if test (count $available_themes) -eq 0
-    notify-send "Theme Error" "No themes found" -t 3000 -u critical
+    echo "Error: No themes found"
     exit 1
 end
 
-# Detect current theme
-set current_theme ""
-
-# Try 1: "# theme:" marker in active-theme.conf
-set active_theme_conf "$HOME/.config/hypr/active-theme.conf"
-if test -f "$active_theme_conf"
-    set marker_line (grep '^# theme:' "$active_theme_conf" 2>/dev/null)
-    if test -n "$marker_line"
-        set current_theme (echo $marker_line | sed 's/^# theme: *//')
-    end
-end
-
-# Try 2: symlink fallback
-if test -z "$current_theme"; and test -L "$HOME/.config/hawker/current/theme"
-    set current_theme (basename (readlink "$HOME/.config/hawker/current/theme"))
-end
+set current_theme (hawker-theme-current 2>/dev/null)
 
 # If can't determine current, use second theme (so prev will be first)
 if test -z "$current_theme"
@@ -57,7 +35,4 @@ if test $prev_index -lt 1
     set prev_index (count $available_themes)
 end
 
-set prev_theme $available_themes[$prev_index]
-
-# Use hawker-theme-set to apply the theme
-hawker-theme-set $prev_theme
+hawker-theme-set $available_themes[$prev_index]
