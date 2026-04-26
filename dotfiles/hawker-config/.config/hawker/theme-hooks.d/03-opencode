@@ -1,3 +1,0 @@
-type=config-rewrite
-target=~/.config/opencode/tui.json
-key=theme

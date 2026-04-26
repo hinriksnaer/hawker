@@ -32,10 +32,9 @@ ln -snf "$DOTFILES_DIR/themes" "$HAWKER_DATA/themes"
 
 # ── Runtime directories ──
 echo "==> Creating runtime config files..."
-mkdir -p "$HOME/.config/hawker/current"
+mkdir -p "$HOME/.config/hawker"
 mkdir -p "$HOME/.config/hypr/wallpapers"
 touch "$HOME/.config/hypr/active-theme.conf"
-touch "$HOME/.config/hypr/active-mode.conf"
 
 # ── SSH config (desktop only) ──
 if [ -d /mnt/games/.ssh ]; then
@@ -54,9 +53,8 @@ EOF
 fi
 
 # ── Apply default theme if none is set ──
-CURRENT_THEME_DIR="$HOME/.config/hawker/current"
-if [ -z "$(ls -A "$CURRENT_THEME_DIR" 2>/dev/null)" ]; then
-    DEFAULT_THEME=$(nix eval --raw ".#nixosConfigurations.container.config.hawker.defaultTheme" 2>/dev/null) || DEFAULT_THEME="torrentz-hydra"
+if [ ! -f "$HOME/.config/hawker/current-theme" ]; then
+    DEFAULT_THEME=$(nix eval --raw ".#nixosConfigurations.default.config.hawker.defaultTheme" 2>/dev/null) || DEFAULT_THEME="torrentz-hydra"
     echo "==> Applying default theme: $DEFAULT_THEME"
     hawker-theme-set "$DEFAULT_THEME" || echo "  (theme set failed -- run hawker-theme-set manually)"
 fi

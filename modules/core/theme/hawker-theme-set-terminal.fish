@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# Apply theme to terminal applications (btop, neovim, yazi)
+# Apply theme to terminal applications (btop, neovim, yazi, opencode)
 # Usage: hawker-theme-set-terminal <theme-name>
 # Returns applied:skipped counts on stdout
 
@@ -84,6 +84,20 @@ if command -v yazi >/dev/null 2>&1
         "use = \"$yazi_flavor\"" \
         > $theme_file 2>/dev/null
 
+    if test $status -eq 0
+        set applied_count (math $applied_count + 1)
+    else
+        set skipped_count (math $skipped_count + 1)
+    end
+else
+    set skipped_count (math $skipped_count + 1)
+end
+
+# ── opencode ──
+# Rewrite theme key in tui.json
+set oc_config "$HOME/.config/opencode/tui.json"
+if test -f "$oc_config"
+    sed -i "s/\"theme\": *\"[^\"]*\"/\"theme\": \"$theme_name\"/" "$oc_config" 2>/dev/null
     if test $status -eq 0
         set applied_count (math $applied_count + 1)
     else
