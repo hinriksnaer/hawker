@@ -13,6 +13,7 @@
     "group/tray-expander",
     "bluetooth",
     "network",
+    "backlight",
     "pulseaudio",
     "custom/power"
   ],
@@ -88,6 +89,14 @@
     "format-connected": "",
     "tooltip-format": "Devices connected: {num_connections}",
     "on-click": "blueman-manager"
+  },
+  "backlight": {
+    "format": "{icon}",
+    "format-icons": ["", "", "", "", "", "", "", "", ""],
+    "tooltip-format": "Brightness {percent}%",
+    "scroll-step": 5,
+    "on-scroll-up": "brightness-control up",
+    "on-scroll-down": "brightness-control down"
   },
   "pulseaudio": {
     "format": "{icon}",

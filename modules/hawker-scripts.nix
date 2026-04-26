@@ -58,5 +58,6 @@ in
     (mkFish "hawker-wallpaper-next")
     (mkFish "hawker-set-yazi-theme")
     (mkFish "volume-control")
+    (mkFish "brightness-control")
   ];
 }
