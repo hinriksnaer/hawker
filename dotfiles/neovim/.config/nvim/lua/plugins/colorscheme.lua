@@ -87,14 +87,14 @@ return {
 
   -- Matte Black - Minimal dark theme
   {
-    'tahayvr/matteblack.nvim',
+    'kxzk/matteblack.nvim',
     lazy = false,
     priority = 1000,
   },
 
   -- Monokai Pro - Professional monokai theme
   {
-    'gthelding/monokai-pro.nvim',
+    'loctvl842/monokai-pro.nvim',
     priority = 1000,
   },
 }

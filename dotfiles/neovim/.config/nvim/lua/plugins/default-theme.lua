@@ -1,6 +1,9 @@
 -- Default theme configuration
--- This file sets a fallback colorscheme when no hawker-theme is active
--- theme.lua (symlinked by hawker-theme-set) will override this when present
+-- Sets ayu as fallback colorscheme only when no hawker theme is active.
+-- theme.lua (managed by hawker-theme-set) takes priority when present.
+
+local theme_file = vim.fn.stdpath 'config' .. '/lua/plugins/theme.lua'
+local has_theme = vim.loop.fs_stat(theme_file) ~= nil
 
 return {
   {
@@ -10,8 +13,10 @@ return {
       require('ayu').setup {
         mirage = true,
       }
-      -- Set ayu as default colorscheme
-      vim.cmd.colorscheme('ayu')
+      -- Only set ayu if no hawker theme is active
+      if not has_theme then
+        vim.cmd.colorscheme('ayu')
+      end
     end,
   },
 }
