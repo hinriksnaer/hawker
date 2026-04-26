@@ -34,6 +34,11 @@
       if test -f $HOME/repos/.venv/bin/activate.fish
           source $HOME/repos/.venv/bin/activate.fish
       end
+
+      # Proton Pass SSH agent
+      if test -S $HOME/.ssh/proton-pass-agent.sock
+          set -gx SSH_AUTH_SOCK $HOME/.ssh/proton-pass-agent.sock
+      end
     '';
 
     shellAliases = {
