@@ -1,9 +1,9 @@
 { pkgs, ... }:
 
 {
-  programs.yazi.enable = true;
-
   environment.systemPackages = with pkgs; [
+    yazi
+
     # Yazi preview dependencies
     file
     ffmpegthumbnailer
