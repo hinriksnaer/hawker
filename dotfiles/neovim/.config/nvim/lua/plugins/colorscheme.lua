@@ -87,7 +87,7 @@ return {
 
   -- Matte Black - Minimal dark theme
   {
-    'kxzk/matteblack.nvim',
+    'tahayvr/matteblack.nvim',
     lazy = false,
     priority = 1000,
   },

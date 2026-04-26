@@ -1,7 +1,7 @@
 -- Hawker theme: matte-black
 return {
   {
-    "kxzk/matteblack.nvim",
+    "tahayvr/matteblack.nvim",
     priority = 1000,
     lazy = false,
     opts = {
