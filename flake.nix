@@ -45,7 +45,11 @@
 
       # ── Individually importable modules (auto-discovered) ──
       nixosModules =
-        (discoverModules ./modules) //
+        (discoverModules ./modules/core) //
+        (discoverModules ./modules/terminal) //
+        (discoverModules ./modules/desktop) //
+        (discoverModules ./modules/hardware) //
+        (discoverModules ./modules/apps) //
         (discoverModules ./roles) //
         (discoverDirs ./projects);
 

@@ -23,7 +23,7 @@ in
     text = ''
       BTOP_DIR="/home/${username}/.config/btop"
       mkdir -p "$BTOP_DIR/themes"
-      SRC="${../dotfiles/btop/.config/btop/btop.conf}"
+      SRC="${../../dotfiles/btop/.config/btop/btop.conf}"
       if [ -f "$SRC" ]; then
         cp "$SRC" "$BTOP_DIR/btop.conf"
         chown -R ${username}:users "$BTOP_DIR"

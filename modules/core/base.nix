@@ -13,10 +13,6 @@ in
 
   nixpkgs.config.allowUnfree = true;
 
-  # ── Boot ──
-  boot.loader.systemd-boot.enable = lib.mkDefault true;
-  boot.loader.efi.canTouchEfiVariables = lib.mkDefault true;
-
   # ── Locale ──
   time.timeZone = "America/New_York";
   i18n.defaultLocale = "en_US.UTF-8";
@@ -50,9 +46,6 @@ in
     procps
     git
   ];
-
-  # ── System services ──
-  services.dbus.enable = true;
 
   system.stateVersion = "24.11";
 }

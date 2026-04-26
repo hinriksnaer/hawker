@@ -4,7 +4,7 @@ let
   vc = config.hawker.container.projects.vllm;
 in
 {
-  imports = [ ../../modules/cuda-dev.nix ];
+  imports = [ ../cuda-dev.nix ];
 
   config = {
     environment.systemPackages = with pkgs; [

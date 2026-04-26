@@ -1,17 +1,17 @@
 { ... }:
 {
   imports = [
-    ../modules/cliphist.nix
-    ../modules/desktop-session.nix
-    ../modules/fonts.nix
-    ../modules/hyprland.nix
-    ../modules/hyprlock.nix
-    ../modules/kitty.nix
-    ../modules/mako.nix
-    ../modules/proton-pass.nix
-    ../modules/rofi.nix
-    ../modules/screenshot.nix
-    ../modules/sddm.nix
-    ../modules/waybar.nix
+    ../modules/desktop/cliphist.nix
+    ../modules/desktop/desktop-session.nix
+    ../modules/desktop/fonts.nix
+    ../modules/desktop/hyprland.nix
+    ../modules/desktop/hyprlock.nix
+    ../modules/desktop/kitty.nix
+    ../modules/desktop/mako.nix
+    ../modules/desktop/rofi.nix
+    ../modules/desktop/screenshot.nix
+    ../modules/desktop/sddm.nix
+    ../modules/desktop/theme.nix
+    ../modules/desktop/waybar.nix
   ];
 }

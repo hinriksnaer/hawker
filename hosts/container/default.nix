@@ -55,7 +55,9 @@ in
     git
   ];
 
-  # Container-specific: disable services that don't apply
+  # Container-specific: disable services and boot that don't apply
+  boot.loader.grub.enable = false;
+  fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
   services.nscd.enable = false;
   system.nssModules = lib.mkForce [];
 

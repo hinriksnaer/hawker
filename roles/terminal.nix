@@ -1,12 +1,12 @@
 { ... }:
 {
   imports = [
-    ../modules/btop.nix
-    ../modules/gh.nix
-    ../modules/lazygit.nix
-    ../modules/neovim.nix
-    ../modules/opencode.nix
-    ../modules/tmux.nix
-    ../modules/yazi.nix
+    ../modules/terminal/btop.nix
+    ../modules/terminal/gh.nix
+    ../modules/terminal/lazygit.nix
+    ../modules/terminal/neovim.nix
+    ../modules/terminal/opencode.nix
+    ../modules/terminal/tmux.nix
+    ../modules/terminal/yazi.nix
   ];
 }

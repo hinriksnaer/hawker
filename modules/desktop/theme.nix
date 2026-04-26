@@ -1,12 +1,11 @@
-# Hawker CLI scripts -- wrapped with writeShellApplication (bash)
-# or writeScriptBin (fish) for explicit dependencies and shellcheck.
+# Hawker theme system -- theme/wallpaper CLI scripts with HAWKER_PATH.
 #
 # Source files live in scripts/ at repo root. Nix wraps them at build time
 # with runtime deps in PATH and HAWKER_PATH baked in.
 { pkgs, config, ... }:
 
 let
-  src = ../scripts;
+  src = ../../scripts;
   username = config.hawker.username;
   hawkerPath = "/home/${username}/.local/share/hawker";
 
@@ -14,8 +13,6 @@ let
   mkBash = name: { runtimeInputs ? [] }: pkgs.writeShellApplication {
     inherit name runtimeInputs;
     text = builtins.readFile "${src}/${name}.sh";
-    # SC2029: variable expands client-side in ssh (intentional)
-    # SC2016: single-quoted string doesn't expand (intentional for ssh)
     excludeShellChecks = [ "SC2029" "SC2016" ];
   };
 
@@ -32,18 +29,12 @@ in
   environment.sessionVariables.HAWKER_PATH = hawkerPath;
 
   environment.systemPackages = [
-    # Bash scripts with explicit deps
-    (mkBash "hawker-build" {
-      runtimeInputs = with pkgs; [ coreutils ];
-    })
+    # Wallpaper picker (bash)
     (mkBash "hawker-rofi-wallpaper-select" {
       runtimeInputs = with pkgs; [ rofi swaybg findutils coreutils ];
     })
-    (mkBash "power-menu" {
-      runtimeInputs = with pkgs; [ rofi systemd ];
-    })
 
-    # Fish scripts (HAWKER_PATH injected at build time)
+    # Theme and wallpaper scripts (fish)
     (mkFish "hawker-theme-set")
     (mkFish "hawker-theme-set-terminal")
     (mkFish "hawker-theme-set-desktop")
@@ -57,7 +48,5 @@ in
     (mkFish "hawker-wallpaper-set")
     (mkFish "hawker-wallpaper-next")
     (mkFish "hawker-set-yazi-theme")
-    (mkFish "volume-control")
-    (mkFish "brightness-control")
   ];
 }

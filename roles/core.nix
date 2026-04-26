@@ -1,13 +1,12 @@
 { ... }:
 {
   imports = [
-    ../modules/hawker-options.nix
-    ../modules/base.nix
-    ../modules/cli-tools.nix
-    ../modules/build-tools.nix
-    ../modules/fish.nix
-    ../modules/git.nix
-    ../modules/hawker-scripts.nix
-    ../containers/cli.nix
+    ../modules/core/hawker-options.nix
+    ../modules/core/base.nix
+    ../modules/core/cli-tools.nix
+    ../modules/core/build-tools.nix
+    ../modules/core/fish.nix
+    ../modules/core/git.nix
+    ../modules/core/hawker-scripts.nix
   ];
 }

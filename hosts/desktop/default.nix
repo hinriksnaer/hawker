@@ -12,11 +12,13 @@ in
     ../../roles/hardware.nix
     ../../roles/apps.nix
     ../../roles/gaming.nix
-    ../../modules/fancontrol.nix
+    ../../modules/hardware/fancontrol.nix
+    ../../containers/cli.nix
   ];
 
   hawker.username = hostSettings.username;
   hawker.gpu = hostSettings.gpu;
+  hawker.hyprlandHostConfig = ./hyprland.conf;
 
   networking.hostName = "hawker";
 }

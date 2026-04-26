@@ -5,7 +5,7 @@ let
   hasVertex = oc.vertexProject != "";
   username = config.hawker.username;
   defaultTheme = config.hawker.defaultTheme;
-  themesDir = ../dotfiles/themes;
+  themesDir = ../../dotfiles/themes;
 in
 {
   environment.systemPackages = with pkgs; [

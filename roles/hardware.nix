@@ -1,10 +1,11 @@
 { ... }:
 {
   imports = [
-    ../modules/audio.nix
-    ../modules/bluetooth.nix
-    ../modules/brightness.nix
-    ../modules/gpu.nix
-    ../modules/networking.nix
+    ../modules/hardware/audio.nix
+    ../modules/hardware/bluetooth.nix
+    ../modules/hardware/boot.nix
+    ../modules/hardware/brightness.nix
+    ../modules/hardware/gpu.nix
+    ../modules/hardware/networking.nix
   ];
 }

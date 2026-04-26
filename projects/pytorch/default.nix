@@ -5,7 +5,7 @@ let
   cudaToolkit = pkgs.cudaPackages.cudatoolkit;
 in
 {
-  imports = [ ../../modules/cuda-dev.nix ];
+  imports = [ ../cuda-dev.nix ];
 
   config = {
     environment.systemPackages = with pkgs; [
