@@ -31,6 +31,6 @@ in
     (mkFish "hawker-theme-next")
     (mkFish "hawker-theme-prev")
     (mkFish "hawker-theme-refresh")
-    (mkFish "hawker-theme-select-cli")
+    (mkFish "hawker-theme")
   ];
 }

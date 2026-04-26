@@ -46,12 +46,17 @@ in
     procps
     git
 
-    # NixOS rebuild helper
+    # NixOS rebuild helpers
     (writeShellApplication {
       name = "hawker-build";
       runtimeInputs = [ coreutils ];
       text = builtins.readFile ./hawker-build.sh;
       excludeShellChecks = [ "SC2029" "SC2016" ];
+    })
+    (writeShellApplication {
+      name = "hawker-switch";
+      runtimeInputs = [ coreutils hostname ];
+      text = builtins.readFile ./hawker-switch.sh;
     })
   ];
 

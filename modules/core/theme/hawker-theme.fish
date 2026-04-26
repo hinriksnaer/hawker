@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 # Interactive CLI theme selector using fzf
 # Perfect for terminal-only environments
-# Usage: hawker-theme-select-cli
+# Usage: hawker-theme
 
 # Find script directory for calling other scripts
 
