@@ -15,6 +15,7 @@
     "network",
     "backlight",
     "pulseaudio",
+    "battery",
     "custom/power"
   ],
   "hyprland/workspaces": {
