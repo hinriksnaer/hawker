@@ -11,17 +11,5 @@
     # Better defaults
     lsd
     bat
-
-    # Build essentials
-    gcc
-    gnumake
-    cmake
-    pkg-config
-    openssl
-    openssl.dev
-    unzip
-    gnutar
-
-
   ];
 }
