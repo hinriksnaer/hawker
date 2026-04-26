@@ -22,21 +22,28 @@ in
     VERTEX_LOCATION = oc.cloudMlRegion;
   };
 
-  system.activationScripts.opencodeThemes = ''
-    OC_DIR="/home/${username}/.config/opencode"
-    mkdir -p "$OC_DIR/themes"
+  # Symlink per-theme JSON files into opencode's themes directory
+  # and create initial tui.json with the default theme.
+  # Theme switching is handled by hawker-theme-set-terminal (sed rewrite of tui.json).
+  # Requires OpenCode restart to take effect.
+  system.activationScripts.opencodeThemes = {
+    deps = [ "users" "groups" ];
+    text = ''
+      OC_DIR="/home/${username}/.config/opencode"
+      mkdir -p "$OC_DIR/themes"
 
-    for theme_dir in ${themesDir}/*/; do
-      theme=$(basename "$theme_dir")
-      if [ -f "$theme_dir/opencode.json" ]; then
-        ln -sf "$theme_dir/opencode.json" "$OC_DIR/themes/$theme.json"
+      for theme_dir in ${themesDir}/*/; do
+        theme=$(basename "$theme_dir")
+        if [ -f "$theme_dir/opencode.json" ]; then
+          ln -sf "$theme_dir/opencode.json" "$OC_DIR/themes/$theme.json"
+        fi
+      done
+
+      if [ ! -f "$OC_DIR/tui.json" ]; then
+        echo '{"$schema":"https://opencode.ai/tui.json","theme":"${defaultTheme}"}' > "$OC_DIR/tui.json"
       fi
-    done
 
-    if [ ! -f "$OC_DIR/tui.json" ]; then
-      echo '{"$schema":"https://opencode.ai/tui.json","theme":"${defaultTheme}"}' > "$OC_DIR/tui.json"
-    fi
-
-    chown -R ${username}:users "$OC_DIR"
-  '';
+      chown -R ${username}:users "$OC_DIR"
+    '';
+  };
 }

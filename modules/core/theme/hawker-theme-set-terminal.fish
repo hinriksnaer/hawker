@@ -94,7 +94,7 @@ else
 end
 
 # ── opencode ──
-# Rewrite theme key in tui.json
+# Rewrite theme key in tui.json (requires restart to take effect)
 set oc_config "$HOME/.config/opencode/tui.json"
 if test -f "$oc_config"
     sed -i "s/\"theme\": *\"[^\"]*\"/\"theme\": \"$theme_name\"/" "$oc_config" 2>/dev/null
