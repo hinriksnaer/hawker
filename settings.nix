@@ -2,7 +2,7 @@
 # Single source of truth for all user-specific configuration.
 # Global options are type-checked against modules/hawker-options.nix.
 # Per-host settings live under hawker.hosts.<name> and are read
-# directly by each host config.
+# directly by each host config or Home Manager profile.
 { ... }:
 
 {
@@ -33,10 +33,9 @@
         gpu = "intel";
       };
 
-      container = {
-        username = "dev";
-        gpuPassthrough = "4";
-        storagePath = "/mnt/podman_storage/hgudmund";
+      remote = {
+        username = "hgudmund";
+        cudaVisibleDevices = "4";
 
         projects = {
           helion = {

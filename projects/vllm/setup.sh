@@ -5,9 +5,10 @@
 #   https://docs.vllm.ai/en/latest/getting_started/installation/gpu/index.html
 set -euo pipefail
 
-REPOS="$HOME/repos"
+HAWKER_ROOT="${HAWKER_ROOT:-$HOME/workspace/hawker}"
+REPOS="$HAWKER_ROOT/workspace/repos"
 WORKSPACE="$REPOS/vllm"
-VENV="$REPOS/.venv"
+VENV="$HAWKER_ROOT/workspace/.venv"
 MARKER="$REPOS/.vllm-setup-done"
 
 if [ -f "$MARKER" ]; then

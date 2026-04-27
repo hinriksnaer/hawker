@@ -3,9 +3,10 @@
 # Config comes from settings.nix via environment variables.
 set -euo pipefail
 
-REPOS="$HOME/repos"
+HAWKER_ROOT="${HAWKER_ROOT:-$HOME/workspace/hawker}"
+REPOS="$HAWKER_ROOT/workspace/repos"
 WORKSPACE="$REPOS/helion"
-VENV="$REPOS/.venv"
+VENV="$HAWKER_ROOT/workspace/.venv"
 MARKER="$REPOS/.helion-setup-done"
 
 if [ -f "$MARKER" ]; then

@@ -13,7 +13,6 @@ in
     ../../roles/apps.nix
     ../../roles/gaming.nix
     ../../modules/hardware/fancontrol.nix
-    ../../containers/cli.nix
   ];
 
   hawker.username = hostSettings.username;

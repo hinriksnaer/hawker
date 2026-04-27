@@ -4,9 +4,10 @@
 # Follows upstream CONTRIBUTING.md install instructions.
 set -euo pipefail
 
-REPOS="$HOME/repos"
+HAWKER_ROOT="${HAWKER_ROOT:-$HOME/workspace/hawker}"
+REPOS="$HAWKER_ROOT/workspace/repos"
 WORKSPACE="$REPOS/pytorch"
-VENV="$REPOS/.venv"
+VENV="$HAWKER_ROOT/workspace/.venv"
 MARKER="$REPOS/.pytorch-setup-done"
 
 if [ -f "$MARKER" ]; then

@@ -13,10 +13,10 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+      pkgsUnfree = import nixpkgs { inherit system; config.allowUnfree = true; };
       lib = nixpkgs.lib;
 
       # Common modules: user settings (imported by all machine configs)
-      # Note: hawker-options.nix is imported via roles/core.nix
       commonModules = [
         ./settings.nix
       ];
@@ -46,7 +46,6 @@
           );
 
       # Home Manager NixOS integration -- auto-applies HM on nixos-rebuild switch.
-      # Only for desktop/laptop; container uses standalone home-manager switch.
       hmNixosModule = hostname: {
         imports = [ home-manager.nixosModules.home-manager ];
         home-manager.useGlobalPkgs = true;
@@ -59,7 +58,6 @@
     in {
 
       # ── Individually importable modules (auto-discovered) ──
-      # discoverModules finds .nix files, discoverDirs finds directories with default.nix
       nixosModules = let
         discoverAll = dir: (discoverModules dir) // (discoverDirs dir);
       in
@@ -81,16 +79,6 @@
           ];
         };
 
-        container = nixpkgs.lib.nixosSystem {
-          inherit system;
-          modules = commonModules ++ [
-            ./hosts/container/default.nix
-          ];
-        };
-
-        # Alias used by bootstrap.sh to read default theme from container config
-        default = self.nixosConfigurations.container;
-
         laptop = nixpkgs.lib.nixosSystem {
           inherit system;
           modules = commonModules ++ [
@@ -100,7 +88,7 @@
         };
       };
 
-      # ── Home Manager ──
+      # ── Home Manager (standalone) ──
       homeConfigurations = let
         mkHome = hostname: home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
@@ -109,29 +97,15 @@
           ];
         };
       in {
-        dev = mkHome "container";
         hawker = mkHome "desktop";
         hgudmund = mkHome "laptop";
+        remote = mkHome "remote";
       };
 
-      # ── Packages ──
-      packages.${system} = let
-        containerConfig = self.nixosConfigurations.container.config;
-        containerPackages = containerConfig.environment.systemPackages;
-        containerSessionVars = containerConfig.environment.sessionVariables;
-      in {
-        # OCI container image (streamLayeredImage, built by Nix)
-        container = import ./containers/default.nix {
-          inherit pkgs;
-          inherit (settings.hosts.container) username;
-          packages = containerPackages;
-          sessionVariables = containerSessionVars;
-          hmCli = home-manager.packages.${system}.home-manager;
-        };
-
-        # Standalone CLI for managing containers (installable on any host with Nix)
-        hawker-container = pkgs.writeShellScriptBin "hawker-container"
-          (builtins.readFile ./containers/hawker-container.sh);
+      # ── Development shells ──
+      devShells.${system}.default = import ./projects/devshell.nix {
+        pkgs = pkgsUnfree;
+        inherit settings;
       };
     };
 }
