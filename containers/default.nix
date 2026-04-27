@@ -32,20 +32,6 @@ let
   # FHS compatibility helpers from dockerTools
   inherit (pkgs.dockerTools) usrBinEnv binSh;
 
-  # Pre-generate ld.so.cache at the exact Nix store path that glibc's
-  # ldconfig has hardcoded.  This derivation's $out is mapped to / in
-  # the image, so $out${pkgs.glibc}/etc/ld.so.cache becomes
-  # ${pkgs.glibc}/etc/ld.so.cache — the path ldconfig already looks for.
-  # No wrappers needed; the real ldconfig just finds its cache.
-  ldsoCache = pkgs.runCommand "ldconfig-cache" {} ''
-    mkdir -p "$out${pkgs.glibc}/etc"
-    echo "${pkgs.stdenv.cc.cc.lib}/lib" > /tmp/ld.so.conf
-    echo "${pkgs.glibc}/lib"           >> /tmp/ld.so.conf
-    ${pkgs.glibc.bin}/sbin/ldconfig \
-      -f /tmp/ld.so.conf \
-      -C "$out${pkgs.glibc}/etc/ld.so.cache"
-  '';
-
   etcDir = pkgs.runCommand "hawker-etc" {} ''
     mkdir -p $out/etc/ssh
     echo "root:x:0:0:root:/root:/bin/bash" > $out/etc/passwd
@@ -53,6 +39,7 @@ let
     echo "root:x:0:" > $out/etc/group
     echo "users:x:1000:${username}" >> $out/etc/group
     echo "hosts: files dns" > $out/etc/nsswitch.conf
+    echo "ID=nixos" > $out/etc/os-release
 
     cat > $out/etc/ssh/ssh_known_hosts << 'HOSTS'
 github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
@@ -66,7 +53,7 @@ pkgs.dockerTools.streamLayeredImage {
   inherit name;
   tag = "latest";
 
-  contents = packages ++ [ homeDir etcDir ldsoCache usrBinEnv binSh ];
+  contents = packages ++ [ homeDir etcDir usrBinEnv binSh ];
 
   fakeRootCommands = ''
     chown -R 1000:1000 /home/${username}
