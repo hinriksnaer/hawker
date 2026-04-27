@@ -130,7 +130,7 @@ pkgs.dockerTools.streamLayeredImage {
 
   config = {
     Labels = vscode.labels;
-    Entrypoint = [ "/usr/local/bin/container-init" ];
+    Entrypoint = [ "${entrypoint}" ];
     Env = [
       "LANG=en_US.UTF-8"
       "TERM=xterm-256color"
