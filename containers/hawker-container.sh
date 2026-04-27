@@ -148,6 +148,15 @@ case "${1:-help}" in
         deploy_to_host "$2"
         ;;
 
+    code)
+        local user
+        user=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.username" 2>/dev/null) || user="dev"
+        local hex
+        hex=$(printf '%s' "$IMAGE_NAME" | xxd -p | tr -d '\n')
+        echo "==> Opening VSCode attached to $IMAGE_NAME..."
+        code --folder-uri "vscode-remote://attached-container+${hex}/home/${user}"
+        ;;
+
     stop)
         if [ $# -ge 2 ]; then
             ssh "$2" "podman stop ${IMAGE_NAME} 2>/dev/null || docker stop ${IMAGE_NAME} 2>/dev/null"
@@ -187,6 +196,7 @@ case "${1:-help}" in
         echo "  $0 enter [host]       Enter container (local or remote)"
         echo "  $0 update             Pull latest, upgrade CLI, rebuild container"
         echo "  $0 deploy <host>      Clone/pull repo on remote + start container"
+        echo "  $0 code               Open VSCode attached to container"
         echo "  $0 stop [host]        Stop container"
         echo "  $0 clean [host]       Remove container, image, and volumes"
         echo "  $0 status [host]      Show container status"
