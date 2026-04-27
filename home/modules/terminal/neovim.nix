@@ -21,6 +21,6 @@
   ];
 
   # Symlink ~/.config/nvim → repo dotfiles (writable, theme system compatible)
-  xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink
+  home.file.".config/nvim".source = config.lib.file.mkOutOfStoreSymlink
     "${config.home.homeDirectory}/workspace/hawker/dotfiles/neovim/.config/nvim";
 }
