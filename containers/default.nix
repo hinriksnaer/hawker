@@ -40,34 +40,33 @@ let
     SETPRIV="${pkgs.util-linux}/bin/setpriv --reuid=1000 --regid=1000 --init-groups --"
     HAWKER="/home/${username}/hawker"
 
-    # Phase 1: root -- fix /nix ownership (once)
+    # Phase 1: root -- fix /nix ownership (every start, fast if already correct)
     if [ "$(id -u)" = "0" ]; then
-      if [ ! -f /nix/.ownership-fixed ]; then
-        mkdir -p /home/${username}/.local/state/nix/profiles
-        chown -R 1000:1000 /nix /home/${username}
-        touch /nix/.ownership-fixed
-      fi
+      mkdir -p /home/${username}/.local/state/nix/profiles
+      chown -R 1000:1000 /nix /home/${username} 2>/dev/null || true
 
-      # Phase 2: dev -- clone repo + bootstrap + HM (first start only)
-      if [ ! -d "$HAWKER/.git" ] && [ -d /mnt/hawker ]; then
-        echo "==> Cloning hawker repo from host..."
+      # Phase 2: dev -- clone or update repo + bootstrap + HM
+      if [ -d /mnt/hawker ]; then
         $SETPRIV ${pkgs.git}/bin/git config --global --add safe.directory /mnt/hawker
-        $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" init -b main
-        $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" fetch /mnt/hawker main
-        $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" checkout -B main FETCH_HEAD
-        $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" branch --set-upstream-to=origin/main main 2>/dev/null || true
-        # Set SSH remote for push
-        if [ -n "''${HAWKER_REPO:-}" ]; then
-          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote add origin "$HAWKER_REPO" 2>/dev/null || \
-            $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote set-url origin "$HAWKER_REPO"
+
+        if [ ! -d "$HAWKER/.git" ]; then
+          # First start: clone from host
+          echo "==> Cloning hawker repo from host..."
+          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" init -b main
+          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" fetch /mnt/hawker main
+          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" checkout -B main FETCH_HEAD
+          if [ -n "''${HAWKER_REPO:-}" ]; then
+            $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote add origin "$HAWKER_REPO" 2>/dev/null || \
+              $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote set-url origin "$HAWKER_REPO"
+          fi
         fi
-        # Remove stale symlinks from build-time homeDir that point to
-        # the Nix store -- stow can't overwrite these with fresh ones
+
+        # Clean stale Nix store symlinks from build-time homeDir
         ${pkgs.findutils}/bin/find /home/${username}/.config -type l -lname '/nix/store/*' -delete 2>/dev/null || true
         ${pkgs.findutils}/bin/find /home/${username}/.local -type l -lname '/nix/store/*' -delete 2>/dev/null || true
-        # Bootstrap dotfiles (stow)
+
+        # Bootstrap dotfiles (stow) and apply Home Manager
         $SETPRIV ${pkgs.bash}/bin/bash "$HAWKER/bootstrap.sh" || true
-        # Apply Home Manager config
         $SETPRIV ${pkgs.nix}/bin/nix run "$HAWKER#homeConfigurations.''${USER}.activationPackage" 2>/dev/null || true
       fi
 
