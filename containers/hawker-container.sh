@@ -96,6 +96,7 @@ start_container() {
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
         -e "HAWKER_REPO=${repo_url}" \
+        -v "${FLAKE_REF}:/mnt/hawker:ro" \
         "${vol_args[@]}" \
         "${ssh_args[@]}" \
         "${gpu_args[@]}" \

@@ -35,19 +35,37 @@ let
   # VSCode Remote attach compatibility
   vscode = import ./vscode.nix { inherit pkgs username; };
 
-  # Container init: start as root, fix /nix ownership, drop to user.
-  # Required because proot in fakeRootCommands can't chown /nix/store
-  # from the base image layer, and single-user Nix needs write access.
+  # Container init: fix ownership (root), clone repo + bootstrap + HM (dev), exec shell.
   entrypoint = pkgs.writeShellScript "container-init" ''
+    SETPRIV="${pkgs.util-linux}/bin/setpriv --reuid=1000 --regid=1000 --init-groups --"
+    HAWKER="/home/${username}/hawker"
+
+    # Phase 1: root -- fix /nix ownership (once)
     if [ "$(id -u)" = "0" ]; then
       if [ ! -f /nix/.ownership-fixed ]; then
         mkdir -p /home/${username}/.local/state/nix/profiles
         chown -R 1000:1000 /nix /home/${username}
         touch /nix/.ownership-fixed
       fi
-      exec ${pkgs.util-linux}/bin/setpriv \
-        --reuid=1000 --regid=1000 --init-groups \
-        -- "$@"
+
+      # Phase 2: dev -- clone repo + bootstrap + HM (first start only)
+      if [ ! -d "$HAWKER/.git" ] && [ -d /mnt/hawker/.git ]; then
+        echo "==> Cloning hawker repo from host..."
+        $SETPRIV ${pkgs.git}/bin/git clone /mnt/hawker "$HAWKER.tmp"
+        rm -rf "$HAWKER"
+        mv "$HAWKER.tmp" "$HAWKER"
+        # Set SSH remote for push
+        if [ -n "''${HAWKER_REPO:-}" ]; then
+          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote set-url origin "$HAWKER_REPO"
+        fi
+        # Bootstrap dotfiles (stow)
+        $SETPRIV ${pkgs.bash}/bin/bash "$HAWKER/bootstrap.sh" || true
+        # Apply Home Manager config
+        $SETPRIV ${pkgs.nix}/bin/nix run "$HAWKER#homeConfigurations.${username}.activationPackage" 2>/dev/null || true
+      fi
+
+      # Phase 3: drop to dev, exec shell
+      exec $SETPRIV "$@"
     else
       exec "$@"
     fi
