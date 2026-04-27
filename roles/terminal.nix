@@ -6,7 +6,6 @@
     ../modules/terminal/lazygit.nix
     ../modules/terminal/neovim.nix
     ../modules/terminal/opencode.nix
-    ../modules/terminal/tmux.nix
     ../modules/terminal/yazi.nix
   ];
 }
