@@ -149,10 +149,21 @@ case "${1:-help}" in
         ;;
 
     code)
-        user=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.username" 2>/dev/null) || user="dev"
-        hex=$(printf '%s' "$IMAGE_NAME" | xxd -p | tr -d '\n')
-        echo "==> Opening VSCode attached to $IMAGE_NAME..."
-        code --folder-uri "vscode-remote://attached-container+${hex}/home/${user}"
+        if ! command -v code &>/dev/null; then
+            # On a remote host without VSCode, print the URI for the local machine
+            user=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.username" 2>/dev/null) || user="dev"
+            hex=$(printf '%s' "$IMAGE_NAME" | xxd -p | tr -d '\n')
+            echo "VSCode is not installed on this host."
+            echo "From your local machine, run:"
+            echo "  code --folder-uri \"vscode-remote://attached-container+${hex}/home/${user}\""
+            echo ""
+            echo "Or use VSCode's command palette: Dev Containers > Attach to Running Container"
+        else
+            user=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.username" 2>/dev/null) || user="dev"
+            hex=$(printf '%s' "$IMAGE_NAME" | xxd -p | tr -d '\n')
+            echo "==> Opening VSCode attached to $IMAGE_NAME..."
+            code --folder-uri "vscode-remote://attached-container+${hex}/home/${user}"
+        fi
         ;;
 
     stop)
