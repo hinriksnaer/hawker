@@ -97,8 +97,8 @@
         };
       in {
         dev = mkHome "container";
-        # hawker = mkHome "desktop";     # future
-        # hgudmund = mkHome "laptop";    # future
+        hawker = mkHome "desktop";
+        hgudmund = mkHome "laptop";
       };
 
       # ── Packages ──
