@@ -15,6 +15,7 @@ let
     "pkief.material-icon-theme"
     "ms-python.python"
     "ms-python.vscode-pylance"
+    "anthropics.claude-code"
   ];
 
   settings = {

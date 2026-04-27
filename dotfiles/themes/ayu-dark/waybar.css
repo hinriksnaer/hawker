@@ -1,0 +1,31 @@
+/* Ayu Dark theme colors for Waybar */
+@define-color foreground #bfbdb6;
+@define-color background #0b0e14;
+@define-color blue #53bdfa;
+@define-color green #7fd962;
+@define-color yellow #f9af4f;
+@define-color red #ea6c73;
+
+#workspaces button.active label {
+    color: @blue;
+}
+
+#battery.charging {
+    color: @green;
+}
+
+#battery:not(.charging) {
+    color: @yellow;
+}
+
+#battery.full {
+    color: @green;
+}
+
+#battery.warning:not(.charging) {
+    color: @red;
+}
+
+#bluetooth.connected {
+    color: @blue;
+}
