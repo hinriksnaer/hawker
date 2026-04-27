@@ -45,6 +45,16 @@
             (builtins.readDir dir)
           );
 
+      # Home Manager NixOS integration -- auto-applies HM on nixos-rebuild switch.
+      # Only for desktop/laptop; container uses standalone home-manager switch.
+      hmNixosModule = hostname: {
+        imports = [ home-manager.nixosModules.home-manager ];
+        home-manager.useGlobalPkgs = true;
+        home-manager.useUserPackages = true;
+        home-manager.users.${settings.hosts.${hostname}.username} =
+          import ./home { inherit hostname settings; };
+      };
+
     in {
 
       # ── Individually importable modules (auto-discovered) ──
@@ -66,6 +76,7 @@
           inherit system;
           modules = commonModules ++ [
             ./hosts/desktop/default.nix
+            (hmNixosModule "desktop")
           ];
         };
 
@@ -83,6 +94,7 @@
           inherit system;
           modules = commonModules ++ [
             ./hosts/laptop/default.nix
+            (hmNixosModule "laptop")
           ];
         };
       };
