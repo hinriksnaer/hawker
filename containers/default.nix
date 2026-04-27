@@ -61,6 +61,10 @@ let
           $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote add origin "$HAWKER_REPO" 2>/dev/null || \
             $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote set-url origin "$HAWKER_REPO"
         fi
+        # Remove stale symlinks from build-time homeDir that point to
+        # the Nix store -- stow can't overwrite these with fresh ones
+        ${pkgs.findutils}/bin/find /home/${username}/.config -type l -lname '/nix/store/*' -delete 2>/dev/null || true
+        ${pkgs.findutils}/bin/find /home/${username}/.local -type l -lname '/nix/store/*' -delete 2>/dev/null || true
         # Bootstrap dotfiles (stow)
         $SETPRIV ${pkgs.bash}/bin/bash "$HAWKER/bootstrap.sh" || true
         # Apply Home Manager config

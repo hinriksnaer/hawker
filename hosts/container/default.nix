@@ -54,6 +54,7 @@ in
     cacert
     git
     nix
+    tmux
     (writeShellApplication {
       name = "hawker-refresh";
       runtimeInputs = [ git coreutils ];
