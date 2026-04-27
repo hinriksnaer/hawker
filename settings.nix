@@ -46,7 +46,7 @@
             backends = [ "cute" ];
           };
           pytorch = {
-            enable = true;
+            enable = false;
             repo = "https://github.com/pytorch/pytorch.git";
             branch = "viable/strict";
             cudaArch = "9.0";
@@ -54,7 +54,7 @@
             maxJobs = 32;
           };
           vllm = {
-            enable = true;
+            enable = false;
             repo = "https://github.com/vllm-project/vllm.git";
             branch = "main";
             cudaArch = "9.0";
