@@ -1,8 +1,7 @@
 # hawker-refresh - pull latest config and reapply inside a running container
 #
-# The initial clone is handled by the container entrypoint (from /mnt/hawker).
-# This script pulls updates, applies Home Manager, re-stows dotfiles, and
-# refreshes the theme.
+# Pulls from /mnt/hawker (host bind mount, no SSH needed), applies
+# Home Manager, re-stows dotfiles, and refreshes the theme.
 
 HAWKER_DIR="$HOME/hawker"
 
@@ -11,8 +10,19 @@ if [ ! -d "$HAWKER_DIR/.git" ]; then
     exit 1
 fi
 
-echo "==> Pulling latest changes..."
-git -C "$HAWKER_DIR" pull --ff-only || true
+# Pull latest from host's bind-mounted repo
+echo "==> Pulling latest from host..."
+if [ -d /mnt/hawker ]; then
+    git -C "$HAWKER_DIR" fetch /mnt/hawker main
+    git -C "$HAWKER_DIR" merge --ff-only FETCH_HEAD || true
+else
+    echo "Warning: /mnt/hawker not mounted, trying origin..."
+    git -C "$HAWKER_DIR" pull --ff-only || true
+fi
+
+# Clean stale Nix store symlinks (from build-time homeDir)
+find "$HOME/.config" -type l -lname '/nix/store/*' -delete 2>/dev/null || true
+find "$HOME/.local" -type l -lname '/nix/store/*' -delete 2>/dev/null || true
 
 # Apply Home Manager configuration
 if command -v home-manager &>/dev/null; then

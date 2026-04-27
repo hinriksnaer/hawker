@@ -50,11 +50,13 @@ let
         $SETPRIV ${pkgs.git}/bin/git config --global --add safe.directory /mnt/hawker
 
         if [ ! -d "$HAWKER/.git" ]; then
-          # First start: clone from host
+          # First start: clear stale homeDir content (Nix store symlinks
+          # from the build-time image copy) then clone from host
           echo "==> Cloning hawker repo from host..."
+          ${pkgs.findutils}/bin/find "$HAWKER" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
           $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" init -b main
           $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" fetch /mnt/hawker main
-          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" checkout -B main FETCH_HEAD
+          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" checkout -f -B main FETCH_HEAD
           if [ -n "''${HAWKER_REPO:-}" ]; then
             $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote add origin "$HAWKER_REPO" 2>/dev/null || \
               $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote set-url origin "$HAWKER_REPO"
