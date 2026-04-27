@@ -33,7 +33,7 @@ let
   inherit (pkgs.dockerTools) usrBinEnv binSh;
 
   # VSCode Remote attach compatibility
-  vscode = import ./vscode.nix { inherit pkgs; };
+  vscode = import ./vscode.nix { inherit pkgs username; };
 
   etcDir = pkgs.runCommand "hawker-etc" {} ''
     mkdir -p $out/etc/ssh
@@ -56,7 +56,7 @@ pkgs.dockerTools.streamLayeredImage {
   inherit name;
   tag = "latest";
 
-  contents = packages ++ [ homeDir etcDir usrBinEnv binSh ];
+  contents = packages ++ [ homeDir etcDir vscode.localExtensions usrBinEnv binSh ];
 
   fakeRootCommands = ''
     chown -R 1000:1000 /home/${username}
