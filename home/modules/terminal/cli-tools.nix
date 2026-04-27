@@ -3,7 +3,14 @@
 { pkgs, ... }:
 
 {
-  programs.starship.enable = true;
+  programs.starship = {
+    enable = true;
+    settings = {
+      # Clean prompt -- hide verbose SSH hostname
+      hostname.disabled = true;
+      username.disabled = true;
+    };
+  };
 
   programs.fzf = {
     enable = true;
