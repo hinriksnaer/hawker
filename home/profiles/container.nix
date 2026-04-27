@@ -1,4 +1,4 @@
-# Container profile -- user "dev", terminal tools only.
+# Container profile -- user "dev", terminal tools.
 { settings, hostname, ... }:
 
 let
@@ -6,9 +6,8 @@ let
 in
 {
   imports = [
-    ../modules/terminal/git.nix
-    # ../modules/terminal/fish.nix     # add when ready
-    # ../modules/terminal/tmux.nix     # add when ready
+    ../collections/terminal.nix
+    # ../collections/desktop.nix     # not needed in container
   ];
 
   home.username = username;
