@@ -13,8 +13,9 @@ echo "==> Deploying dotfiles via stow (--no-folding)..."
 for dir in "$DOTFILES_DIR"/*/; do
     module=$(basename "$dir")
 
-    # Skip: themes (symlinked separately), btop (NixOS activation)
-    if [ "$module" = "themes" ] || [ "$module" = "btop" ]; then
+    # Skip: themes (symlinked separately), btop (NixOS activation),
+    # neovim/fish (managed by Home Manager)
+    if [ "$module" = "themes" ] || [ "$module" = "btop" ] || [ "$module" = "neovim" ] || [ "$module" = "fish" ]; then
         continue
     fi
 

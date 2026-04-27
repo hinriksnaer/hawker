@@ -1,7 +1,8 @@
-# Neovim -- package + LSP/tooling dependencies.
-# The Lua config (plugins, keymaps, etc.) stays in dotfiles/neovim/
-# and is deployed via stow. HM just provides the binaries.
-{ pkgs, ... }:
+# Neovim -- package, LSP/tooling deps, and config.
+# Config files live in dotfiles/neovim/ in the hawker repo.
+# HM symlinks ~/.config/nvim to the repo directory so files
+# remain writable (needed for theme.lua runtime updates).
+{ pkgs, config, ... }:
 
 {
   programs.neovim = {
@@ -18,4 +19,8 @@
     pyright       # Python LSP
     python3Packages.debugpy  # Python DAP adapter
   ];
+
+  # Symlink ~/.config/nvim → repo dotfiles (writable, theme system compatible)
+  xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink
+    "${config.home.homeDirectory}/workspace/hawker/dotfiles/neovim/.config/nvim";
 }
