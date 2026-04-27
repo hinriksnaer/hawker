@@ -172,6 +172,20 @@ case "${1:-help}" in
         fi
         ;;
 
+    reset)
+        runtime=$(detect_runtime)
+        if [ $# -ge 2 ]; then
+            echo "==> Resetting volumes for ${IMAGE_NAME} on $2..."
+            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache ${IMAGE_NAME}-vscode ${IMAGE_NAME}-config 2>/dev/null; echo done"
+        else
+            echo "==> Resetting volumes for $IMAGE_NAME..."
+            $runtime stop "$IMAGE_NAME" 2>/dev/null || true
+            $runtime rm "$IMAGE_NAME" 2>/dev/null || true
+            $runtime volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" "${IMAGE_NAME}-vscode" "${IMAGE_NAME}-config" 2>/dev/null || true
+            echo "done — run 'hawker-container start' to recreate"
+        fi
+        ;;
+
     clean)
         runtime=$(detect_runtime)
         if [ $# -ge 2 ]; then
@@ -205,6 +219,7 @@ case "${1:-help}" in
         echo "  $0 deploy <host>      Clone/pull repo on remote + start container"
         echo "  $0 code               Open VSCode attached to container"
         echo "  $0 stop [host]        Stop container"
+        echo "  $0 reset [host]       Remove container and volumes (keeps image)"
         echo "  $0 clean [host]       Remove container, image, and volumes"
         echo "  $0 status [host]      Show container status"
         echo ""
