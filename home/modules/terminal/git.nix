@@ -5,13 +5,13 @@
 {
   programs.git = {
     enable = true;
+    signing.format = "openpgp";
     settings = {
       user.name = settings.git.name;
       user.email = settings.git.email;
       core.editor = "nvim";
       init.defaultBranch = "main";
       pull.rebase = false;
-      signing.format = "openpgp";
     };
   };
 }
