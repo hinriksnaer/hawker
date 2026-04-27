@@ -32,6 +32,22 @@ let
   # FHS compatibility helpers from dockerTools
   inherit (pkgs.dockerTools) usrBinEnv binSh;
 
+  # Startup script: generate ld.so.cache then exec fish.
+  # Nix's ldconfig hardcodes cache/conf paths into the read-only Nix store.
+  # At runtime the container overlay makes those paths writable, so we
+  # generate the cache on first launch.  This lets VSCode server's
+  # check-requirements.sh (which calls ldconfig -p) pass.
+  entrypoint = pkgs.writeShellScript "hawker-entrypoint" ''
+    if [ ! -f "${pkgs.glibc}/etc/ld.so.cache" ]; then
+      echo "${pkgs.stdenv.cc.cc.lib}/lib" > /tmp/.ld.so.conf
+      echo "${pkgs.glibc}/lib" >> /tmp/.ld.so.conf
+      mkdir -p "${pkgs.glibc}/etc" 2>/dev/null || true
+      ldconfig -f /tmp/.ld.so.conf 2>/dev/null || true
+      rm -f /tmp/.ld.so.conf
+    fi
+    exec ${pkgs.fish}/bin/fish "$@"
+  '';
+
   etcDir = pkgs.runCommand "hawker-etc" {} ''
     mkdir -p $out/etc/ssh
     echo "root:x:0:0:root:/root:/bin/bash" > $out/etc/passwd
@@ -39,7 +55,6 @@ let
     echo "root:x:0:" > $out/etc/group
     echo "users:x:1000:${username}" >> $out/etc/group
     echo "hosts: files dns" > $out/etc/nsswitch.conf
-    touch $out/etc/NIXOS
 
     cat > $out/etc/ssh/ssh_known_hosts << 'HOSTS'
 github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
@@ -59,12 +74,10 @@ pkgs.dockerTools.streamLayeredImage {
     chown -R 1000:1000 /home/${username}
     chmod 1777 /tmp
 
-    # Generate ld.so.cache so VSCode server's check-requirements.sh passes.
-    # Nix's ldconfig has conf/cache paths hardcoded into the glibc store path.
-    mkdir -p ${pkgs.glibc}/etc
-    echo "${pkgs.stdenv.cc.cc.lib}/lib" > ${pkgs.glibc}/etc/ld.so.conf
-    echo "${pkgs.glibc}/lib" >> ${pkgs.glibc}/etc/ld.so.conf
-    ldconfig || true
+    # Symlink the dynamic linker to the standard FHS path so unpatched
+    # binaries (e.g. VSCode server's node) can find it.
+    mkdir -p /lib64
+    ln -sf ${pkgs.glibc}/lib/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
   '';
   enableFakechroot = true;
 
@@ -84,7 +97,7 @@ pkgs.dockerTools.streamLayeredImage {
       "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
       "NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
     ] ++ sessionEnv;
-    Cmd = [ "${pkgs.fish}/bin/fish" ];
+    Cmd = [ "${entrypoint}" ];
     WorkingDir = "/home/${username}";
   };
 }
