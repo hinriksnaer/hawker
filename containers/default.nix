@@ -39,6 +39,7 @@ let
     echo "root:x:0:" > $out/etc/group
     echo "users:x:1000:${username}" >> $out/etc/group
     echo "hosts: files dns" > $out/etc/nsswitch.conf
+    touch $out/etc/NIXOS
 
     cat > $out/etc/ssh/ssh_known_hosts << 'HOSTS'
 github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
