@@ -35,49 +35,16 @@ let
   # VSCode Remote attach compatibility
   vscode = import ./vscode.nix { inherit pkgs username; };
 
-  # Container init: fix ownership (root), clone repo + bootstrap + HM (dev), exec shell.
-  entrypoint = pkgs.writeShellScript "container-init" ''
-    SETPRIV="${pkgs.util-linux}/bin/setpriv --reuid=1000 --regid=1000 --init-groups --"
-    HAWKER="/home/${username}/hawker"
-
-    # Phase 1: root -- fix /nix ownership (every start, fast if already correct)
-    if [ "$(id -u)" = "0" ]; then
-      mkdir -p /home/${username}/.local/state/nix/profiles
-      chown -R 1000:1000 /nix /home/${username} 2>/dev/null || true
-
-      # Phase 2: dev -- clone or update repo + bootstrap + HM
-      if [ -d /mnt/hawker ]; then
-        $SETPRIV ${pkgs.git}/bin/git config --global --add safe.directory /mnt/hawker
-
-        if [ ! -d "$HAWKER/.git" ]; then
-          # First start: clear stale homeDir content (Nix store symlinks
-          # from the build-time image copy) then clone from host
-          echo "==> Cloning hawker repo from host..."
-          ${pkgs.findutils}/bin/find "$HAWKER" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
-          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" init -b main
-          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" fetch /mnt/hawker main
-          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" checkout -f -B main FETCH_HEAD
-          if [ -n "''${HAWKER_REPO:-}" ]; then
-            $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote add origin "$HAWKER_REPO" 2>/dev/null || \
-              $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote set-url origin "$HAWKER_REPO"
-          fi
-        fi
-
-        # Clean stale Nix store symlinks from build-time homeDir
-        ${pkgs.findutils}/bin/find /home/${username}/.config -type l -lname '/nix/store/*' -delete 2>/dev/null || true
-        ${pkgs.findutils}/bin/find /home/${username}/.local -type l -lname '/nix/store/*' -delete 2>/dev/null || true
-
-        # Bootstrap dotfiles (stow) and apply Home Manager
-        $SETPRIV ${pkgs.bash}/bin/bash "$HAWKER/bootstrap.sh" || true
-        $SETPRIV ${pkgs.nix}/bin/nix run "$HAWKER#homeConfigurations.''${USER}.activationPackage" 2>/dev/null || true
-      fi
-
-      # Phase 3: drop to dev, exec shell
-      exec $SETPRIV "$@"
-    else
-      exec "$@"
-    fi
-  '';
+  # Entrypoint store paths -- resolved at Nix eval time, baked into
+  # the script as literal strings. These packages are stable across
+  # rebuilds (same nixpkgs pin) and exist in the persistent /nix volume.
+  ep = {
+    setpriv = "${pkgs.util-linux}/bin/setpriv";
+    git = "${pkgs.git}/bin/git";
+    find = "${pkgs.findutils}/bin/find";
+    bash = "${pkgs.bash}/bin/bash";
+    nix = "${pkgs.nix}/bin/nix";
+  };
 
   etcDir = pkgs.runCommand "hawker-etc" {} ''
     mkdir -p $out/etc/ssh
@@ -98,17 +65,9 @@ github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAA
 HOSTS
   '';
 
-  # Wrap entrypoint in a directory so streamLayeredImage can include it
-  # (writeShellScript produces a single file, contents expects directories)
-  entrypointDir = pkgs.runCommand "entrypoint-dir" {} ''
-    mkdir -p $out/usr/local/bin
-    cp ${entrypoint} $out/usr/local/bin/container-init
-    chmod +x $out/usr/local/bin/container-init
-  '';
-
   # All content items for the image (shared with nixDb closure)
   allContents = packages
-    ++ [ homeDir etcDir vscode.localExtensions entrypointDir usrBinEnv binSh ]
+    ++ [ homeDir etcDir vscode.localExtensions usrBinEnv binSh ]
     ++ pkgs.lib.optional (hmCli != null) hmCli;
 
   # Generate Nix database without gcroots symlinks.
@@ -151,12 +110,53 @@ pkgs.dockerTools.streamLayeredImage {
     chmod -R u+w nix/var/nix/
 
     ${vscode.fakeRootSetup}
+
+    # Container entrypoint -- written as a real file (not symlink, not
+    # under /nix/) so it survives /nix volume mounts across rebuilds.
+    mkdir -p /usr/local/bin
+    cat > /usr/local/bin/container-init << 'ENTRYPOINT'
+#!/bin/sh
+SETPRIV="${ep.setpriv} --reuid=1000 --regid=1000 --init-groups --"
+HAWKER="/home/${username}/hawker"
+
+if [ "$(id -u)" = "0" ]; then
+  mkdir -p /home/${username}/.local/state/nix/profiles
+  chown -R 1000:1000 /nix /home/${username} 2>/dev/null || true
+
+  if [ -d /mnt/hawker ]; then
+    $SETPRIV ${ep.git} config --global --add safe.directory /mnt/hawker
+
+    if [ ! -d "$HAWKER/.git" ]; then
+      echo "==> Cloning hawker repo from host..."
+      ${ep.find} "$HAWKER" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
+      $SETPRIV ${ep.git} -C "$HAWKER" init -b main
+      $SETPRIV ${ep.git} -C "$HAWKER" fetch /mnt/hawker main
+      $SETPRIV ${ep.git} -C "$HAWKER" checkout -f -B main FETCH_HEAD
+      if [ -n "$HAWKER_REPO" ]; then
+        $SETPRIV ${ep.git} -C "$HAWKER" remote add origin "$HAWKER_REPO" 2>/dev/null || \
+          $SETPRIV ${ep.git} -C "$HAWKER" remote set-url origin "$HAWKER_REPO"
+      fi
+    fi
+
+    ${ep.find} /home/${username}/.config -type l -lname '/nix/store/*' -delete 2>/dev/null || true
+    ${ep.find} /home/${username}/.local -type l -lname '/nix/store/*' -delete 2>/dev/null || true
+
+    $SETPRIV ${ep.bash} "$HAWKER/bootstrap.sh" || true
+    $SETPRIV ${ep.nix} run "$HAWKER#homeConfigurations.''${USER}.activationPackage" 2>/dev/null || true
+  fi
+
+  exec $SETPRIV "$@"
+else
+  exec "$@"
+fi
+ENTRYPOINT
+    chmod +x /usr/local/bin/container-init
   '';
   enableFakechroot = true;
 
   config = {
     Labels = vscode.labels;
-    Entrypoint = [ "${entrypoint}" ];
+    Entrypoint = [ "/usr/local/bin/container-init" ];
     Env = [
       "LANG=en_US.UTF-8"
       "TERM=xterm-256color"
