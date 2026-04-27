@@ -4,6 +4,11 @@
 { pkgs, ... }:
 
 {
+  # Starship is managed by HM but the NixOS fish init references
+  # it by absolute system path. Keep it in system packages until
+  # fish itself migrates to HM.
+  environment.systemPackages = [ pkgs.starship ];
+
   programs.fish = {
     enable = true;
 
