@@ -32,20 +32,17 @@ let
   # FHS compatibility helpers from dockerTools
   inherit (pkgs.dockerTools) usrBinEnv binSh;
 
-  # Startup script: generate ld.so.cache then exec fish.
-  # Nix's ldconfig hardcodes cache/conf paths into the read-only Nix store.
-  # At runtime the container overlay makes those paths writable, so we
-  # generate the cache on first launch.  This lets VSCode server's
-  # check-requirements.sh (which calls ldconfig -p) pass.
-  entrypoint = pkgs.writeShellScript "hawker-entrypoint" ''
-    if [ ! -f "${pkgs.glibc}/etc/ld.so.cache" ]; then
-      echo "${pkgs.stdenv.cc.cc.lib}/lib" > /tmp/.ld.so.conf
-      echo "${pkgs.glibc}/lib" >> /tmp/.ld.so.conf
-      mkdir -p "${pkgs.glibc}/etc" 2>/dev/null || true
-      ldconfig -f /tmp/.ld.so.conf 2>/dev/null || true
-      rm -f /tmp/.ld.so.conf
-    fi
-    exec ${pkgs.fish}/bin/fish "$@"
+  # Pre-generate ld.so.cache at /etc/ (not in the Nix store) so that
+  # VSCode server's check-requirements.sh passes when it calls ldconfig.
+  # A companion wrapper at /sbin/ldconfig (created in fakeRootCommands)
+  # redirects the Nix-patched ldconfig to use these standard paths.
+  ldsoCache = pkgs.runCommand "ldconfig-cache" {} ''
+    mkdir -p $out/etc
+    echo "${pkgs.stdenv.cc.cc.lib}/lib" > $out/etc/ld.so.conf
+    echo "${pkgs.glibc}/lib"           >> $out/etc/ld.so.conf
+    ${pkgs.glibc.bin}/sbin/ldconfig \
+      -f $out/etc/ld.so.conf \
+      -C $out/etc/ld.so.cache
   '';
 
   etcDir = pkgs.runCommand "hawker-etc" {} ''
@@ -68,7 +65,7 @@ pkgs.dockerTools.streamLayeredImage {
   inherit name;
   tag = "latest";
 
-  contents = packages ++ [ homeDir etcDir usrBinEnv binSh ];
+  contents = packages ++ [ homeDir etcDir ldsoCache usrBinEnv binSh ];
 
   fakeRootCommands = ''
     chown -R 1000:1000 /home/${username}
@@ -78,6 +75,15 @@ pkgs.dockerTools.streamLayeredImage {
     # binaries (e.g. VSCode server's node) can find it.
     mkdir -p /lib64
     ln -sf ${pkgs.glibc}/lib/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
+
+    # Wrapper ldconfig that redirects Nix's hardcoded store paths to the
+    # pre-generated cache at /etc/ld.so.cache (from ldsoCache derivation).
+    mkdir -p /sbin
+    cat > /sbin/ldconfig << 'WRAPPER'
+#!/bin/sh
+exec ${pkgs.glibc.bin}/sbin/ldconfig -f /etc/ld.so.conf -C /etc/ld.so.cache "$@"
+WRAPPER
+    chmod +x /sbin/ldconfig
   '';
   enableFakechroot = true;
 
@@ -97,7 +103,7 @@ pkgs.dockerTools.streamLayeredImage {
       "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
       "NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
     ] ++ sessionEnv;
-    Cmd = [ "${entrypoint}" ];
+    Cmd = [ "${pkgs.fish}/bin/fish" ];
     WorkingDir = "/home/${username}";
   };
 }
