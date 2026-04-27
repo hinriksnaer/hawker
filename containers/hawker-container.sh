@@ -70,6 +70,8 @@ start_container() {
         -v "${FLAKE_REF}:/home/${user}/hawker" \
         -v "${IMAGE_NAME}-repos:/home/${user}/repos" \
         -v "${IMAGE_NAME}-ccache:/home/${user}/.cache/ccache" \
+        -v "${IMAGE_NAME}-vscode:/home/${user}/.vscode-server" \
+        -v "${IMAGE_NAME}-config:/home/${user}/.config" \
         "${ssh_args[@]}" \
         "${gpu_args[@]}" \
         "$IMAGE_NAME:latest"
@@ -157,12 +159,12 @@ case "${1:-help}" in
         runtime=$(detect_runtime)
         if [ $# -ge 2 ]; then
             echo "==> Cleaning ${IMAGE_NAME} on $2..."
-            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache 2>/dev/null; \$rt rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
+            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache ${IMAGE_NAME}-vscode ${IMAGE_NAME}-config 2>/dev/null; \$rt rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
         else
             echo "==> Cleaning local $IMAGE_NAME..."
             $runtime stop "$IMAGE_NAME" 2>/dev/null || true
             $runtime rm "$IMAGE_NAME" 2>/dev/null || true
-            $runtime volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" 2>/dev/null || true
+            $runtime volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" "${IMAGE_NAME}-vscode" "${IMAGE_NAME}-config" 2>/dev/null || true
             $runtime rmi "$IMAGE_NAME:latest" 2>/dev/null || true
             echo "done"
         fi
