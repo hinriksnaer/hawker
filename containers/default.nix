@@ -60,6 +60,7 @@ pkgs.dockerTools.streamLayeredImage {
 
   fakeRootCommands = ''
     chown -R 1000:1000 /home/${username}
+    chmod -R a+rwX /home/${username}
     chmod 1777 /tmp
 
     ${vscode.fakeRootSetup}
