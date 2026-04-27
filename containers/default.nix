@@ -58,6 +58,13 @@ pkgs.dockerTools.streamLayeredImage {
   fakeRootCommands = ''
     chown -R 1000:1000 /home/${username}
     chmod 1777 /tmp
+
+    # Generate ld.so.cache so VSCode server's check-requirements.sh passes.
+    # Nix's ldconfig has conf/cache paths hardcoded into the glibc store path.
+    mkdir -p ${pkgs.glibc}/etc
+    echo "${pkgs.stdenv.cc.cc.lib}/lib" > ${pkgs.glibc}/etc/ld.so.conf
+    echo "${pkgs.glibc}/lib" >> ${pkgs.glibc}/etc/ld.so.conf
+    ldconfig || true
   '';
   enableFakechroot = true;
 
