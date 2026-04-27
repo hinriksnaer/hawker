@@ -15,12 +15,13 @@
   # Git -- proof of concept for HM-managed config
   programs.git = {
     enable = true;
-    userName = "hinriksnaer";
-    userEmail = "hgudmund@redhat.com";
-    extraConfig = {
+    settings = {
+      user.name = "hinriksnaer";
+      user.email = "hgudmund@redhat.com";
       core.editor = "nvim";
       init.defaultBranch = "main";
       pull.rebase = false;
+      signing.format = null;
     };
   };
 }

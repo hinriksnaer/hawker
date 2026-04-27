@@ -41,8 +41,8 @@ let
   entrypoint = pkgs.writeShellScript "container-init" ''
     if [ "$(id -u)" = "0" ]; then
       if [ ! -f /nix/.ownership-fixed ]; then
-        chown -R 1000:1000 /nix /home/${username}
         mkdir -p /home/${username}/.local/state/nix/profiles
+        chown -R 1000:1000 /nix /home/${username}
         touch /nix/.ownership-fixed
       fi
       exec ${pkgs.util-linux}/bin/setpriv \
