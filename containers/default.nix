@@ -72,20 +72,49 @@ github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAA
 HOSTS
   '';
 
+  # All content items for the image (shared with nixDb closure)
+  allContents = packages
+    ++ [ homeDir etcDir vscode.localExtensions usrBinEnv binSh ]
+    ++ pkgs.lib.optional (hmCli != null) hmCli;
+
+  # Generate Nix database without gcroots symlinks.
+  # includeNixDB = true fails under proot when packages share basenames
+  # (ln -s follows the first symlink into the read-only store).
+  # We generate just the DB -- gcroots are only for GC prevention
+  # which doesn't apply in a container.
+  nixDb = pkgs.runCommand "nix-db" {
+    nativeBuildInputs = [ pkgs.nix ];
+    closureInfo = pkgs.closureInfo { rootPaths = allContents; };
+  } ''
+    mkdir -p $out/nix/var/nix/db
+    export NIX_REMOTE=local?root=$out
+    export USER=nobody
+    nix-store --load-db < $closureInfo/registration
+    ${pkgs.sqlite}/bin/sqlite3 $out/nix/var/nix/db/db.sqlite \
+      "UPDATE ValidPaths SET registrationTime = 1"
+  '';
+
 in
 pkgs.dockerTools.streamLayeredImage {
   inherit name;
   tag = "latest";
 
-  includeNixDB = true;
-
-  contents = packages
-    ++ [ homeDir etcDir vscode.localExtensions usrBinEnv binSh ]
-    ++ pkgs.lib.optional (hmCli != null) hmCli;
+  contents = allContents ++ [ nixDb ];
 
   fakeRootCommands = ''
     chown -R 1000:1000 /home/${username}
     chmod 1777 /tmp
+
+    # Dereference Nix DB symlinks -- contents creates symlinks into
+    # the read-only store, but Nix needs writable db files.
+    for f in nix/var/nix/db/*; do
+      if [ -L "$f" ]; then
+        cp -L "$f" "$f.real"
+        rm "$f"
+        mv "$f.real" "$f"
+      fi
+    done
+    chmod -R u+w nix/var/nix/
 
     ${vscode.fakeRootSetup}
   '';
