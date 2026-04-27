@@ -16,7 +16,7 @@
   '';
 
   programs.zsh.enable = true;
-  programs.zsh.initExtra = ''
+  programs.zsh.initContent = ''
     if [[ $(${pkgs.procps}/bin/ps --no-header --pid=$PPID --format=comm) != "fish" && -z ''${ZSH_EXECUTION_STRING} ]]; then
       exec ${pkgs.fish}/bin/fish ''${login_shell:+--login}
     fi
