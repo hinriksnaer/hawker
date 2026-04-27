@@ -6,6 +6,8 @@
   imports = [
     ../modules/terminal/git.nix
     ../modules/terminal/tmux.nix
+    ../modules/terminal/cli-tools.nix
+    ../modules/terminal/gh.nix
     # ../modules/terminal/fish.nix     # add when ready
     # ../modules/terminal/btop.nix     # add when ready
     # ../modules/terminal/neovim.nix   # add when ready
