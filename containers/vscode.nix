@@ -27,6 +27,8 @@ let
     "workbench.colorTheme" = "Torrentz Hydra";
     "vscode-neovim.neovimExecutablePaths.linux" = "${pkgs.neovim}/bin/nvim";
     "editor.lineNumbers" = "relative";
+    "editor.cursorBlinking" = "solid";
+    "editor.cursorSurroundingLines" = 8;
   };
 
   # Path to the torrentz-hydra VSCode extension source
