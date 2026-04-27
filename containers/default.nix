@@ -74,7 +74,7 @@ HOSTS
 
   # All content items for the image (shared with nixDb closure)
   allContents = packages
-    ++ [ homeDir etcDir vscode.localExtensions usrBinEnv binSh ]
+    ++ [ homeDir etcDir vscode.localExtensions entrypoint usrBinEnv binSh ]
     ++ pkgs.lib.optional (hmCli != null) hmCli;
 
   # Generate Nix database without gcroots symlinks.
