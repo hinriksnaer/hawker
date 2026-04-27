@@ -21,12 +21,11 @@
   ];
 
   # Symlink ~/.config/nvim → repo dotfiles (writable, theme system compatible)
-  # Uses activation script instead of home.file because mkOutOfStoreSymlink
-  # fails when the target doesn't exist at build time.
-  home.activation.neovimConfig = config.lib.dag.entryAfter [ "writeBoundary" ] ''
-    if [ ! -e "$HOME/.config/nvim" ] || [ -L "$HOME/.config/nvim" ]; then
-      mkdir -p "$HOME/.config"
-      ln -sfn "$HOME/workspace/hawker/dotfiles/neovim/.config/nvim" "$HOME/.config/nvim"
-    fi
+  # Uses activation script to replace HM's generated nvim dir with a symlink
+  # to the repo's Lua config. Runs after linkGeneration so it can override.
+  home.activation.neovimConfig = config.lib.dag.entryAfter [ "linkGeneration" ] ''
+    rm -rf "$HOME/.config/nvim"
+    mkdir -p "$HOME/.config"
+    ln -sfn "$HOME/workspace/hawker/dotfiles/neovim/.config/nvim" "$HOME/.config/nvim"
   '';
 }
