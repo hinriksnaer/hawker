@@ -53,6 +53,11 @@ in
     openssh
     cacert
     git
+    (writeShellApplication {
+      name = "hawker-refresh";
+      runtimeInputs = [ git coreutils ];
+      text = builtins.readFile ../../containers/hawker-refresh.sh;
+    })
   ];
 
   # Container-specific: disable services and boot that don't apply
