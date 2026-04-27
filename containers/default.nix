@@ -49,14 +49,16 @@ let
       fi
 
       # Phase 2: dev -- clone repo + bootstrap + HM (first start only)
-      if [ ! -d "$HAWKER/.git" ] && [ -d /mnt/hawker/.git ]; then
+      if [ ! -d "$HAWKER/.git" ] && [ -d /mnt/hawker ]; then
         echo "==> Cloning hawker repo from host..."
-        $SETPRIV ${pkgs.git}/bin/git clone /mnt/hawker "$HAWKER.tmp"
-        rm -rf "$HAWKER"
-        mv "$HAWKER.tmp" "$HAWKER"
+        $SETPRIV ${pkgs.git}/bin/git config --global --add safe.directory /mnt/hawker
+        $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" init -b main
+        $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" fetch /mnt/hawker main
+        $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" checkout -f FETCH_HEAD
         # Set SSH remote for push
         if [ -n "''${HAWKER_REPO:-}" ]; then
-          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote set-url origin "$HAWKER_REPO"
+          $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote add origin "$HAWKER_REPO" 2>/dev/null || \
+            $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote set-url origin "$HAWKER_REPO"
         fi
         # Bootstrap dotfiles (stow)
         $SETPRIV ${pkgs.bash}/bin/bash "$HAWKER/bootstrap.sh" || true
