@@ -19,11 +19,14 @@ let
     "ms-python.python"
     "ms-python.vscode-pylance"
     "anthropics.claude-code"
+    "asvetliakov.vscode-neovim"
   ];
 
   settings = {
     "extensions.verifySignature" = false;
     "workbench.colorTheme" = "Torrentz Hydra";
+    "vscode-neovim.neovimExecutablePaths.linux" = "${pkgs.neovim}/bin/nvim";
+    "editor.lineNumbers" = "relative";
   };
 
   # Path to the torrentz-hydra VSCode extension source
