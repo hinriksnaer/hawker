@@ -54,7 +54,7 @@ fi
 
 # ── Apply default theme if none is set ──
 if [ ! -f "$HOME/.config/hawker/current-theme" ]; then
-    DEFAULT_THEME=$(nix eval --raw ".#nixosConfigurations.default.config.hawker.defaultTheme" 2>/dev/null) || DEFAULT_THEME="torrentz-hydra"
+    DEFAULT_THEME=$(nix eval --raw ".#nixosConfigurations.desktop.config.hawker.defaultTheme" 2>/dev/null) || DEFAULT_THEME="ayu-dark"
     echo "==> Applying default theme: $DEFAULT_THEME"
     hawker-theme-set "$DEFAULT_THEME" || echo "  (theme set failed -- run hawker-theme-set manually)"
 fi
