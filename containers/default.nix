@@ -32,17 +32,18 @@ let
   # FHS compatibility helpers from dockerTools
   inherit (pkgs.dockerTools) usrBinEnv binSh;
 
-  # Pre-generate ld.so.cache at /etc/ (not in the Nix store) so that
-  # VSCode server's check-requirements.sh passes when it calls ldconfig.
-  # A companion wrapper at /sbin/ldconfig (created in fakeRootCommands)
-  # redirects the Nix-patched ldconfig to use these standard paths.
+  # Pre-generate ld.so.cache at the exact Nix store path that glibc's
+  # ldconfig has hardcoded.  This derivation's $out is mapped to / in
+  # the image, so $out${pkgs.glibc}/etc/ld.so.cache becomes
+  # ${pkgs.glibc}/etc/ld.so.cache — the path ldconfig already looks for.
+  # No wrappers needed; the real ldconfig just finds its cache.
   ldsoCache = pkgs.runCommand "ldconfig-cache" {} ''
-    mkdir -p $out/etc
-    echo "${pkgs.stdenv.cc.cc.lib}/lib" > $out/etc/ld.so.conf
-    echo "${pkgs.glibc}/lib"           >> $out/etc/ld.so.conf
+    mkdir -p "$out${pkgs.glibc}/etc"
+    echo "${pkgs.stdenv.cc.cc.lib}/lib" > /tmp/ld.so.conf
+    echo "${pkgs.glibc}/lib"           >> /tmp/ld.so.conf
     ${pkgs.glibc.bin}/sbin/ldconfig \
-      -f $out/etc/ld.so.conf \
-      -C $out/etc/ld.so.cache
+      -f /tmp/ld.so.conf \
+      -C "$out${pkgs.glibc}/etc/ld.so.cache"
   '';
 
   etcDir = pkgs.runCommand "hawker-etc" {} ''
@@ -75,15 +76,6 @@ pkgs.dockerTools.streamLayeredImage {
     # binaries (e.g. VSCode server's node) can find it.
     mkdir -p /lib64
     ln -sf ${pkgs.glibc}/lib/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
-
-    # Wrapper ldconfig that redirects Nix's hardcoded store paths to the
-    # pre-generated cache at /etc/ld.so.cache (from ldsoCache derivation).
-    mkdir -p /sbin
-    cat > /sbin/ldconfig << 'WRAPPER'
-#!/bin/sh
-exec ${pkgs.glibc.bin}/sbin/ldconfig -f /etc/ld.so.conf -C /etc/ld.so.cache "$@"
-WRAPPER
-    chmod +x /sbin/ldconfig
   '';
   enableFakechroot = true;
 
