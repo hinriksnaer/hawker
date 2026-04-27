@@ -1,10 +1,11 @@
 /* Ayu Dark theme colors for Waybar */
+/* Colors from ayu-theme/ayu-colors canonical palette */
 @define-color foreground #bfbdb6;
-@define-color background #0b0e14;
-@define-color blue #53bdfa;
-@define-color green #7fd962;
-@define-color yellow #f9af4f;
-@define-color red #ea6c73;
+@define-color background #10141c;
+@define-color blue #59c2ff;
+@define-color green #70bf56;
+@define-color yellow #ffb454;
+@define-color red #f07178;
 
 #workspaces button.active label {
     color: @blue;

@@ -1,14 +1,14 @@
 /* Ayu Dark Theme for Rofi */
 
 * {
-    bg-col:              #0b0e14;
-    bg-col-light:        #11151c;
+    bg-col:              #10141c;
+    bg-col-light:        #141821;
     border-col:          #e6b450;
-    selected-col:        #11151c;
+    selected-col:        #141821;
     blue:                #59c2ff;
     fg-col:              #bfbdb6;
-    fg-col2:             #f9af4f;
-    grey:                #565b66;
+    fg-col2:             #ffb454;
+    grey:                #5a6378;
 
     background-color:    transparent;
     text-color:          @fg-col;

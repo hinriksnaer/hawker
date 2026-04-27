@@ -1,9 +1,9 @@
 {
   "$schema": "https://opencode.ai/theme.json",
   "defs": {
-    "bg":             "#0b0e14",
+    "bg":             "#10141c",
     "bg_panel":       "#0d1017",
-    "bg_highlight":   "#11151c",
+    "bg_highlight":   "#161a24",
     "fg":             "#bfbdb6",
     "fg_dim":         "#acb6bf",
     "fg_muted":       "#565b66",
@@ -19,7 +19,7 @@
     "constant":       "#d2a6ff",
     "operator_color": "#f29668",
     "accent":         "#e6b450",
-    "added":          "#7fd962",
+    "added":          "#70bf56",
     "removed":        "#f26d78",
     "error":          "#d95757"
   },
