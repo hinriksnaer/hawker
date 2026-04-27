@@ -32,6 +32,9 @@ let
   # FHS compatibility helpers from dockerTools
   inherit (pkgs.dockerTools) usrBinEnv binSh;
 
+  # VSCode Remote attach compatibility
+  vscode = import ./vscode.nix { inherit pkgs; };
+
   etcDir = pkgs.runCommand "hawker-etc" {} ''
     mkdir -p $out/etc/ssh
     echo "root:x:0:0:root:/root:/bin/bash" > $out/etc/passwd
@@ -39,7 +42,7 @@ let
     echo "root:x:0:" > $out/etc/group
     echo "users:x:1000:${username}" >> $out/etc/group
     echo "hosts: files dns" > $out/etc/nsswitch.conf
-    echo "ID=nixos" > $out/etc/os-release
+    ${vscode.etcSetup}
 
     cat > $out/etc/ssh/ssh_known_hosts << 'HOSTS'
 github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
@@ -59,14 +62,12 @@ pkgs.dockerTools.streamLayeredImage {
     chown -R 1000:1000 /home/${username}
     chmod 1777 /tmp
 
-    # Symlink the dynamic linker to the standard FHS path so unpatched
-    # binaries (e.g. VSCode server's node) can find it.
-    mkdir -p /lib64
-    ln -sf ${pkgs.glibc}/lib/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
+    ${vscode.fakeRootSetup}
   '';
   enableFakechroot = true;
 
   config = {
+    Labels = vscode.labels;
     User = "${username}";
     Env = [
       "LANG=en_US.UTF-8"
