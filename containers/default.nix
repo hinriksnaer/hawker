@@ -54,7 +54,8 @@ let
         $SETPRIV ${pkgs.git}/bin/git config --global --add safe.directory /mnt/hawker
         $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" init -b main
         $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" fetch /mnt/hawker main
-        $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" checkout -f FETCH_HEAD
+        $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" checkout -B main FETCH_HEAD
+        $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" branch --set-upstream-to=origin/main main 2>/dev/null || true
         # Set SSH remote for push
         if [ -n "''${HAWKER_REPO:-}" ]; then
           $SETPRIV ${pkgs.git}/bin/git -C "$HAWKER" remote add origin "$HAWKER_REPO" 2>/dev/null || \
