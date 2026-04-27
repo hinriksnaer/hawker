@@ -8,7 +8,7 @@
 {
   hawker = {
     # ── Global (shared across all hosts) ──
-    defaultTheme = "torrentz-hydra";
+    defaultTheme = "ayu-dark";
 
     git = {
       name = "hinriksnaer";

@@ -24,11 +24,12 @@ let
 
   settings = {
     "extensions.verifySignature" = false;
-    "workbench.colorTheme" = "Torrentz Hydra";
+    "workbench.colorTheme" = "ayu-dark";
     "vscode-neovim.neovimExecutablePaths.linux" = "${pkgs.neovim}/bin/nvim";
+    "vscode-neovim.useCtrlKeysForNormalMode" = false;
+    "vscode-neovim.neovimClean" = true;
     "editor.lineNumbers" = "relative";
     "editor.cursorBlinking" = "solid";
-    "editor.cursorSurroundingLines" = 8;
   };
 
   # Path to the torrentz-hydra VSCode extension source
