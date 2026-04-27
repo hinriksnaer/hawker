@@ -40,4 +40,10 @@ if command -v hawker-theme-refresh &>/dev/null; then
     hawker-theme-refresh
 fi
 
+# Apply Home Manager configuration
+if command -v home-manager &>/dev/null; then
+    echo "==> Applying Home Manager configuration..."
+    home-manager switch --flake "$HAWKER_DIR#dev" 2>&1 || true
+fi
+
 echo "==> Done"

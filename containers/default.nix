@@ -3,7 +3,7 @@
 # extracted by flake.nix and passed here. No systemd, no NixOS inside —
 # just the declared packages + dotfiles + a fish shell.
 # Config changes = rebuild image on host (fast with Nix caching).
-{ pkgs, packages, username, sessionVariables ? {}, name ? "hawker-dev" }:
+{ pkgs, packages, username, sessionVariables ? {}, name ? "hawker-dev", hmCli ? null }:
 
 let
   sessionEnv = pkgs.lib.mapAttrsToList (k: v: "${k}=${v}") sessionVariables;
@@ -35,6 +35,24 @@ let
   # VSCode Remote attach compatibility
   vscode = import ./vscode.nix { inherit pkgs username; };
 
+  # Container init: start as root, fix /nix ownership, drop to user.
+  # Required because proot in fakeRootCommands can't chown /nix/store
+  # from the base image layer, and single-user Nix needs write access.
+  entrypoint = pkgs.writeShellScript "container-init" ''
+    if [ "$(id -u)" = "0" ]; then
+      if [ ! -f /nix/.ownership-fixed ]; then
+        chown -R 1000:1000 /nix /home/${username}
+        mkdir -p /home/${username}/.local/state/nix/profiles
+        touch /nix/.ownership-fixed
+      fi
+      exec ${pkgs.util-linux}/bin/setpriv \
+        --reuid=1000 --regid=1000 --init-groups \
+        -- "$@"
+    else
+      exec "$@"
+    fi
+  '';
+
   etcDir = pkgs.runCommand "hawker-etc" {} ''
     mkdir -p $out/etc/ssh
     echo "root:x:0:0:root:/root:/bin/bash" > $out/etc/passwd
@@ -43,6 +61,9 @@ let
     echo "users:x:1000:${username}" >> $out/etc/group
     echo "hosts: files dns" > $out/etc/nsswitch.conf
     ${vscode.etcSetup}
+
+    mkdir -p $out/etc/nix
+    echo 'experimental-features = nix-command flakes' > $out/etc/nix/nix.conf
 
     cat > $out/etc/ssh/ssh_known_hosts << 'HOSTS'
 github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
@@ -56,7 +77,11 @@ pkgs.dockerTools.streamLayeredImage {
   inherit name;
   tag = "latest";
 
-  contents = packages ++ [ homeDir etcDir vscode.localExtensions usrBinEnv binSh ];
+  includeNixDB = true;
+
+  contents = packages
+    ++ [ homeDir etcDir vscode.localExtensions usrBinEnv binSh ]
+    ++ pkgs.lib.optional (hmCli != null) hmCli;
 
   fakeRootCommands = ''
     chown -R 1000:1000 /home/${username}
@@ -68,7 +93,7 @@ pkgs.dockerTools.streamLayeredImage {
 
   config = {
     Labels = vscode.labels;
-    User = "${username}";
+    Entrypoint = [ "${entrypoint}" ];
     Env = [
       "LANG=en_US.UTF-8"
       "TERM=xterm-256color"

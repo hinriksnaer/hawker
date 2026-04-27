@@ -36,6 +36,7 @@
       container = {
         username = "dev";
         gpuPassthrough = "4";
+        storagePath = "/mnt/podman_storage/hgudmund";
 
         projects = {
           helion = {

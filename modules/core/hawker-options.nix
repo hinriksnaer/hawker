@@ -77,6 +77,16 @@ with lib;
         '';
         example = "4";
       };
+
+      storagePath = mkOption {
+        type = types.str;
+        default = "";
+        description = ''
+          Host path for persistent container storage (repos, nix store,
+          credentials, etc.). Empty uses podman named volumes.
+        '';
+        example = "/mnt/podman_storage/user";
+      };
     };
   };
 }

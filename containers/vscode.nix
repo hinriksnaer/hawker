@@ -63,6 +63,7 @@ in
   # and auto-installs marketplace extensions / applies settings.
   labels = {
     "devcontainer.metadata" = builtins.toJSON [{
+      remoteUser = "dev";
       customizations.vscode = {
         inherit extensions settings;
       };

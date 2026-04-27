@@ -3,9 +3,13 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, ... }:
+  outputs = { self, nixpkgs, home-manager, ... }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -83,6 +87,12 @@
         };
       };
 
+      # ── Home Manager ──
+      homeConfigurations.dev = home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        modules = [ ./home/default.nix ];
+      };
+
       # ── Packages ──
       packages.${system} = let
         containerConfig = self.nixosConfigurations.container.config;
@@ -95,6 +105,7 @@
           inherit (settings.hosts.container) username;
           packages = containerPackages;
           sessionVariables = containerSessionVars;
+          hmCli = home-manager.packages.${system}.home-manager;
         };
 
         # Standalone CLI for managing containers (installable on any host with Nix)

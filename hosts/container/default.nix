@@ -53,6 +53,7 @@ in
     openssh
     cacert
     git
+    nix
     (writeShellApplication {
       name = "hawker-refresh";
       runtimeInputs = [ git coreutils ];

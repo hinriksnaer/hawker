@@ -59,24 +59,44 @@ start_container() {
         ssh_args+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock" -e "SSH_AUTH_SOCK=/tmp/ssh-agent.sock")
     fi
 
-    # Persistent named volumes
+    # Persistent storage
     local user
     user=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.username" 2>/dev/null) || user="dev"
 
-    # Pass git remote so hawker-refresh can clone inside the container
     local repo_url
     repo_url=$(git -C "${FLAKE_REF}" remote get-url origin 2>/dev/null) || repo_url=""
+
+    local storage
+    storage=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.container.storagePath" 2>/dev/null) || storage=""
+
+    local vol_args=()
+    if [ -n "$storage" ]; then
+        mkdir -p "$storage"/{hawker,repos,ccache,vscode,config,nix}
+        vol_args=(
+            -v "$storage/hawker:/home/${user}/hawker"
+            -v "$storage/repos:/home/${user}/repos"
+            -v "$storage/ccache:/home/${user}/.cache/ccache"
+            -v "$storage/vscode:/home/${user}/.vscode-server"
+            -v "$storage/config:/home/${user}/.config"
+            -v "$storage/nix:/nix"
+        )
+    else
+        vol_args=(
+            -v "${IMAGE_NAME}-hawker:/home/${user}/hawker"
+            -v "${IMAGE_NAME}-repos:/home/${user}/repos"
+            -v "${IMAGE_NAME}-ccache:/home/${user}/.cache/ccache"
+            -v "${IMAGE_NAME}-vscode:/home/${user}/.vscode-server"
+            -v "${IMAGE_NAME}-config:/home/${user}/.config"
+            -v "${IMAGE_NAME}-nix:/nix"
+        )
+    fi
 
     echo "==> Starting $IMAGE_NAME..."
     $runtime run -it \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
         -e "HAWKER_REPO=${repo_url}" \
-        -v "${IMAGE_NAME}-hawker:/home/${user}/hawker" \
-        -v "${IMAGE_NAME}-repos:/home/${user}/repos" \
-        -v "${IMAGE_NAME}-ccache:/home/${user}/.cache/ccache" \
-        -v "${IMAGE_NAME}-vscode:/home/${user}/.vscode-server" \
-        -v "${IMAGE_NAME}-config:/home/${user}/.config" \
+        "${vol_args[@]}" \
         "${ssh_args[@]}" \
         "${gpu_args[@]}" \
         "$IMAGE_NAME:latest"
@@ -88,7 +108,7 @@ enter_container() {
 
     if $runtime container inspect "$IMAGE_NAME" &>/dev/null; then
         if [ "$($runtime inspect -f '{{.State.Running}}' "$IMAGE_NAME" 2>/dev/null)" = "true" ]; then
-            exec $runtime exec -it "$IMAGE_NAME" fish
+            exec $runtime exec -it --user dev "$IMAGE_NAME" fish
         fi
         $runtime start -ai "$IMAGE_NAME"
     else
@@ -180,28 +200,43 @@ case "${1:-help}" in
 
     reset)
         runtime=$(detect_runtime)
+        storage=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.container.storagePath" 2>/dev/null) || storage=""
         if [ $# -ge 2 ]; then
             echo "==> Resetting session state for ${IMAGE_NAME} on $2 (keeps repos + ccache)..."
-            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-hawker ${IMAGE_NAME}-vscode ${IMAGE_NAME}-config 2>/dev/null; echo done"
+            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-hawker ${IMAGE_NAME}-vscode ${IMAGE_NAME}-config ${IMAGE_NAME}-nix 2>/dev/null; echo done"
+        elif [ -n "$storage" ]; then
+            echo "==> Resetting session state for $IMAGE_NAME (keeps repos + ccache)..."
+            $runtime stop "$IMAGE_NAME" 2>/dev/null || true
+            $runtime rm "$IMAGE_NAME" 2>/dev/null || true
+            rm -rf "$storage"/{hawker,vscode,config,nix}
+            echo "done — run 'hawker-container start' to recreate"
         else
             echo "==> Resetting session state for $IMAGE_NAME (keeps repos + ccache)..."
             $runtime stop "$IMAGE_NAME" 2>/dev/null || true
             $runtime rm "$IMAGE_NAME" 2>/dev/null || true
-            $runtime volume rm "${IMAGE_NAME}-hawker" "${IMAGE_NAME}-vscode" "${IMAGE_NAME}-config" 2>/dev/null || true
+            $runtime volume rm "${IMAGE_NAME}-hawker" "${IMAGE_NAME}-vscode" "${IMAGE_NAME}-config" "${IMAGE_NAME}-nix" 2>/dev/null || true
             echo "done — run 'hawker-container start' to recreate"
         fi
         ;;
 
     clean)
         runtime=$(detect_runtime)
+        storage=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.container.storagePath" 2>/dev/null) || storage=""
         if [ $# -ge 2 ]; then
             echo "==> Cleaning ${IMAGE_NAME} on $2..."
-            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-hawker ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache ${IMAGE_NAME}-vscode ${IMAGE_NAME}-config 2>/dev/null; \$rt rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
+            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-hawker ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache ${IMAGE_NAME}-vscode ${IMAGE_NAME}-config ${IMAGE_NAME}-nix 2>/dev/null; \$rt rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
+        elif [ -n "$storage" ]; then
+            echo "==> Cleaning local $IMAGE_NAME..."
+            $runtime stop "$IMAGE_NAME" 2>/dev/null || true
+            $runtime rm "$IMAGE_NAME" 2>/dev/null || true
+            rm -rf "$storage"/{hawker,repos,ccache,vscode,config,nix}
+            $runtime rmi "$IMAGE_NAME:latest" 2>/dev/null || true
+            echo "done"
         else
             echo "==> Cleaning local $IMAGE_NAME..."
             $runtime stop "$IMAGE_NAME" 2>/dev/null || true
             $runtime rm "$IMAGE_NAME" 2>/dev/null || true
-            $runtime volume rm "${IMAGE_NAME}-hawker" "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" "${IMAGE_NAME}-vscode" "${IMAGE_NAME}-config" 2>/dev/null || true
+            $runtime volume rm "${IMAGE_NAME}-hawker" "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" "${IMAGE_NAME}-vscode" "${IMAGE_NAME}-config" "${IMAGE_NAME}-nix" 2>/dev/null || true
             $runtime rmi "$IMAGE_NAME:latest" 2>/dev/null || true
             echo "done"
         fi
