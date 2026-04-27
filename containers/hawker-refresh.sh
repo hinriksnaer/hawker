@@ -1,7 +1,8 @@
 # hawker-refresh - update hawker config from inside a running container
 #
-# Pulls latest changes, re-runs bootstrap to re-stow dotfiles,
-# and reapplies the current theme.
+# On first run: clones the hawker repo (replacing the Nix store copy
+# that has no .git). On subsequent runs: pulls latest changes.
+# Then re-runs bootstrap to re-stow dotfiles and reapplies the theme.
 
 HAWKER_DIR="$HOME/hawker"
 
@@ -10,8 +11,21 @@ if [ ! -d "$HAWKER_DIR" ]; then
     exit 1
 fi
 
-# Pull latest changes if it's a git repo
-if [ -d "$HAWKER_DIR/.git" ]; then
+# First run: the image copy has no .git (Nix strips it).
+# Clone the real repo so we can pull/commit/push.
+if [ ! -d "$HAWKER_DIR/.git" ]; then
+    if [ -z "${HAWKER_REPO:-}" ]; then
+        echo "Error: HAWKER_REPO not set — can't clone. Was the container started with hawker-container?" >&2
+        exit 1
+    fi
+    echo "==> Cloning hawker repo (first run)..."
+    tmp=$(mktemp -d)
+    git clone "$HAWKER_REPO" "$tmp/hawker"
+    # Replace the Nix store copy with the real clone
+    rm -rf "$HAWKER_DIR"
+    mv "$tmp/hawker" "$HAWKER_DIR"
+    rm -rf "$tmp"
+else
     echo "==> Pulling latest changes..."
     git -C "$HAWKER_DIR" pull --ff-only || true
 fi

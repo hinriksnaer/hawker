@@ -63,10 +63,16 @@ start_container() {
     local user
     user=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.username" 2>/dev/null) || user="dev"
 
+    # Pass git remote so hawker-refresh can clone inside the container
+    local repo_url
+    repo_url=$(git -C "${FLAKE_REF}" remote get-url origin 2>/dev/null) || repo_url=""
+
     echo "==> Starting $IMAGE_NAME..."
     $runtime run -it \
         --name "$IMAGE_NAME" \
         --hostname "$IMAGE_NAME" \
+        -e "HAWKER_REPO=${repo_url}" \
+        -v "${IMAGE_NAME}-hawker:/home/${user}/hawker" \
         -v "${IMAGE_NAME}-repos:/home/${user}/repos" \
         -v "${IMAGE_NAME}-ccache:/home/${user}/.cache/ccache" \
         -v "${IMAGE_NAME}-vscode:/home/${user}/.vscode-server" \
@@ -176,12 +182,12 @@ case "${1:-help}" in
         runtime=$(detect_runtime)
         if [ $# -ge 2 ]; then
             echo "==> Resetting session state for ${IMAGE_NAME} on $2 (keeps repos + ccache)..."
-            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-vscode ${IMAGE_NAME}-config 2>/dev/null; echo done"
+            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-hawker ${IMAGE_NAME}-vscode ${IMAGE_NAME}-config 2>/dev/null; echo done"
         else
             echo "==> Resetting session state for $IMAGE_NAME (keeps repos + ccache)..."
             $runtime stop "$IMAGE_NAME" 2>/dev/null || true
             $runtime rm "$IMAGE_NAME" 2>/dev/null || true
-            $runtime volume rm "${IMAGE_NAME}-vscode" "${IMAGE_NAME}-config" 2>/dev/null || true
+            $runtime volume rm "${IMAGE_NAME}-hawker" "${IMAGE_NAME}-vscode" "${IMAGE_NAME}-config" 2>/dev/null || true
             echo "done — run 'hawker-container start' to recreate"
         fi
         ;;
@@ -190,12 +196,12 @@ case "${1:-help}" in
         runtime=$(detect_runtime)
         if [ $# -ge 2 ]; then
             echo "==> Cleaning ${IMAGE_NAME} on $2..."
-            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache ${IMAGE_NAME}-vscode ${IMAGE_NAME}-config 2>/dev/null; \$rt rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
+            ssh "$2" "rt=\$(command -v podman || command -v docker); \$rt stop ${IMAGE_NAME} 2>/dev/null; \$rt rm ${IMAGE_NAME} 2>/dev/null; \$rt volume rm ${IMAGE_NAME}-hawker ${IMAGE_NAME}-repos ${IMAGE_NAME}-ccache ${IMAGE_NAME}-vscode ${IMAGE_NAME}-config 2>/dev/null; \$rt rmi ${IMAGE_NAME}:latest 2>/dev/null; echo done"
         else
             echo "==> Cleaning local $IMAGE_NAME..."
             $runtime stop "$IMAGE_NAME" 2>/dev/null || true
             $runtime rm "$IMAGE_NAME" 2>/dev/null || true
-            $runtime volume rm "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" "${IMAGE_NAME}-vscode" "${IMAGE_NAME}-config" 2>/dev/null || true
+            $runtime volume rm "${IMAGE_NAME}-hawker" "${IMAGE_NAME}-repos" "${IMAGE_NAME}-ccache" "${IMAGE_NAME}-vscode" "${IMAGE_NAME}-config" 2>/dev/null || true
             $runtime rmi "$IMAGE_NAME:latest" 2>/dev/null || true
             echo "done"
         fi
