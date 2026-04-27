@@ -149,9 +149,7 @@ case "${1:-help}" in
         ;;
 
     code)
-        local user
         user=$($NIX_CMD eval --raw "${FLAKE_REF}#nixosConfigurations.container.config.hawker.username" 2>/dev/null) || user="dev"
-        local hex
         hex=$(printf '%s' "$IMAGE_NAME" | xxd -p | tr -d '\n')
         echo "==> Opening VSCode attached to $IMAGE_NAME..."
         code --folder-uri "vscode-remote://attached-container+${hex}/home/${user}"
