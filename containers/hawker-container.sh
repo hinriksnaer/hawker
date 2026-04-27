@@ -30,6 +30,7 @@ start_container() {
     runtime=$(detect_runtime)
 
     $runtime rm -f "$IMAGE_NAME" 2>/dev/null || true
+    $runtime rmi -f "$IMAGE_NAME:latest" 2>/dev/null || true
 
     # Build and stream the layered image
     echo "==> Building container image..."
