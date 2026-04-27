@@ -88,9 +88,17 @@
       };
 
       # ── Home Manager ──
-      homeConfigurations.dev = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-        modules = [ ./home/default.nix ];
+      homeConfigurations = let
+        mkHome = hostname: home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [
+            (import ./home { inherit hostname settings; })
+          ];
+        };
+      in {
+        dev = mkHome "container";
+        # hawker = mkHome "desktop";     # future
+        # hgudmund = mkHome "laptop";    # future
       };
 
       # ── Packages ──

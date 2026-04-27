@@ -64,7 +64,7 @@ let
         # Bootstrap dotfiles (stow)
         $SETPRIV ${pkgs.bash}/bin/bash "$HAWKER/bootstrap.sh" || true
         # Apply Home Manager config
-        $SETPRIV ${pkgs.nix}/bin/nix run "$HAWKER#homeConfigurations.${username}.activationPackage" 2>/dev/null || true
+        $SETPRIV ${pkgs.nix}/bin/nix run "$HAWKER#homeConfigurations.''${USER}.activationPackage" 2>/dev/null || true
       fi
 
       # Phase 3: drop to dev, exec shell
