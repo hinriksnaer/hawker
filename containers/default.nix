@@ -72,9 +72,17 @@ github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAA
 HOSTS
   '';
 
+  # Wrap entrypoint in a directory so streamLayeredImage can include it
+  # (writeShellScript produces a single file, contents expects directories)
+  entrypointDir = pkgs.runCommand "entrypoint-dir" {} ''
+    mkdir -p $out/usr/local/bin
+    cp ${entrypoint} $out/usr/local/bin/container-init
+    chmod +x $out/usr/local/bin/container-init
+  '';
+
   # All content items for the image (shared with nixDb closure)
   allContents = packages
-    ++ [ homeDir etcDir vscode.localExtensions entrypoint usrBinEnv binSh ]
+    ++ [ homeDir etcDir vscode.localExtensions entrypointDir usrBinEnv binSh ]
     ++ pkgs.lib.optional (hmCli != null) hmCli;
 
   # Generate Nix database without gcroots symlinks.
@@ -122,7 +130,7 @@ pkgs.dockerTools.streamLayeredImage {
 
   config = {
     Labels = vscode.labels;
-    Entrypoint = [ "${entrypoint}" ];
+    Entrypoint = [ "/usr/local/bin/container-init" ];
     Env = [
       "LANG=en_US.UTF-8"
       "TERM=xterm-256color"
