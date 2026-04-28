@@ -91,7 +91,7 @@
       # ── Home Manager (standalone) ──
       homeConfigurations = let
         mkHome = hostname: home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
+          pkgs = pkgsUnfree;
           modules = [
             (import ./home { inherit hostname settings; })
           ];

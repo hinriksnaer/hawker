@@ -8,6 +8,5 @@
     ../modules/apps/proton-pass.nix
     ../modules/apps/slack.nix
     ../modules/apps/thunar.nix
-    ../modules/apps/vscode.nix
   ];
 }
