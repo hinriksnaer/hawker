@@ -9,10 +9,10 @@
 #   hawker-setup helion           # set up just helion
 set -euo pipefail
 
-# Must run inside the devshell (nix develop)
+# Must run inside the devshell (auto-activates via direnv in ~/workspace/repos)
 if [ -z "${IN_NIX_SHELL:-}" ]; then
     echo "Error: hawker-setup must be run inside the devshell" >&2
-    echo "  Run: nix develop ~/hawker" >&2
+    echo "  cd ~/workspace/repos   (direnv activates automatically)" >&2
     exit 1
 fi
 
