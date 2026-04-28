@@ -2,7 +2,7 @@
 # Replaces modules/core/fish.nix (NixOS) and dotfiles/fish/ (stow).
 # Shell integrations for starship, fzf, zoxide, lsd are handled
 # automatically by their respective HM modules in cli-tools.nix.
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 
 {
   programs.fish = {
@@ -20,6 +20,11 @@
       if test -d ~/.nix-profile/share/terminfo
         set -gx TERMINFO_DIRS "$HOME/.nix-profile/share/terminfo:$TERMINFO_DIRS"
       end
+
+      # HM session variables (fish-native, avoids POSIX sourcing issues)
+      ${lib.concatStringsSep "\n      " (lib.mapAttrsToList (k: v:
+        "set -gx ${k} ${lib.escapeShellArg (toString v)}"
+      ) config.home.sessionVariables)}
     '';
 
     interactiveShellInit = ''
@@ -51,7 +56,6 @@
   programs.bash.initExtra = ''
     [ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ] && . "$HOME/.nix-profile/etc/profile.d/nix.sh"
     [ -f "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh" ] && . "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
-    [ -f "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ] && . "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
     exec fish
   '';
 
