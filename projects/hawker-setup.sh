@@ -9,6 +9,13 @@
 #   hawker-setup helion           # set up just helion
 set -euo pipefail
 
+# Must run inside the devshell (nix develop)
+if [ -z "${IN_NIX_SHELL:-}" ]; then
+    echo "Error: hawker-setup must be run inside the devshell" >&2
+    echo "  Run: nix develop ~/hawker" >&2
+    exit 1
+fi
+
 HAWKER_ROOT="${HAWKER_ROOT:-$HOME/workspace/hawker}"
 
 if [ ! -d "$HAWKER_ROOT/.git" ]; then
