@@ -3,7 +3,7 @@
 * {
     bg-col:              #10141c;
     bg-col-light:        #141821;
-    border-col:          #e6b450;
+    border-col:          #ff6a1f;
     selected-col:        #141821;
     blue:                #59c2ff;
     fg-col:              #bfbdb6;
