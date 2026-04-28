@@ -18,6 +18,8 @@ in
       # ── Environment ──
       env = [
         "HAWKER_PATH,$HOME/.local/share/hawker"
+      ] ++ lib.optionals isDesktop [
+        "SSH_AUTH_SOCK,$HOME/.ssh/proton-pass-agent.sock"
       ];
 
       # ── Monitors ──
@@ -165,6 +167,14 @@ in
       exec-once = [
         "dbus-update-activation-environment --systemd --all"
         "nm-applet"
+        "waybar"
+        "mako"
+        "wl-paste --watch cliphist store"
+        "swaybg -i $HOME/.config/hypr/wallpapers/current -m fill"
+        "sleep 2 && hawker-theme-refresh 2>/dev/null || true"
+      ] ++ lib.optionals isDesktop [
+        # Proton Pass SSH agent (desktop only)
+        "bash -c 'nohup pass-cli ssh-agent start > /tmp/proton-pass-agent.log 2>&1 &'"
       ];
 
       # ── Keybinds ──
@@ -179,6 +189,8 @@ in
         "$mainMod SHIFT, Return, togglespecialworkspace, emergency"
         "$mainMod, B, exec, firefox"
         "$mainMod, E, exec, kitty -e yazi"
+        "$mainMod, Space, exec, rofi -show drun"
+        "$mainMod, Escape, exec, hyprlock"
 
         # Window management
         "$mainMod, Q, killactive,"
@@ -258,6 +270,33 @@ in
 
         # Keyboard layout
         "$mainMod CTRL, Space, exec, hyprctl switchxkblayout all next"
+
+        # Clipboard
+        ''$mainMod, C, exec, cliphist list | rofi -dmenu -p "Clipboard" | cliphist decode | wl-copy''
+
+        # Screenshots
+        ", Print, exec, grim -g \"$(slurp)\" - | wl-copy"
+        "$mainMod, Print, exec, grim - | wl-copy"
+        "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | wl-copy"
+
+        # Theme
+        "$mainMod, T, exec, hawker-rofi-theme-select"
+        "$mainMod SHIFT, T, exec, hawker-theme-next"
+        "$mainMod, W, exec, hawker-rofi-wallpaper-select"
+        "$mainMod SHIFT, W, exec, hawker-wallpaper-next"
+
+        # Brightness
+        ", XF86MonBrightnessUp, exec, brightness-control up"
+        ", XF86MonBrightnessDown, exec, brightness-control down"
+
+        # Volume / Media
+        ", XF86AudioRaiseVolume, exec, volume-control up"
+        ", XF86AudioLowerVolume, exec, volume-control down"
+        ", XF86AudioMute, exec, volume-control mute"
+        ", XF86AudioPlay, exec, playerctl play-pause"
+        ", XF86AudioPause, exec, playerctl play-pause"
+        ", XF86AudioNext, exec, playerctl next"
+        ", XF86AudioPrev, exec, playerctl previous"
       ];
 
       bindm = [
