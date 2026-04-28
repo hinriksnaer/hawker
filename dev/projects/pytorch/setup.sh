@@ -66,7 +66,7 @@ ln -sf "$(command -v cmake)" "$VENV/bin/cmake3"
 # Build and install PyTorch in editable mode (upstream recommended method)
 echo "==> Installing PyTorch in editable mode (compiles from source)..."
 echo "    MAX_JOBS=${MAX_JOBS:-auto}, TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST:-auto}"
-echo "    CMAKE=${CMAKE}"
+echo "    cmake: $(command -v cmake)"
 echo "    ccache: ${CMAKE_CXX_COMPILER_LAUNCHER:-none}"
 python -m pip install --no-build-isolation -v -e .
 
