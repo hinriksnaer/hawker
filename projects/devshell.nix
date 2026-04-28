@@ -147,6 +147,8 @@ pkgs.mkShell {
     # Activate shared venv if it exists
     if [ -f "${venv}/bin/activate" ]; then
       source "${venv}/bin/activate"
+      # Ensure debugpy is available for neovim DAP
+      python -c "import debugpy" 2>/dev/null || uv pip install debugpy -q
     fi
   '';
 }
