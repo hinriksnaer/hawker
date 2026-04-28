@@ -161,7 +161,7 @@ in
         {
           name = "suppress-maximize";
           "match:class" = ".*";
-          suppressevent = "maximize";
+          suppress = "maximize";
         }
       ];
 
