@@ -10,7 +10,7 @@
     baseIndex = 1;
     escapeTime = 0;
     historyLimit = 50000;
-    terminal = "xterm-256color";
+    terminal = "tmux-256color";
 
     plugins = with pkgs.tmuxPlugins; [
       sensible
