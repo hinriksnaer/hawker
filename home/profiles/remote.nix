@@ -11,6 +11,7 @@ in
 {
   imports = [
     ../collections/terminal.nix
+    ../modules/desktop/vscode.nix
   ];
 
   home.username = username;
