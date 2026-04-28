@@ -10,7 +10,7 @@
     ../modules/desktop/waybar.nix
     ../modules/desktop/rofi.nix
     ../modules/desktop/hyprlock.nix
-    ../modules/desktop/vscode.nix
+    ../modules/desktop/apps.nix
     ../modules/desktop/theme-hooks.nix
   ];
 }
