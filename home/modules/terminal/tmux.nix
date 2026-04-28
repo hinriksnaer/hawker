@@ -32,7 +32,7 @@
 
     extraConfig = ''
       set -g focus-events on
-      set-option -sa terminal-overrides ",xterm*:Tc"
+      set-option -sa terminal-overrides ",xterm*:Tc,tmux*:Tc"
 
       # Vim style pane selection
       bind h select-pane -L

@@ -30,6 +30,9 @@
   programs.ripgrep.enable = true;
   programs.fd.enable = true;
 
+  # Kitty terminfo for SSH sessions from kitty terminal
+  home.packages = with pkgs; [ kitty.terminfo ];
+
   # Man pager via bat
   home.sessionVariables = {
     MANPAGER = "sh -c 'col -bx | bat -l man -p'";
