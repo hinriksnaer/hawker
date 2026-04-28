@@ -26,4 +26,18 @@ in
   ];
 
   home.sessionVariables.HAWKER_PATH = hawkerPath;
+
+  # Deploy themes to ~/.local/share/hawker/themes/
+  xdg.dataFile."hawker/themes" = {
+    source = ../../../dotfiles/themes;
+    recursive = true;
+  };
+
+  # Ensure runtime config directory exists with a default theme
+  home.activation.hawkerConfig = config.lib.dag.entryAfter [ "linkGeneration" ] ''
+    mkdir -p "$HOME/.config/hawker"
+    if [ ! -f "$HOME/.config/hawker/current-theme" ]; then
+      echo "ayu-dark" > "$HOME/.config/hawker/current-theme"
+    fi
+  '';
 }
