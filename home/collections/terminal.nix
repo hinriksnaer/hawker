@@ -13,6 +13,8 @@
     ../modules/terminal/neovim.nix
     ../modules/terminal/theme.nix
     ../modules/terminal/opencode.nix
-    # ../modules/terminal/btop.nix     # add when ready
+    ../modules/terminal/btop.nix
+    ../modules/terminal/lazygit.nix
+    ../modules/terminal/yazi.nix
   ];
 }
