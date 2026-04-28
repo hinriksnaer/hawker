@@ -16,6 +16,10 @@
       if test -d /nix/var/nix/profiles/default/bin
         fish_add_path --prepend /nix/var/nix/profiles/default/bin
       end
+      # Terminfo from HM profile (kitty terminfo for SSH sessions)
+      if test -d ~/.nix-profile/share/terminfo
+        set -gx TERMINFO_DIRS "$HOME/.nix-profile/share/terminfo:$TERMINFO_DIRS"
+      end
     '';
 
     interactiveShellInit = ''
