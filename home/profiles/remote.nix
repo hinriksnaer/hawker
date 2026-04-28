@@ -14,8 +14,9 @@ in
   home.homeDirectory = "/home/${username}";
   home.stateVersion = "24.11";
 
-  # hawker-setup command -- sets up project workspaces
+  # hawker commands
   home.packages = [
     (pkgs.writeShellScriptBin "hawker-setup" (builtins.readFile ../../projects/hawker-setup.sh))
+    (pkgs.writeShellScriptBin "hawker-refresh" (builtins.readFile ../../projects/hawker-refresh.sh))
   ];
 }
