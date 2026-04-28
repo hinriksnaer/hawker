@@ -10,6 +10,16 @@
 set -euo pipefail
 
 HAWKER_ROOT="${HAWKER_ROOT:-$HOME/workspace/hawker}"
+
+if [ ! -d "$HAWKER_ROOT/.git" ]; then
+    if [ -d "$HOME/hawker/.git" ]; then
+        HAWKER_ROOT="$HOME/hawker"
+    else
+        echo "Error: hawker repo not found" >&2
+        exit 1
+    fi
+fi
+
 REPOS="${HAWKER_REPOS:-$HOME/workspace/repos}"
 
 export HAWKER_ROOT REPOS
