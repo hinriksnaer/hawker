@@ -133,27 +133,33 @@ in
       # ── Window rules ──
       windowrule = [
         {
+          name = "file-dialogs";
           "match:title" = "^(Open File|Save File|Open Folder)$";
           float = true;
         }
         {
+          name = "floating-utils";
           "match:class" = "^(pavucontrol|nm-connection-editor|blueman-manager|mpv|polkit-gnome-authentication-agent-1)$";
           float = true;
         }
         {
+          name = "pip";
           "match:title" = "^(Picture-in-Picture)$";
           float = true;
           pin = true;
         }
         {
+          name = "kitty-opacity";
           "match:class" = "^(kitty)$";
           opacity = "0.95 0.85";
         }
         {
+          name = "comms-workspace";
           "match:class" = "^(discord|Slack)$";
           workspace = 3;
         }
         {
+          name = "suppress-maximize";
           "match:class" = ".*";
           suppressevent = "maximize";
         }
