@@ -272,6 +272,19 @@ in
     '';
   };
 
+  # XDG portal -- route interfaces to the correct backend
+  xdg.portal = {
+    enable = true;
+    config = {
+      hyprland = {
+        default = [ "hyprland" "gtk" ];
+      };
+      common = {
+        default = [ "gtk" ];
+      };
+    };
+  };
+
   # Reload Hyprland after HM deploys a new config
   home.activation.hyprlandReload = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     if command -v hyprctl &>/dev/null && hyprctl monitors &>/dev/null 2>&1; then
