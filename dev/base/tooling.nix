@@ -8,6 +8,7 @@
     python3
     python3Packages.pip
     python3Packages.virtualenv
+    python3Packages.debugpy  # DAP adapter for neovim
     uv
 
     # Build tools
