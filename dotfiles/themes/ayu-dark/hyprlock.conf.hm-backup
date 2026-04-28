@@ -1,6 +1,0 @@
-$color = rgba(16, 20, 28, 1.0)
-$inner_color = rgba(16, 20, 28, 1.0)
-$outer_color = rgba(191, 189, 182, 1.0)
-$font_color = rgba(191, 189, 182, 1.0)
-$check_color = rgba(255, 143, 64, 1.0)
-$fail_color = rgba(240, 113, 120, 1.0)

@@ -1,5 +1,0 @@
-$color = rgba(15,16,22,1.0)
-$inner_color = rgba(21,24,35,0.8)
-$outer_color = rgba(27,197,201,0.92)
-$font_color = rgba(226,230,241,1.0)
-$check_color = rgba(97,205,112,0.9)
