@@ -1,0 +1,195 @@
+# Waybar status bar.
+# Theme CSS loaded at runtime via @import (swapped by hawker-theme-set).
+{ ... }:
+
+{
+  programs.waybar = {
+    enable = true;
+
+    settings.mainBar = {
+      reload_style_on_change = true;
+      layer = "top";
+      position = "top";
+      spacing = 0;
+      height = 26;
+
+      modules-left = [ "custom/hawker" "hyprland/workspaces" ];
+      modules-center = [ "clock" ];
+      modules-right = [
+        "group/hardware-cpu"
+        "group/hardware-gpu"
+        "group/hardware-ram"
+        "group/tray-expander"
+        "bluetooth"
+        "network"
+        "backlight"
+        "pulseaudio"
+        "battery"
+        "custom/power"
+      ];
+
+      "hyprland/workspaces" = {
+        on-click = "activate";
+        format = "{icon}";
+        format-icons = {
+          default = "";
+          "1" = "1"; "2" = "2"; "3" = "3"; "4" = "4"; "5" = "5";
+          "6" = "6"; "7" = "7"; "8" = "8"; "9" = "9";
+          active = "󱓻";
+        };
+        persistent-workspaces = {
+          "1" = []; "2" = []; "3" = []; "4" = []; "5" = [];
+        };
+      };
+
+      "custom/hawker" = {
+        format = "";
+        on-click = "rofi -show drun";
+        on-click-right = "kitty";
+        tooltip-format = "Hawker Menu\n\nSuper + Space";
+      };
+
+      clock = {
+        format = "{:L%d %A %H:%M}";
+        format-alt = "{:L%d %B W%V %Y}";
+        tooltip = false;
+      };
+
+      network = {
+        format-icons = [ "󰤯" "󰤟" "󰤢" "󰤥" "󰤨" ];
+        format = "{icon}";
+        format-wifi = "{icon}";
+        format-ethernet = "󰀂";
+        format-disconnected = "󰤮";
+        tooltip-format-wifi = "{essid} ({frequency} GHz)\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}";
+        tooltip-format-ethernet = "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}";
+        tooltip-format-disconnected = "Disconnected";
+        interval = 3;
+        spacing = 1;
+        on-click = "nm-connection-editor";
+      };
+
+      battery = {
+        format = "{capacity}% {icon}";
+        format-discharging = "{capacity}% {icon}";
+        format-charging = "{capacity}% {icon}";
+        format-plugged = "{capacity}% ";
+        format-icons = {
+          charging = [ "󰢜" "󰂆" "󰂇" "󰂈" "󰢝" "󰂉" "󰢞" "󰂊" "󰂋" "󰂅" ];
+          default = [ "󰁺" "󰁻" "󰁼" "󰁽" "󰁾" "󰁿" "󰂀" "󰂁" "󰂂" "󰁹" ];
+        };
+        format-full = "󰂅";
+        tooltip-format-discharging = "{power:>1.0f}W↓ {capacity}%";
+        tooltip-format-charging = "{power:>1.0f}W↑ {capacity}%";
+        interval = 5;
+        states = { warning = 20; critical = 10; };
+      };
+
+      bluetooth = {
+        format = "";
+        format-disabled = "󰂲";
+        format-connected = "";
+        tooltip-format = "Devices connected: {num_connections}";
+        on-click = "blueman-manager";
+      };
+
+      backlight = {
+        format = "{icon}";
+        format-icons = [ "" "" "" "" "" "" "" "" "" ];
+        tooltip-format = "Brightness {percent}%";
+        scroll-step = 5;
+        on-scroll-up = "brightness-control up";
+        on-scroll-down = "brightness-control down";
+      };
+
+      pulseaudio = {
+        format = "{icon}";
+        on-click = "pavucontrol";
+        on-click-right = "pamixer -t";
+        tooltip-format = "Playing at {volume}%";
+        scroll-step = 5;
+        format-muted = "";
+        format-icons.default = [ "" "" "" ];
+      };
+
+      "group/tray-expander" = {
+        orientation = "inherit";
+        drawer = {
+          transition-duration = 500;
+          children-class = "tray-group-item";
+          transition-left-to-right = false;
+        };
+        modules = [ "custom/expand-icon" "tray" ];
+      };
+
+      "custom/expand-icon" = { format = "󰕰"; tooltip = false; };
+
+      tray = { icon-size = 12; spacing = 17; };
+
+      # CPU hardware group
+      "group/hardware-cpu" = {
+        orientation = "inherit";
+        modules = [ "custom/cpu-icon" "cpu" "temperature" ];
+      };
+      "custom/cpu-icon" = { format = "󰍛"; tooltip = false; };
+      cpu = {
+        interval = 2;
+        format = "{usage}%";
+        tooltip-format = "CPU Usage: {usage}%\nLoad: {load}";
+        on-click = "kitty btop";
+      };
+      temperature = {
+        interval = 2;
+        hwmon-path = "/sys/class/hwmon/hwmon3/temp1_input";
+        critical-threshold = 75;
+        format = "{temperatureC}°";
+        format-critical = " {temperatureC}°";
+        tooltip-format = "CPU Temp: {temperatureC}°C";
+        on-click = "kitty btop";
+      };
+
+      # GPU hardware group
+      "group/hardware-gpu" = {
+        orientation = "inherit";
+        modules = [ "custom/gpu-icon" "custom/gpu-usage" "custom/gpu-temp" ];
+      };
+      "custom/gpu-icon" = { format = "󰢮"; tooltip = false; };
+      "custom/gpu-usage" = {
+        exec = "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | head -n 1";
+        interval = 2;
+        format = "{}%";
+        tooltip-format = "GPU Usage";
+        on-click = "kitty btop";
+      };
+      "custom/gpu-temp" = {
+        exec = "nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits | head -n 1";
+        interval = 2;
+        format = "{}°";
+        tooltip-format = "GPU Temperature";
+        on-click = "kitty btop";
+      };
+
+      # RAM hardware group
+      "group/hardware-ram" = {
+        orientation = "inherit";
+        modules = [ "custom/ram-icon" "memory" ];
+      };
+      "custom/ram-icon" = { format = "󰘚"; tooltip = false; };
+      memory = {
+        interval = 2;
+        format = "{percentage}%";
+        tooltip-format = "RAM: {used:0.1f}G / {total:0.1f}G ({percentage}%)";
+        on-click = "kitty btop";
+      };
+
+      "custom/power" = {
+        format = "⏻";
+        tooltip-format = "Power Menu";
+        on-click = "power-menu";
+      };
+    };
+
+    # Theme CSS imported at runtime (symlinked by hawker-theme-set)
+    style = builtins.readFile ../../../dotfiles/waybar/.config/waybar/style.css;
+  };
+}

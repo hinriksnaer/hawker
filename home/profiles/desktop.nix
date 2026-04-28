@@ -7,7 +7,7 @@ in
 {
   imports = [
     ../collections/terminal.nix
-    # ../collections/desktop.nix     # add when desktop modules exist
+    ../collections/desktop.nix
   ];
 
   home.username = username;
