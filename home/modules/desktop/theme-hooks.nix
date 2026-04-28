@@ -37,12 +37,12 @@
 
   # Create empty theme include files so apps don't error before first theme-set
   home.activation.desktopThemeFiles = config.lib.dag.entryAfter [ "linkGeneration" ] ''
-    touch "$HOME/.config/kitty/theme.conf"
-    touch "$HOME/.config/rofi/theme.rasi"
-    touch "$HOME/.config/waybar/theme.css"
     mkdir -p "$HOME/.config/hypr/wallpapers"
-    touch "$HOME/.config/hypr/active-theme.conf"
-    touch "$HOME/.config/hypr/hyprlock-theme.conf"
-    touch "$HOME/.config/mako/theme.conf"
+    [ -e "$HOME/.config/kitty/theme.conf" ]         || touch "$HOME/.config/kitty/theme.conf"
+    [ -e "$HOME/.config/rofi/theme.rasi" ]           || touch "$HOME/.config/rofi/theme.rasi"
+    [ -e "$HOME/.config/waybar/theme.css" ]          || touch "$HOME/.config/waybar/theme.css"
+    [ -e "$HOME/.config/hypr/active-theme.conf" ]    || touch "$HOME/.config/hypr/active-theme.conf"
+    [ -e "$HOME/.config/hypr/hyprlock-theme.conf" ]  || touch "$HOME/.config/hypr/hyprlock-theme.conf"
+    [ -e "$HOME/.config/mako/theme.conf" ]           || touch "$HOME/.config/mako/theme.conf"
   '';
 }
