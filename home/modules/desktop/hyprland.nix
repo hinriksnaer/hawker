@@ -1,7 +1,7 @@
 # Hyprland window manager configuration.
 # Theme colors loaded at runtime via source (swapped by hawker-theme-set).
 # Per-host settings (monitor, layout) come from the profile via _module.args.
-{ config, settings, hostname, ... }:
+{ config, lib, settings, hostname, ... }:
 
 let
   hostSettings = settings.hosts.${hostname};
@@ -269,4 +269,11 @@ in
       source = ~/.config/hypr/active-theme.conf
     '';
   };
+
+  # Reload Hyprland after HM deploys a new config
+  home.activation.hyprlandReload = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    if command -v hyprctl &>/dev/null && hyprctl monitors &>/dev/null 2>&1; then
+      hyprctl reload &>/dev/null || true
+    fi
+  '';
 }
