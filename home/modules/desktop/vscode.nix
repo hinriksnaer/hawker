@@ -23,11 +23,12 @@
 
         # Theme
         teabyii.ayu
+        pkief.material-icon-theme
       ];
 
       userSettings = {
         "workbench.colorTheme" = "Ayu Dark";
-        "workbench.iconTheme" = "ayu";
+        "workbench.iconTheme" = "material-icon-theme";
       };
     };
   };
