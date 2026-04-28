@@ -132,13 +132,31 @@ in
 
       # ── Window rules ──
       windowrule = [
-        "float, title:^(Open File|Save File|Open Folder)$"
-        "float, class:^(pavucontrol|nm-connection-editor|blueman-manager|mpv|polkit-gnome-authentication-agent-1)$"
-        "float, title:^(Picture-in-Picture)$"
-        "pin, title:^(Picture-in-Picture)$"
-        "opacity 0.95 0.85, class:^(kitty)$"
-        "workspace 3, class:^(discord|Slack)$"
-        "suppressevent maximize, class:.*"
+        {
+          "match:title" = "^(Open File|Save File|Open Folder)$";
+          float = true;
+        }
+        {
+          "match:class" = "^(pavucontrol|nm-connection-editor|blueman-manager|mpv|polkit-gnome-authentication-agent-1)$";
+          float = true;
+        }
+        {
+          "match:title" = "^(Picture-in-Picture)$";
+          float = true;
+          pin = true;
+        }
+        {
+          "match:class" = "^(kitty)$";
+          opacity = "0.95 0.85";
+        }
+        {
+          "match:class" = "^(discord|Slack)$";
+          workspace = 3;
+        }
+        {
+          "match:class" = ".*";
+          suppressevent = "maximize";
+        }
       ];
 
       # ── Autostart ──
