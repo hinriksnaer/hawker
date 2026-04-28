@@ -101,8 +101,16 @@ pkgs.mkShell {
     export CPATH="${cudaToolkit}/include:${cudnn.include}/include"
     ${pkgs.lib.optionalString (cudaVisibleDevices != "") ''export CUDA_VISIBLE_DEVICES="${cudaVisibleDevices}"''}
 
+    # Host NVIDIA driver libs (filtered -- adding /usr/lib64 directly would
+    # expose the host's glibc which conflicts with Nix-built binaries)
+    _NVIDIA_LIBS="$HOME/.cache/hawker/nvidia-driver-libs"
+    mkdir -p "$_NVIDIA_LIBS"
+    for _lib in /usr/lib64/libcuda.so* /usr/lib64/libnvidia*.so* /usr/lib64/libnvcuvid*.so*; do
+      [ -e "$_lib" ] && ln -sf "$_lib" "$_NVIDIA_LIBS/" 2>/dev/null
+    done
+
     # Runtime libraries: Nix libstdc++ + CUDA/cuDNN + host NVIDIA drivers
-    export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${cudaToolkit}/lib:${cudnn.lib}/lib:/usr/lib64''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${cudaToolkit}/lib:${cudnn.lib}/lib:$_NVIDIA_LIBS''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
     # PyTorch build flags
     export USE_CUDA=1
