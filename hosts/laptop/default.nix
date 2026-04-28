@@ -10,7 +10,6 @@ in
     ../../roles/desktop.nix
     ../../roles/hardware.nix
     ../../roles/apps.nix
-    ../../roles/gaming.nix
   ];
 
   hawker.username = hostSettings.username;
