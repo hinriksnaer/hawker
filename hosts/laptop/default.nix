@@ -14,7 +14,6 @@ in
 
   hawker.username = hostSettings.username;
   hawker.gpu = hostSettings.gpu;
-  hawker.hyprlandHostConfig = ./hyprland.conf;
 
   networking.hostName = "hawker-laptop";
 }

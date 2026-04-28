@@ -1,13 +1,6 @@
 { pkgs, config, lib, ... }:
 
 {
-  options.hawker.hyprlandHostConfig = lib.mkOption {
-    type = lib.types.nullOr lib.types.path;
-    default = null;
-    description = "Path to a per-host Hyprland config override file (layout, monitors, cursor).";
-  };
-
-  config = {
     # Hyprland compositor with UWSM for proper systemd session management
     # See: https://wiki.nixos.org/wiki/Hyprland
     programs.hyprland = {
@@ -62,20 +55,4 @@
       ELECTRON_OZONE_PLATFORM_HINT = "auto";
       _JAVA_AWT_WM_NONREPARENTING = "1";
     };
-
-    # Deploy per-host Hyprland overrides (layout, monitors, cursor)
-    system.activationScripts.hyprlandHostConfig = lib.mkIf (config.hawker.hyprlandHostConfig != null) {
-      deps = [ "users" "groups" ];
-      text = let
-        username = config.hawker.username;
-        hostConfig = config.hawker.hyprlandHostConfig;
-      in ''
-        HYPR_DIR="/home/${username}/.config/hypr/conf.d"
-        mkdir -p "$HYPR_DIR"
-        rm -f "$HYPR_DIR/host.conf"
-        cp "${hostConfig}" "$HYPR_DIR/host.conf"
-        chown ${username}:users "$HYPR_DIR/host.conf"
-      '';
-    };
-  };
 }
