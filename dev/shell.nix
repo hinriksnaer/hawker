@@ -28,15 +28,18 @@ let
   cudaBase = import ./base/cuda.nix    { inherit pkgs; };
 
   # ── Per-project modules (imported only when enabled) ──
+  # Build order matters: pytorch first (provides torch), then downstream.
+  projectOrder = [ "pytorch" "helion" "vllm" ];
+
   projectModules = {
-    pytorch = import ./projects/pytorch.nix { inherit pkgs; config = projectSettings.pytorch or {}; };
-    helion  = import ./projects/helion.nix  { inherit pkgs; config = projectSettings.helion or {}; };
-    vllm    = import ./projects/vllm.nix    { inherit pkgs; config = projectSettings.vllm or {}; };
+    pytorch = import ./projects/pytorch { inherit pkgs; config = projectSettings.pytorch or {}; };
+    helion  = import ./projects/helion  { inherit pkgs; config = projectSettings.helion or {}; };
+    vllm    = import ./projects/vllm    { inherit pkgs; config = projectSettings.vllm or {}; };
   };
 
   enabledNames = builtins.filter (name:
     (projectSettings.${name} or {}).enable or false
-  ) (builtins.attrNames projectModules);
+  ) projectOrder;
 
   enabledModules = map (name: projectModules.${name}) enabledNames;
 

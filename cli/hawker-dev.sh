@@ -1,5 +1,8 @@
 # hawker-dev -- CLI for managing the hawker development environment.
 # Must be run inside the nix develop shell.
+#
+# Build logic lives in dev/projects/<name>/setup.sh -- this CLI
+# just orchestrates them in the correct order.
 
 REPOS="$HOME/workspace/repos"
 VENV="$REPOS/.venv"
@@ -24,14 +27,24 @@ enabled_projects() {
 }
 
 resolve_projects() {
-  # If specific projects given, validate them. Otherwise use all enabled.
+  # If specific projects given, validate and return in build order.
+  # Otherwise return all enabled (already in build order from Nix).
   if [[ $# -gt 0 ]]; then
-    for p in "$@"; do
-      if ! enabled_projects | grep -qx "$p"; then
-        error "project '$p' is not enabled. Enabled: ${HAWKER_ENABLED_PROJECTS:-none}"
+    local ordered=""
+    for p in $(enabled_projects); do
+      for req in "$@"; do
+        if [[ "$p" == "$req" ]]; then
+          ordered+="$p"$'\n'
+        fi
+      done
+    done
+    # Validate all requested projects were found
+    for req in "$@"; do
+      if ! echo "$ordered" | grep -qx "$req"; then
+        error "project '$req' is not enabled. Enabled: ${HAWKER_ENABLED_PROJECTS:-none}"
       fi
     done
-    echo "$@" | tr ' ' '\n'
+    echo "$ordered" | grep -v '^$'
   else
     enabled_projects
   fi
@@ -39,81 +52,19 @@ resolve_projects() {
 
 # ── Commands ──
 
-cmd_setup() {
-  local projects
-  projects=$(resolve_projects "$@")
-
-  # Create shared venv if it doesn't exist
-  if [[ ! -d "$VENV" ]]; then
-    info "creating shared venv at $VENV"
-    python -m venv "$VENV"
-  fi
-  source "$VENV/bin/activate"
-
-  for project in $projects; do
-    local repo dir branch
-    repo=$(get_repo "$project")
-    branch=$(get_branch "$project")
-    dir="$REPOS/$project"
-
-    if [[ -z "$repo" ]]; then
-      warn "no repo configured for $project, skipping"
-      continue
-    fi
-
-    if [[ -d "$dir" ]]; then
-      info "$project: already cloned at $dir"
-    else
-      info "$project: cloning $repo ($branch)"
-      git clone --branch "$branch" --recurse-submodules "$repo" "$dir"
-    fi
-  done
-
-  info "setup complete"
-}
-
 cmd_build() {
   local projects
   projects=$(resolve_projects "$@")
 
-  if [[ ! -d "$VENV" ]]; then
-    error "venv not found. Run 'hawker-dev setup' first."
-  fi
-  source "$VENV/bin/activate"
-
   for project in $projects; do
-    local dir="$REPOS/$project"
-    if [[ ! -d "$dir" ]]; then
-      error "$project: not cloned. Run 'hawker-dev setup $project' first."
+    local setup="$HAWKER_ROOT/dev/projects/${project}/setup.sh"
+
+    if [[ ! -f "$setup" ]]; then
+      error "$project: no setup script found at $setup"
     fi
 
-    info "$project: building"
-    case "$project" in
-      pytorch)
-        info "$project: pip install (editable, from source)"
-        pip install -e "$dir" 2>&1 | tail -1
-        ;;
-      helion)
-        local torch_index="$HELION_TORCH_INDEX"
-        local extras="${HELION_PIP_EXTRAS:-}"
-        info "$project: installing torch from --extra-index-url https://download.pytorch.org/whl/$torch_index"
-        pip install torch --extra-index-url "https://download.pytorch.org/whl/$torch_index" 2>&1 | tail -1
-        info "$project: pip install (editable${extras:+, extras: $extras})"
-        pip install -e "${dir}${extras}" 2>&1 | tail -1
-        ;;
-      vllm)
-        local torch_index="$VLLM_TORCH_INDEX"
-        info "$project: installing torch from --extra-index-url https://download.pytorch.org/whl/$torch_index"
-        pip install torch --extra-index-url "https://download.pytorch.org/whl/$torch_index" 2>&1 | tail -1
-        info "$project: pip install (editable)"
-        pip install -e "$dir" 2>&1 | tail -1
-        ;;
-      *)
-        warn "$project: no build recipe, attempting generic pip install -e"
-        pip install -e "$dir" 2>&1 | tail -1
-        ;;
-    esac
-    info "$project: done"
+    info "$project: running setup"
+    bash "$setup"
   done
 }
 
@@ -127,7 +78,7 @@ cmd_update() {
     branch=$(get_branch "$project")
 
     if [[ ! -d "$dir" ]]; then
-      warn "$project: not cloned, skipping (run 'hawker-dev setup' first)"
+      warn "$project: not cloned, skipping (run 'hawker-dev build' first)"
       continue
     fi
 
@@ -142,31 +93,35 @@ cmd_update() {
 cmd_status() {
   local all_projects="pytorch helion vllm"
 
-  printf "%-12s %-8s %-8s %-10s %s\n" "PROJECT" "ENABLED" "CLONED" "BRANCH" "REPO"
-  printf "%-12s %-8s %-8s %-10s %s\n" "-------" "-------" "------" "------" "----"
+  printf "%-12s %-8s %-8s %-10s %s\n" "PROJECT" "ENABLED" "BUILT" "BRANCH" "REPO"
+  printf "%-12s %-8s %-8s %-10s %s\n" "-------" "-------" "-----" "------" "----"
 
   for project in $all_projects; do
-    local enabled="no" cloned="no" branch repo dir
+    local enabled="no" built="no" branch repo dir marker
     repo=$(get_repo "$project")
     branch=$(get_branch "$project")
     dir="$REPOS/$project"
+    marker="$REPOS/.${project}-setup-done"
 
     if enabled_projects | grep -qx "$project" 2>/dev/null; then
       enabled="yes"
     fi
-    if [[ -d "$dir/.git" ]]; then
-      cloned="yes"
+    if [[ -f "$marker" ]]; then
+      built="yes"
+      branch=$(git -C "$dir" branch --show-current 2>/dev/null || echo "$branch")
+    elif [[ -d "$dir/.git" ]]; then
+      built="cloned"
       branch=$(git -C "$dir" branch --show-current 2>/dev/null || echo "$branch")
     fi
 
-    printf "%-12s %-8s %-8s %-10s %s\n" "$project" "$enabled" "$cloned" "${branch:-—}" "${repo:-—}"
+    printf "%-12s %-8s %-8s %-10s %s\n" "$project" "$enabled" "$built" "${branch:-—}" "${repo:-—}"
   done
 
   echo ""
   if [[ -d "$VENV" ]]; then
     info "venv: $VENV"
   else
-    info "venv: not created (run 'hawker-dev setup')"
+    info "venv: not created (run 'hawker-dev build')"
   fi
 }
 
@@ -176,11 +131,18 @@ cmd_clean() {
 
   for project in $projects; do
     local dir="$REPOS/$project"
+    local marker="$REPOS/.${project}-setup-done"
+
     if [[ -d "$dir" ]]; then
       info "$project: removing $dir"
       rm -rf "$dir"
-    else
-      info "$project: not cloned, nothing to clean"
+    fi
+    if [[ -f "$marker" ]]; then
+      rm -f "$marker"
+    fi
+
+    if [[ ! -d "$dir" && ! -f "$marker" ]]; then
+      info "$project: nothing to clean"
     fi
   done
 
@@ -196,27 +158,27 @@ usage() {
 Usage: hawker-dev <command> [projects...]
 
 Commands:
-  setup   Clone repos and create shared venv for enabled projects
-  build   Build and install projects into the shared venv
-  status  Show state of all projects
+  build   Clone, build, and install projects from source (idempotent)
+  status  Show state of all projects (enabled, built, branch)
   update  Pull latest changes for project repos
-  clean   Remove project repos (and venv if no projects specified)
+  clean   Remove project repos and build markers (and venv if no projects specified)
 
-Projects default to all enabled projects if none are specified.
+Projects are built in dependency order (pytorch first, then downstream).
+If no projects are specified, all enabled projects are built/updated/cleaned.
 Enabled projects: ${HAWKER_ENABLED_PROJECTS:-none}
 
 Examples:
-  hawker-dev setup                 # set up all enabled projects
+  hawker-dev build                 # build all enabled projects from source
   hawker-dev build pytorch         # build only pytorch
-  hawker-dev update helion vllm    # pull latest for helion and vllm
-  hawker-dev clean                 # remove everything (repos + venv)
-  hawker-dev clean pytorch         # remove only pytorch repo
+  hawker-dev status                # show project state
+  hawker-dev update helion         # pull latest for helion
+  hawker-dev clean                 # remove everything (repos + markers + venv)
+  hawker-dev clean pytorch         # remove only pytorch repo + marker
 EOF
 }
 
 # ── Main ──
 case "${1:-}" in
-  setup)  shift; cmd_setup "$@" ;;
   build)  shift; cmd_build "$@" ;;
   status) shift; cmd_status "$@" ;;
   update) shift; cmd_update "$@" ;;
