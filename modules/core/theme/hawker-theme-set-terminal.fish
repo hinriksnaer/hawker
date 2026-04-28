@@ -47,11 +47,14 @@ end
 # Loads the theme's neovim.lua from the themes directory via dofile().
 set nvim_source "$theme_path/neovim.lua"
 if test -f "$nvim_source"
-    # Escape the path for Lua string
     set escaped_path (string replace -a "'" "\\'" "$nvim_source")
-    for server in (nvim --server '' --remote-expr '' 2>/dev/null; nvim --server-list 2>/dev/null)
-        if test -n "$server"
-            nvim --server "$server" --remote-expr "luaeval(\"(function() local ok, spec = pcall(dofile, '$escaped_path'); if ok and spec then for _, s in ipairs(spec) do if s.config then s.config(nil, s.opts or {}) end end end end)()\")" 2>/dev/null
+    set lua_cmd "local ok, spec = pcall(dofile, '$escaped_path'); if ok and spec then for _, s in ipairs(spec) do if type(s) == 'table' and s.config then pcall(s.config, nil, s.opts or {}) end end end"
+
+    # Find neovim server sockets
+    set uid (id -u)
+    for sock in /run/user/$uid/nvim.*.0 /tmp/nvim*/0
+        if test -S "$sock"
+            nvim --server "$sock" --remote-send ":lua $lua_cmd<CR>" 2>/dev/null
         end
     end
     set applied_count (math $applied_count + 1)
