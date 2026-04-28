@@ -1,4 +1,4 @@
--- Neovim Configuration
+-- Neovim configuration
 -- Modular setup with lazy.nvim plugin manager
 
 -- Core configuration
