@@ -1,14 +1,1 @@
--- Hawker theme: ristretto
-return {
-  {
-    "loctvl842/monokai-pro.nvim",
-    priority = 1000,
-    lazy = false,
-    opts = {
-      colorscheme = "monokai-pro",
-    },
-    config = function()
-      vim.cmd.colorscheme("monokai-pro")
-    end,
-  },
-}
+/nix/store/7p4p486q6qgxq0q68q6n56ra14jw01qd-home-manager-files/.local/share/hawker/themes/ristretto/neovim.lua

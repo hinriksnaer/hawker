@@ -1,14 +1,1 @@
--- Hawker theme: nord
-return {
-  {
-    "EdenEast/nightfox.nvim",
-    priority = 1000,
-    lazy = false,
-    opts = {
-      colorscheme = "nordfox",
-    },
-    config = function()
-      vim.cmd.colorscheme("nordfox")
-    end,
-  },
-}
+/nix/store/7p4p486q6qgxq0q68q6n56ra14jw01qd-home-manager-files/.local/share/hawker/themes/nord/neovim.lua

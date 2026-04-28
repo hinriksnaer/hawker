@@ -1,15 +1,1 @@
--- Hawker theme: catppuccin
-return {
-  {
-    "catppuccin/nvim",
-    name = "catppuccin",
-    priority = 1000,
-    lazy = false,
-    opts = {
-      colorscheme = "catppuccin",
-    },
-    config = function()
-      vim.cmd.colorscheme("catppuccin")
-    end,
-  },
-}
+/nix/store/7p4p486q6qgxq0q68q6n56ra14jw01qd-home-manager-files/.local/share/hawker/themes/catppuccin/neovim.lua
