@@ -34,11 +34,6 @@
       # History
       set -g fish_history_size 10000
 
-      # Auto-activate shared venv if it exists
-      if test -f $HOME/workspace/repos/.venv/bin/activate.fish
-          source $HOME/workspace/repos/.venv/bin/activate.fish
-      end
-
       # Proton Pass SSH agent (desktop only, harmless elsewhere)
       if test -S $HOME/.ssh/proton-pass-agent.sock
           set -gx SSH_AUTH_SOCK $HOME/.ssh/proton-pass-agent.sock
