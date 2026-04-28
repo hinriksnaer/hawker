@@ -58,9 +58,14 @@ python -m pip install --group dev
 # which are properly configured for this environment
 python -m pip uninstall -y cmake ninja 2>/dev/null || true
 
+# Point PyTorch at the Nix-provided cmake (its cmake.py searches for
+# /usr/bin/cmake3 as a fallback which finds the host system's cmake)
+export CMAKE="$(command -v cmake)"
+
 # Build and install PyTorch in editable mode (upstream recommended method)
 echo "==> Installing PyTorch in editable mode (compiles from source)..."
 echo "    MAX_JOBS=${MAX_JOBS:-auto}, TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST:-auto}"
+echo "    CMAKE=${CMAKE}"
 echo "    ccache: ${CMAKE_CXX_COMPILER_LAUNCHER:-none}"
 python -m pip install --no-build-isolation -v -e .
 
