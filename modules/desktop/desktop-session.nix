@@ -31,6 +31,7 @@
 
     # Desktop utilities
     networkmanagerapplet  # nm-applet tray icon
+    libnotify             # notify-send (used by theme scripts, power-menu)
   ];
 
   # Default cursor theme fallback (XDG/X11 apps outside the compositor)
