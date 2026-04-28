@@ -158,11 +158,7 @@ in
           "match:class" = "^(discord|Slack)$";
           workspace = 3;
         }
-        {
-          name = "suppress-maximize";
-          "match:class" = ".*";
-          suppress = "maximize";
-        }
+
       ];
 
       # ── Autostart ──
