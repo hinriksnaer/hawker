@@ -1,1 +1,18 @@
-/nix/store/6nz268v9kkbfysmj0kcvrq19rabcf3wm-home-manager-files/.local/share/hawker/themes/torrentz-hydra/vscode/package.json
+{
+  "name": "torrentz-hydra",
+  "displayName": "Torrentz Hydra",
+  "description": "Dark theme with cyan/orange accents from the hawker theme system",
+  "version": "1.0.0",
+  "publisher": "hawker",
+  "engines": { "vscode": "^1.60.0" },
+  "categories": ["Themes"],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Torrentz Hydra",
+        "uiTheme": "vs-dark",
+        "path": "./themes/torrentz-hydra.json"
+      }
+    ]
+  }
+}

@@ -1,1 +1,14 @@
-/nix/store/6nz268v9kkbfysmj0kcvrq19rabcf3wm-home-manager-files/.local/share/hawker/themes/matte-black/neovim.lua
+-- Hawker theme: matte-black
+return {
+  {
+    "tahayvr/matteblack.nvim",
+    priority = 1000,
+    lazy = false,
+    opts = {
+      colorscheme = "matteblack",
+    },
+    config = function()
+      vim.cmd.colorscheme("matteblack")
+    end,
+  },
+}

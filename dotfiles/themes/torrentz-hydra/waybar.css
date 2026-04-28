@@ -1,1 +1,8 @@
-/nix/store/6nz268v9kkbfysmj0kcvrq19rabcf3wm-home-manager-files/.local/share/hawker/themes/torrentz-hydra/waybar.css
+/* Torrentz Hydra theme colors for Waybar */
+@define-color foreground #E2E6F1;
+@define-color background transparent;
+@define-color accent #1BC5C9;
+@define-color accent-muted #3bb8c8;
+@define-color warning #E3B77D;
+@define-color error #F25636;
+@define-color border #FF6A1F;
