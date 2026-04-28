@@ -43,12 +43,17 @@ if pgrep -x btop >/dev/null 2>&1
 end
 
 # ── neovim ──
-# COPY instead of symlink -- Lua module loader breaks with symlinks
+# Apply theme to all running neovim instances via RPC.
+# Loads the theme's neovim.lua from the themes directory via dofile().
 set nvim_source "$theme_path/neovim.lua"
-set nvim_dest "$HOME/.config/nvim/lua/plugins/theme.lua"
 if test -f "$nvim_source"
-    mkdir -p (dirname $nvim_dest) 2>/dev/null
-    cp -f $nvim_source $nvim_dest
+    # Escape the path for Lua string
+    set escaped_path (string replace -a "'" "\\'" "$nvim_source")
+    for server in (nvim --server '' --remote-expr '' 2>/dev/null; nvim --server-list 2>/dev/null)
+        if test -n "$server"
+            nvim --server "$server" --remote-expr "luaeval(\"(function() local ok, spec = pcall(dofile, '$escaped_path'); if ok and spec then for _, s in ipairs(spec) do if s.config then s.config(nil, s.opts or {}) end end end end)()\")" 2>/dev/null
+        end
+    end
     set applied_count (math $applied_count + 1)
 else
     set skipped_count (math $skipped_count + 1)
