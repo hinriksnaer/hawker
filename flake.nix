@@ -86,19 +86,17 @@
         };
       };
 
-      # ── Home Manager (standalone) ──
-      homeConfigurations = let
-        mkHome = hostname: home-manager.lib.homeManagerConfiguration {
-          pkgs = pkgsUnfree;
-          modules = [
-            (import ./home { inherit hostname settings; })
-          ];
-        };
-      in {
-        hawker = mkHome "desktop";
-        hgudmund = mkHome "laptop";
-        remote = mkHome "remote";
-      };
+      # ── Home Manager (standalone, user@host convention) ──
+      homeConfigurations = lib.mapAttrs'
+        (hostName: hostCfg: lib.nameValuePair
+          "${hostCfg.username}@${hostName}"
+          (home-manager.lib.homeManagerConfiguration {
+            pkgs = pkgsUnfree;
+            modules = [
+              (import ./home { hostname = hostName; inherit settings; })
+            ];
+          })
+        ) settings.hosts;
 
       # ── Development shells ──
       devShells.${system}.default = import ./dev/shell.nix {

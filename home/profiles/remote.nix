@@ -1,5 +1,5 @@
 # Remote server profile -- non-NixOS host with Nix installed.
-# Apply with: home-manager switch --flake ~/hawker#remote
+# Apply with: home-manager switch --flake ~/hawker#<user>@remote
 { pkgs, config, settings, hostname, ... }:
 
 let
@@ -7,6 +7,7 @@ let
   homeDir = "/home/${username}";
   reposDir = "${homeDir}/workspace/repos";
   hawkerRoot = "${homeDir}/hawker";
+  cli = import ../../cli { inherit pkgs; hmProfile = "${username}@${hostname}"; };
 in
 {
   imports = [
@@ -18,8 +19,10 @@ in
   home.homeDirectory = homeDir;
   home.stateVersion = "24.11";
 
+  # hawker-hm-switch: pull latest + home-manager switch
+  home.packages = [ cli.hawker-hm-switch ];
+
   # Auto-activate devshell when cd-ing into workspace/repos
-  # hawker-dev CLI is provided by the devshell itself (dev/cli/)
   home.activation.setupDirenv = config.lib.dag.entryAfter [ "linkGeneration" ] ''
     mkdir -p "${reposDir}"
     envrc="${reposDir}/.envrc"

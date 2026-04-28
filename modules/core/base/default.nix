@@ -2,6 +2,7 @@
 
 let
   inherit (config.hawker) username;
+  cli = import ../../../cli { inherit pkgs; };
 in
 {
   # ── Nix settings ──
@@ -46,18 +47,8 @@ in
     procps
     git
 
-    # NixOS rebuild helpers
-    (writeShellApplication {
-      name = "hawker-build";
-      runtimeInputs = [ coreutils ];
-      text = builtins.readFile ./hawker-build.sh;
-      excludeShellChecks = [ "SC2029" "SC2016" ];
-    })
-    (writeShellApplication {
-      name = "hawker-switch";
-      runtimeInputs = [ coreutils hostname ];
-      text = builtins.readFile ./hawker-switch.sh;
-    })
+    # NixOS rebuild helper
+    cli.hawker-switch
   ];
 
   system.stateVersion = "24.11";

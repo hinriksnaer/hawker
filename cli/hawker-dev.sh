@@ -1,7 +1,5 @@
-#!/usr/bin/env bash
 # hawker-dev -- CLI for managing the hawker development environment.
 # Must be run inside the nix develop shell.
-set -euo pipefail
 
 REPOS="$HOME/workspace/repos"
 VENV="$REPOS/.venv"

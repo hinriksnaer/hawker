@@ -21,7 +21,7 @@ let
   venv = "${repos}/.venv";
 
   # ── CLI ──
-  cli = import ./cli { inherit pkgs; };
+  cli = import ../cli { inherit pkgs; };
 
   # ── Base layers ──
   tooling  = import ./base/tooling.nix { inherit pkgs; };
