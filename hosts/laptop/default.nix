@@ -7,7 +7,6 @@ in
   imports = [
     ./hardware-configuration.nix
     ../../roles/core.nix
-    ../../roles/terminal.nix
     ../../roles/desktop.nix
     ../../roles/hardware.nix
     ../../roles/apps.nix
