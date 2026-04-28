@@ -1,1 +1,15 @@
-/nix/store/7p4p486q6qgxq0q68q6n56ra14jw01qd-home-manager-files/.local/share/hawker/themes/rose-pine/neovim.lua
+-- Hawker theme: rose-pine
+return {
+  {
+    "rose-pine/neovim",
+    name = "rose-pine",
+    priority = 1000,
+    lazy = false,
+    opts = {
+      colorscheme = "rose-pine-dawn",
+    },
+    config = function()
+      vim.cmd.colorscheme("rose-pine-dawn")
+    end,
+  },
+}
