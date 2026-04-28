@@ -32,6 +32,12 @@ let
   maxJobs = toString (pytorchCfg.maxJobs or 32);
   buildTests = if (pytorchCfg.buildTests or false) then "1" else "0";
 
+  # Enabled projects (from settings)
+  enabledProjects = builtins.filter (name:
+    (projectSettings.${name} or {}).enable or false
+  ) [ "pytorch" "helion" "vllm" ];
+  enabledProjectsStr = builtins.concatStringsSep " " enabledProjects;
+
   # Workspace paths
   repos = "$HOME/workspace/repos";
   venv = "${repos}/.venv";
@@ -81,7 +87,8 @@ pkgs.mkShell {
   NIX_CONFIG = "extra-substituters = https://cache.nixos-cuda.org\nextra-trusted-public-keys = cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=";
 
   shellHook = ''
-    export HAWKER_ROOT="''${HAWKER_ROOT:-$HOME/workspace/hawker}"
+    export HAWKER_ROOT="''${HAWKER_ROOT:-$HOME/hawker}"
+    export HAWKER_ENABLED_PROJECTS="${enabledProjectsStr}"
 
     # CUDA environment
     export CUDA_HOME="${cudaToolkit}"

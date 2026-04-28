@@ -34,12 +34,14 @@ export HAWKER_ROOT REPOS
 # Create repos directory
 mkdir -p "$REPOS"
 
-# Project build order
-PROJECT_ORDER=(pytorch helion vllm)
-
-# If a specific project is requested, only set up that one
+# If a specific project is requested, use that; otherwise use enabled projects from settings
 if [ $# -ge 1 ]; then
     PROJECT_ORDER=("$@")
+elif [ -n "${HAWKER_ENABLED_PROJECTS:-}" ]; then
+    read -ra PROJECT_ORDER <<< "$HAWKER_ENABLED_PROJECTS"
+else
+    echo "Error: no projects enabled in settings.nix" >&2
+    exit 1
 fi
 
 for project in "${PROJECT_ORDER[@]}"; do
