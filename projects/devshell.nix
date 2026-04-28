@@ -33,9 +33,8 @@ let
   buildTests = if (pytorchCfg.buildTests or false) then "1" else "0";
 
   # Workspace paths
-  workspace = "$HAWKER_ROOT/workspace";
-  repos = "${workspace}/repos";
-  venv = "${workspace}/.venv";
+  repos = "$HOME/workspace/repos";
+  venv = "${repos}/.venv";
 in
 pkgs.mkShell {
   name = "hawker-dev";
@@ -82,8 +81,7 @@ pkgs.mkShell {
   NIX_CONFIG = "extra-substituters = https://cache.nixos-cuda.org\nextra-trusted-public-keys = cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=";
 
   shellHook = ''
-    # Hawker root
-    export HAWKER_ROOT="''${HAWKER_ROOT:-$(cd "$(dirname "''${BASH_SOURCE[0]:-$0}")/.." 2>/dev/null && pwd || echo "$HOME/workspace/hawker")}"
+    export HAWKER_ROOT="''${HAWKER_ROOT:-$HOME/workspace/hawker}"
 
     # CUDA environment
     export CUDA_HOME="${cudaToolkit}"

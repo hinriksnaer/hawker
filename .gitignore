@@ -7,5 +7,4 @@ index.html
 dotfiles/tmux/.config/tmux/plugins/
 dotfiles/hyprland/.config/hypr/conf.d.bak/
 dotfiles/hyprland/.config/hypr/hyprland.conf.bak
-workspace/*
-!workspace/.keep
+

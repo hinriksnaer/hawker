@@ -30,10 +30,8 @@
       set -g fish_history_size 10000
 
       # Auto-activate shared venv if it exists
-      if test -f $HAWKER_ROOT/workspace/.venv/bin/activate.fish
-          source $HAWKER_ROOT/workspace/.venv/bin/activate.fish
-      else if test -f $HOME/workspace/hawker/workspace/.venv/bin/activate.fish
-          source $HOME/workspace/hawker/workspace/.venv/bin/activate.fish
+      if test -f $HOME/workspace/repos/.venv/bin/activate.fish
+          source $HOME/workspace/repos/.venv/bin/activate.fish
       end
 
       # Proton Pass SSH agent (desktop only, harmless elsewhere)
