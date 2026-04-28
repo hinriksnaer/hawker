@@ -8,6 +8,7 @@ in
   imports = [
     ../collections/terminal.nix
     ../collections/desktop.nix
+    ../modules/desktop/vscode.nix
   ];
 
   home.username = username;
