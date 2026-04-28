@@ -62,12 +62,10 @@
         discoverAll = dir: (discoverModules dir) // (discoverDirs dir);
       in
         (discoverAll ./modules/core) //
-        (discoverAll ./modules/terminal) //
         (discoverAll ./modules/desktop) //
         (discoverAll ./modules/hardware) //
         (discoverAll ./modules/apps) //
-        (discoverModules ./roles) //
-        (discoverDirs ./projects);
+        (discoverModules ./roles);
 
       # ── Machine configurations ──
       nixosConfigurations = {
@@ -103,7 +101,7 @@
       };
 
       # ── Development shells ──
-      devShells.${system}.default = import ./projects/devshell.nix {
+      devShells.${system}.default = import ./dev/shell.nix {
         pkgs = pkgsUnfree;
         inherit settings;
       };

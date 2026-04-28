@@ -1,15 +1,1 @@
--- Hawker theme: rose-pine
-return {
-  {
-    "rose-pine/neovim",
-    name = "rose-pine",
-    priority = 1000,
-    lazy = false,
-    opts = {
-      colorscheme = "rose-pine-dawn",
-    },
-    config = function()
-      vim.cmd.colorscheme("rose-pine-dawn")
-    end,
-  },
-}
+/nix/store/6nz268v9kkbfysmj0kcvrq19rabcf3wm-home-manager-files/.local/share/hawker/themes/rose-pine/neovim.lua

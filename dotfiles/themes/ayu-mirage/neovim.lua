@@ -1,14 +1,1 @@
--- Hawker theme: ayu-mirage
-return {
-  {
-    "Shatur/neovim-ayu",
-    priority = 1000,
-    lazy = false,
-    opts = {
-      colorscheme = "ayu-mirage",
-    },
-    config = function()
-      vim.cmd.colorscheme("ayu-mirage")
-    end,
-  },
-}
+/nix/store/6nz268v9kkbfysmj0kcvrq19rabcf3wm-home-manager-files/.local/share/hawker/themes/ayu-mirage/neovim.lua

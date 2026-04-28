@@ -18,13 +18,8 @@ in
   home.homeDirectory = homeDir;
   home.stateVersion = "24.11";
 
-  # hawker commands
-  home.packages = [
-    (pkgs.writeShellScriptBin "hawker-setup" (builtins.readFile ../../projects/hawker-setup.sh))
-    (pkgs.writeShellScriptBin "hawker-refresh" (builtins.readFile ../../projects/hawker-refresh.sh))
-  ];
-
   # Auto-activate devshell when cd-ing into workspace/repos
+  # hawker-dev CLI is provided by the devshell itself (dev/cli/)
   home.activation.setupDirenv = config.lib.dag.entryAfter [ "linkGeneration" ] ''
     mkdir -p "${reposDir}"
     envrc="${reposDir}/.envrc"

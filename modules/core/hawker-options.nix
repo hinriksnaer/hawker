@@ -15,7 +15,7 @@ with lib;
     gpu = mkOption {
       type = types.enum [ "nvidia" "intel" "amd" "none" ];
       default = "none";
-      description = "GPU driver to use. Configures drivers, kernel modules, VAAPI, and container toolkit.";
+      description = "GPU driver to use. Configures drivers, kernel modules, and VAAPI.";
       example = "nvidia";
     };
 
@@ -64,29 +64,5 @@ with lib;
       description = "Per-host settings (username, gpu, projects, etc.). Keyed by host name.";
     };
 
-    # Container options. Project-specific options are declared in
-    # each project's options.nix (auto-discovered by the container config).
-    container = {
-      gpuPassthrough = mkOption {
-        type = types.str;
-        default = "all";
-        description = ''
-          GPU device indices to pass through to containers.
-          "all" for all GPUs, "none" to disable, or a
-          comma-separated list of indices (e.g. "0,1,4").
-        '';
-        example = "4";
-      };
-
-      storagePath = mkOption {
-        type = types.str;
-        default = "";
-        description = ''
-          Host path for persistent container storage (repos, nix store,
-          credentials, etc.). Empty uses podman named volumes.
-        '';
-        example = "/mnt/podman_storage/user";
-      };
-    };
   };
 }

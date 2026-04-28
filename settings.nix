@@ -46,7 +46,7 @@
             backends = [ "cute" ];
           };
           pytorch = {
-            enable = false;
+            enable = true;
             repo = "https://github.com/pytorch/pytorch.git";
             branch = "viable/strict";
             cudaArch = "9.0";

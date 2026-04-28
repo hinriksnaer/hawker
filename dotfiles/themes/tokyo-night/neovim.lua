@@ -1,14 +1,1 @@
--- Hawker theme: tokyo-night
-return {
-  {
-    "folke/tokyonight.nvim",
-    priority = 1000,
-    lazy = false,
-    opts = {
-      colorscheme = "tokyonight-night",
-    },
-    config = function()
-      vim.cmd.colorscheme("tokyonight-night")
-    end,
-  },
-}
+/nix/store/6nz268v9kkbfysmj0kcvrq19rabcf3wm-home-manager-files/.local/share/hawker/themes/tokyo-night/neovim.lua
