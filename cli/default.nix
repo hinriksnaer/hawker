@@ -32,6 +32,6 @@
   hawker-dev = pkgs.writeShellApplication {
     name = "hawker-dev";
     text = builtins.readFile ./hawker-dev.sh;
-    excludeShellChecks = [ "SC2086" "SC2155" ];
+    excludeShellChecks = [ "SC1091" "SC2086" "SC2155" ];
   };
 }
