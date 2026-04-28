@@ -101,6 +101,9 @@ pkgs.mkShell {
     export CPATH="${cudaToolkit}/include:${cudnn.include}/include"
     ${pkgs.lib.optionalString (cudaVisibleDevices != "") ''export CUDA_VISIBLE_DEVICES="${cudaVisibleDevices}"''}
 
+    # Runtime libraries for pip-installed packages (PyTorch needs libstdc++)
+    export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${cudaToolkit}/lib:${cudnn.lib}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
     # PyTorch build flags
     export USE_CUDA=1
     export USE_CUDNN=1
