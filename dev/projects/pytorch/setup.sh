@@ -58,9 +58,10 @@ python -m pip install --group dev
 # which are properly configured for this environment
 python -m pip uninstall -y cmake ninja 2>/dev/null || true
 
-# Point PyTorch at the Nix-provided cmake (its cmake.py searches for
-# /usr/bin/cmake3 as a fallback which finds the host system's cmake)
-export CMAKE="$(command -v cmake)"
+# PyTorch's cmake.py searches for both "cmake" and "cmake3" via shutil.which().
+# On non-NixOS hosts, /usr/bin/cmake3 may exist but be broken/incompatible.
+# Symlink cmake3 -> our Nix cmake in the venv bin so it's found first in PATH.
+ln -sf "$(command -v cmake)" "$VENV/bin/cmake3"
 
 # Build and install PyTorch in editable mode (upstream recommended method)
 echo "==> Installing PyTorch in editable mode (compiles from source)..."
